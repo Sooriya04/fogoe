@@ -1,0 +1,18 @@
+{
+  "name": "fogoe",
+  "version": "0.0.1",
+  "description": "A minimal CLI for initializing structured Node.js projects with sensible defaults.",
+  "license": "MIT",
+  "author": "Sooriya",
+  "type": "commonjs",
+  "main": "index.js",
+  "bin": {
+    "fogoe": "bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "prompts": "^2.4.2"
+  }
+}
