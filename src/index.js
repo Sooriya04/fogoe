@@ -108,6 +108,4 @@ const chalk = require("chalk");
     console.log(chalk.yellow("   2. Run: npx prisma generate"));
     console.log(chalk.yellow("   3. Run: npx prisma db push"));
   }
-  
-  console.log("\n");
 })();
