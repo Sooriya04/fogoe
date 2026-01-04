@@ -16,6 +16,8 @@ Even without business logic, reaching a basic "server is alive" state requires m
 
 Fogoe generates only the essentials — a server, a single route, and a working application lifecycle. Reach a running state in seconds, with full freedom to extend or restructure as needed.
 
+🌐 Website: https://sooriya04.github.io/fogoe-site/
+
 ## Usage
 
 Run Fogoe directly without installation:

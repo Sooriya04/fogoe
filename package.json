@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Open-source CLI for zero-friction Node.js backend initialization.",
   "author": "Sooriya",
+  "homepage" : "https://sooriya04.github.io/fogoe-site/",
   "license": "MIT",
   "type": "commonjs",
 
