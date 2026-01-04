@@ -1,19 +1,40 @@
 {
   "name": "fogoe",
-  "version": "0.0.1",
-  "description": "A minimal CLI for initializing structured Node.js projects with sensible defaults.",
-  "license": "MIT",
+  "version": "1.0.0",
+  "description": "Open-source CLI for zero-friction Node.js backend initialization.",
   "author": "Sooriya",
+  "license": "MIT",
   "type": "commonjs",
-  "main": "index.js",
+
   "bin": {
-    "fogoe": "bin/cli.js"
+    "fogoe": "./bin/cli.js"
   },
+
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests specified\" && exit 0"
   },
+
   "dependencies": {
     "chalk": "^4.1.2",
     "prompts": "^2.4.2"
-  }
+  },
+
+  "keywords": [
+    "node",
+    "nodejs",
+    "cli",
+    "backend",
+    "scaffold",
+    "starter",
+    "express",
+    "fastify",
+    "developer-tools"
+  ],
+
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ]
 }
