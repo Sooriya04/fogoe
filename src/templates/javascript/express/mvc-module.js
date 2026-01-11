@@ -80,8 +80,8 @@ import mongoose from "mongoose";
 import { DATABASE_URL } from "./env.js";
 
 mongoose.connect(DATABASE_URL)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB error:", err));
 
 export default mongoose;
 `.trim(),
@@ -130,7 +130,7 @@ import { DATABASE_URL } from "./env.js";
 
 const pool = mysql.createPool(DATABASE_URL);
 
-console.log("✅ MySQL pool created");
+console.log("MySQL pool created");
 
 export default pool;
 `.trim(),
@@ -149,7 +149,7 @@ import { DATABASE_URL } from "./env.js";
 
 const pool = new Pool({ connectionString: DATABASE_URL });
 
-pool.on("connect", () => console.log("✅ PostgreSQL connected"));
+pool.on("connect", () => console.log("PostgreSQL connected"));
 
 export default pool;
 `.trim(),
@@ -186,6 +186,12 @@ import argon2 from "argon2";
 
 // Import argon2
 export default argon2;
+`.trim(),
+  crypto: `
+import crypto from "crypto";
+
+// Import crypto
+export default crypto;
 `.trim()
 };
 

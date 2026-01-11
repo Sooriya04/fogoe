@@ -87,8 +87,8 @@ const mongoose = require("mongoose");
 const { DATABASE_URL } = require("./env");
 
 mongoose.connect(DATABASE_URL)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB error:", err));
 
 module.exports = mongoose;
 `.trim(),
@@ -137,7 +137,7 @@ const { DATABASE_URL } = require("./env");
 
 const pool = mysql.createPool(DATABASE_URL);
 
-console.log("✅ MySQL pool created");
+console.log("MySQL pool created");
 
 module.exports = pool;
 `.trim(),
@@ -155,7 +155,7 @@ const { DATABASE_URL } = require("./env");
 
 const pool = new Pool({ connectionString: DATABASE_URL });
 
-pool.on("connect", () => console.log("✅ PostgreSQL connected"));
+pool.on("connect", () => console.log("PostgreSQL connected"));
 
 module.exports = pool;
 `.trim(),
@@ -192,6 +192,12 @@ const argon2 = require("argon2");
 
 // Import argon2
 module.exports = argon2;
+`.trim(),
+  crypto: `
+const crypto = require("crypto");
+
+// Import crypto
+module.exports = crypto;
 `.trim()
 };
 

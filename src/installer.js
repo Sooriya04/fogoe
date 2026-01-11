@@ -12,7 +12,8 @@ const dbPackages = {
 // Hashing package mapping
 const hashPackages = {
   bcrypt: "bcrypt",
-  argon2: "argon2"
+  argon2: "argon2",
+  crypto: ""
 };
 
 /**
