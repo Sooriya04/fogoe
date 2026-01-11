@@ -1,25 +1,21 @@
 {
   "name": "fogoe",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Open-source CLI for zero-friction Node.js backend initialization.",
   "author": "Sooriya",
-  "homepage" : "https://sooriya04.github.io/fogoe-site/",
+  "homepage": "https://sooriya04.github.io/fogoe-site/",
   "license": "MIT",
   "type": "commonjs",
-
   "bin": {
     "fogoe": "./bin/cli.js"
   },
-
   "scripts": {
     "test": "echo \"No tests specified\" && exit 0"
   },
-
   "dependencies": {
     "chalk": "^4.1.2",
     "prompts": "^2.4.2"
   },
-
   "keywords": [
     "node",
     "nodejs",
@@ -31,7 +27,6 @@
     "fastify",
     "developer-tools"
   ],
-
   "files": [
     "bin",
     "src",
