@@ -6,7 +6,16 @@ const { install } = require("./installer");
 const chalk = require("chalk");
 
 (async () => {
-  console.log("\n⚡ Fogoe Initializer\n");
+// Check arguments
+  const args = process.argv.slice(2);
+  
+  if (args.includes("git-init")) {
+    const { initGit } = require("./git");
+    await initGit();
+    return;
+  }
+
+  console.log("\nFogoe Initializer\n");
 
   // Project metadata
   const name = await input("Package name");
@@ -62,7 +71,8 @@ const chalk = require("chalk");
     // Hashing selection
     hashing = await select("Select hashing library", [
       "bcrypt",
-      "argon2"
+      "argon2",
+      "crypto"
     ]);
 
     // JWT selection
@@ -98,12 +108,12 @@ const chalk = require("chalk");
   install(runtime, architecture, database, hashing, useJwt);
 
   console.log("\n");
-  console.log(chalk.green("✓ Fogoe project ready"));
-  console.log(chalk.cyan("→ npm run dev"));
+  console.log(chalk.green("Fogoe project ready"));
+  console.log(chalk.cyan("npm run dev"));
   
   // Prisma-specific instructions
   if (database === "prisma") {
-    console.log(chalk.yellow("\n📝 Prisma setup:"));
+    console.log(chalk.yellow("\nPrisma setup:"));
     console.log(chalk.yellow("   1. Update DATABASE_URL in .env"));
     console.log(chalk.yellow("   2. Run: npx prisma generate"));
     console.log(chalk.yellow("   3. Run: npx prisma db push"));
