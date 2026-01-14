@@ -1,6 +1,5 @@
 // Minimal Fastify ES Module TypeScript Template
-export default `
-import "dotenv/config";
+module.exports = `import "dotenv/config";
 
 import Fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";

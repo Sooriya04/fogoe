@@ -1,6 +1,6 @@
 # Fogoe
 
-A minimal CLI for initializing Node.js backend projects with zero friction.
+A minimal CLI for initializing Node.js backend projects with **TypeScript support** and zero friction.
 
 ## Problem
 
@@ -56,23 +56,27 @@ Fogoe supports two architecture patterns:
 
 Choose based on project scope and team preferences.
 
-## Supported Runtimes
+## Supported Options
 
 Fogoe supports the following options during initialization:
 
+- **Languages:** JavaScript, TypeScript
 - **Frameworks:** Express, Fastify
 - **Module systems:** CommonJS, ES Modules
+- **Git Integration:** Optional GitHub repository initialization
 
 ## Packages Included
 
 | Category | Options |
 |----------|---------|
+| **Language** | JavaScript, TypeScript |
 | **Framework** | Express, Fastify |
 | **CORS** | cors, @fastify/cors |
 | **Environment** | dotenv |
 | **Database** | mongoose, prisma, mysql2, pg |
 | **Hashing** | bcrypt, argon2 |
 | **Auth** | jsonwebtoken (optional) |
+| **Git** | GitHub initialization (optional) |
 
 ## Configuration Philosophy
 
@@ -84,6 +88,40 @@ Fogoe scaffolds projects, it does not configure full systems.
 - Developers retain full control over implementation details
 
 Fogoe provides the foundation. You build the system.
+
+## TypeScript Support
+
+Fogoe fully supports TypeScript with automatic configuration:
+
+- **Automatic Type Installation:** All necessary `@types/*` packages are installed based on your selections
+- **Smart tsconfig.json:** Generated with optimal settings for your module type and architecture
+- **Path Aliases:** MVC projects get clean import paths (`@routes/*`, `@controllers/*`, etc.)
+- **Zero Configuration:** TypeScript just works out of the box
+
+### TypeScript Packages Automatically Installed:
+
+- **Core:** `typescript`, `ts-node`, `tsx`, `@types/node`
+- **Express:** `@types/express`, `@types/cors`
+- **Fastify:** `@fastify/type-provider-typebox`
+- **Databases:** `@types/pg`, `@types/mysql2` (when needed)
+- **Libraries:** `@types/bcrypt`, `@types/jsonwebtoken` (when selected)
+
+## Git Integration
+
+Optionally initialize a Git repository and push to GitHub during project setup:
+
+- **Automatic .gitignore:** Configured with `node_modules/` and `.env`
+- **Initial Commit:** All project files committed automatically
+- **GitHub Push:** Connects to your repository and pushes the first commit
+- **Visual Feedback:** Progress shown with checkmarks for each step
+- **Completely Optional:** Skip if you prefer manual Git setup
+
+### Git Setup Flow:
+
+1. Select "yes" when prompted "Initialize Git repository?"
+2. Enter branch name (default: `main`)
+3. Provide your GitHub repository URL
+4. Fogoe handles the rest: init → add → commit → push
 
 ## Non-goals
 

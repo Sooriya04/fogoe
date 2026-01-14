@@ -1,6 +1,6 @@
 const fs = require("fs");
 const { execSync } = require("child_process");
-const { input } = require("./prompt");
+const { input } = require("./prompts");
 const chalk = require("chalk");
 
 async function initGit() {
@@ -77,6 +77,7 @@ async function initGit() {
 
   try {
     execSync("git init", { stdio: "ignore" });
+    console.log(chalk.green("✓ Git repository initialized"));
   } catch (err) {
     console.error("Failed to initialize Git repository.");
     process.exit(1);
@@ -84,6 +85,7 @@ async function initGit() {
 
   try {
     execSync("git add .", { stdio: "ignore" });
+    console.log(chalk.green("✓ Files staged"));
   } catch (err) {
     console.error("Failed to stage files.");
     process.exit(1);
@@ -91,6 +93,7 @@ async function initGit() {
 
   try {
     execSync('git commit -m "Initial commit"', { stdio: "ignore" });
+    console.log(chalk.green("✓ Initial commit created"));
   } catch (err) {
     console.error("Commit failed. Ensure there are files to commit.");
     process.exit(1);
@@ -98,6 +101,7 @@ async function initGit() {
 
   try {
     execSync(`git branch -M ${branchName}`, { stdio: "ignore" });
+    console.log(chalk.green(`✓ Branch set to ${branchName}`));
   } catch (err) {
     console.error("Failed to set branch.");
     process.exit(1);
@@ -105,6 +109,7 @@ async function initGit() {
 
   try {
     execSync(`git remote add origin ${repoUrl}`, { stdio: "ignore" });
+    console.log(chalk.green("✓ Remote origin added"));
   } catch (err) {
     const existingRemotes = execSync("git remote", { encoding: "utf8" });
     if (existingRemotes.includes("origin")) {
@@ -124,13 +129,13 @@ async function initGit() {
 
   try {
     execSync(`git push -u origin ${branchName}`, { stdio: "ignore" });
+    console.log(chalk.green("✓ Repository pushed to GitHub"));
   } catch (err) {
     console.error("Failed to push repository to GitHub.");
     process.exit(1);
   }
 
-  console.log("\n.gitignore configured successfully.");
-  console.log("GitHub repository initialized and pushed successfully.");
+  console.log(chalk.green("\n✓ GitHub repository initialized successfully!"));
 }
 
 module.exports = { initGit };

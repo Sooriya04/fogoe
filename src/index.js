@@ -1,5 +1,5 @@
 const fs = require("fs");
-const { input, select } = require("./prompt");
+const { input, select } = require("./prompts");
 const { scaffold } = require("./scaffold");
 const { buildPackageJson } = require("./packageJson");
 const { install } = require("./installer");
@@ -33,13 +33,8 @@ const chalk = require("chalk");
   // Language selection
   const language = await select("Select language", [
     "javascript",
-    "typescript (coming soon)"
+    "typescript"
   ]);
-
-  if (language !== "javascript") {
-    console.log("\nTypeScript support coming soon.\n");
-    process.exit(0);
-  }
 
   // Runtime selection
   const runtime = await select("Select runtime", [
@@ -93,7 +88,8 @@ const chalk = require("chalk");
         description,
         author,
         license,
-        type
+        type,
+        language
       }),
       null,
       2
@@ -101,11 +97,24 @@ const chalk = require("chalk");
   );
 
   // Scaffold the project
-  scaffold(runtime, type, architecture, database, hashing, useJwt);
+  scaffold(language, runtime, type, architecture, database, hashing, useJwt);
 
   // Install dependencies
   console.log("\nInstalling dependencies...\n");
-  install(runtime, architecture, database, hashing, useJwt);
+  install(language, runtime, architecture, database, hashing, useJwt);
+
+  console.log("\n");
+  
+  // Git initialization (optional)
+  const gitChoice = await select("Initialize Git repository?", [
+    "yes",
+    "no"
+  ]);
+  
+  if (gitChoice === "yes") {
+    const { initGit } = require("./git");
+    await initGit();
+  }
 
   console.log("\n");
   console.log(chalk.green("Fogoe project ready"));

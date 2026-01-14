@@ -1,6 +1,5 @@
-// Minimal Express ES Module TypeScript Template
-export default `
-import "dotenv/config";
+// Minimal Express CommonJS TypeScript Template
+module.exports = `import "dotenv/config";
 
 import express, { Request, Response, Application } from "express";
 import cors from "cors";

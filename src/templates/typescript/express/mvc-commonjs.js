@@ -1,4 +1,4 @@
-// Fastify CommonJS MVC TypeScript Templates
+// Express CommonJS MVC TypeScript Templates
 // All templates in one file - databases + hashing included
 
 // ========== CORE TEMPLATES ==========
@@ -9,45 +9,41 @@ import "dotenv/config";
 import app from "./app";
 import { PORT } from "./config/env";
 
-app.listen({ port: PORT, host: "0.0.0.0" })
-  .then((): void => {
-    console.log(\\\`Server running on http://localhost:\\\${PORT}\\\`);
-  })
-  .catch((err): void => {
-    console.error(err);
-    process.exit(1);
-  });
+app.listen(PORT, (): void => {
+  console.log(\`Server running on http://localhost:\${PORT}\`);
+});
 `.trim();
 
 const app = `
-import Fastify, { FastifyInstance } from "fastify";
-import cors from "@fastify/cors";
+import express, { Application } from "express";
+import cors from "cors";
 import homeRoutes from "./routes/home";
 
-const fastify: FastifyInstance = Fastify();
+const app: Application = express();
 
-fastify.register(cors);
-fastify.register(homeRoutes);
+app.use(cors());
+app.use(express.json());
+app.use("/", homeRoutes);
 
-export = fastify;
+export = app;
 `.trim();
 
 const homeRoute = `
-import { FastifyInstance } from "fastify";
+import express, { Router } from "express";
 import { home } from "../controllers/homecontroller";
 
-async function homeRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get("/", home);
-}
+const router: Router = express.Router();
 
-export = homeRoutes;
+router.get("/", home);
+
+export = router;
 `.trim();
 
 const homeController = `
-import { FastifyRequest, FastifyReply } from "fastify";
+import { Request, Response } from "express";
 
-export async function home(_req: FastifyRequest, reply: FastifyReply): Promise<void> {
-  reply.type("text/plain").send("Fogoe running");
+export function home(_req: Request, res: Response): void {
+  res.send("Fogoe running");
 }
 `.trim();
 
@@ -79,8 +75,8 @@ DATABASE_URL=
 // ========== DATABASE TEMPLATES ==========
 
 const databases = {
-  mongodb: {
-    dbConfig: `
+    mongodb: {
+        dbConfig: `
 import mongoose from "mongoose";
 import { DATABASE_URL } from "./env";
 
@@ -90,28 +86,28 @@ mongoose.connect(DATABASE_URL)
 
 export = mongoose;
 `.trim(),
-    model: `
+        model: `
 import mongoose from "mongoose";
 
 // Import mongoose - add your schemas here
 export = mongoose;
 `.trim()
-  },
-  prisma: {
-    dbConfig: `
+    },
+    prisma: {
+        dbConfig: `
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 export = prisma;
 `.trim(),
-    model: `
+        model: `
 import prisma from "../config/db";
 
 // Import Prisma client
 export = prisma;
 `.trim(),
-    schema: `
+        schema: `
 generator client {
   provider = "prisma-client-js"
 }
@@ -127,9 +123,9 @@ model User {
   name  String?
 }
 `.trim()
-  },
-  mysql: {
-    dbConfig: `
+    },
+    mysql: {
+        dbConfig: `
 import mysql from "mysql2/promise";
 import { DATABASE_URL } from "./env";
 
@@ -139,15 +135,15 @@ console.log("MySQL pool created");
 
 export = pool;
 `.trim(),
-    model: `
+        model: `
 import pool from "../config/db";
 
 // Import MySQL pool
 export = pool;
 `.trim()
-  },
-  postgresql: {
-    dbConfig: `
+    },
+    postgresql: {
+        dbConfig: `
 import { Pool } from "pg";
 import { DATABASE_URL } from "./env";
 
@@ -157,41 +153,41 @@ pool.on("connect", (): void => console.log("PostgreSQL connected"));
 
 export = pool;
 `.trim(),
-    model: `
+        model: `
 import pool from "../config/db";
 
 // Import PostgreSQL pool
 export = pool;
 `.trim()
-  },
-  none: {
-    dbConfig: `
+    },
+    none: {
+        dbConfig: `
 // No database selected
 export = {};
 `.trim(),
-    model: `
+        model: `
 // No database selected
 export = {};
 `.trim()
-  }
+    }
 };
 
 // ========== HASHING TEMPLATES ==========
 
 const hashing = {
-  bcrypt: `
+    bcrypt: `
 import bcrypt from "bcrypt";
 
 // Import bcrypt
 export = bcrypt;
 `.trim(),
-  argon2: `
+    argon2: `
 import argon2 from "argon2";
 
 // Import argon2
 export = argon2;
 `.trim(),
-  crypto: `
+    crypto: `
 import crypto from "crypto";
 
 // Import crypto
@@ -199,15 +195,15 @@ export = crypto;
 `.trim()
 };
 
-export default {
-  server,
-  app,
-  homeRoute,
-  homeController,
-  authMiddleware,
-  helper,
-  envConfig,
-  envFile,
-  databases,
-  hashing
+module.exports = {
+    server,
+    app,
+    homeRoute,
+    homeController,
+    authMiddleware,
+    helper,
+    envConfig,
+    envFile,
+    databases,
+    hashing
 };

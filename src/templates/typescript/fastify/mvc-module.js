@@ -1,4 +1,4 @@
-// Express CommonJS MVC TypeScript Templates
+// Fastify ES Module MVC TypeScript Templates
 // All templates in one file - databases + hashing included
 
 // ========== CORE TEMPLATES ==========
@@ -6,56 +6,57 @@
 const server = `
 import "dotenv/config";
 
-import app from "./app";
-import { PORT } from "./config/env";
+import app from "./app.js";
+import { PORT } from "./config/env.js";
 
-app.listen(PORT, (): void => {
-  console.log(\\\`Server running on http://localhost:\\\${PORT}\\\`);
-});
+try {
+  await app.listen({ port: PORT, host: "0.0.0.0" });
+  console.log(\`Server running on http://localhost:\${PORT}\`);
+} catch (err) {
+  console.error(err);
+  process.exit(1);
+}
 `.trim();
 
 const app = `
-import express, { Application } from "express";
-import cors from "cors";
-import homeRoutes from "./routes/home";
+import Fastify, { FastifyInstance } from "fastify";
+import cors from "@fastify/cors";
+import homeRoutes from "./routes/home.js";
 
-const app: Application = express();
+const fastify: FastifyInstance = Fastify();
 
-app.use(cors());
-app.use(express.json());
-app.use("/", homeRoutes);
+await fastify.register(cors);
+await fastify.register(homeRoutes);
 
-export = app;
+export default fastify;
 `.trim();
 
 const homeRoute = `
-import express, { Router } from "express";
-import { home } from "../controllers/homecontroller";
+import { FastifyInstance } from "fastify";
+import { home } from "../controllers/homecontroller.js";
 
-const router: Router = express.Router();
-
-router.get("/", home);
-
-export = router;
+export default async function homeRoutes(fastify: FastifyInstance): Promise<void> {
+  fastify.get("/", home);
+}
 `.trim();
 
 const homeController = `
-import { Request, Response } from "express";
+import { FastifyRequest, FastifyReply } from "fastify";
 
-export function home(_req: Request, res: Response): void {
-  res.send("Fogoe running");
+export async function home(_req: FastifyRequest, reply: FastifyReply): Promise<void> {
+  reply.send("Fogoe running");
 }
 `.trim();
 
 const authMiddleware = `
 import jwt from "jsonwebtoken";
 
-export = jwt;
+export default jwt;
 `.trim();
 
 const helper = `
 // Helper functions placeholder
-export = {};
+export default {};
 `.trim();
 
 const envConfig = `
@@ -78,19 +79,19 @@ const databases = {
     mongodb: {
         dbConfig: `
 import mongoose from "mongoose";
-import { DATABASE_URL } from "./env";
+import { DATABASE_URL } from "./env.js";
 
 mongoose.connect(DATABASE_URL)
   .then((): void => console.log("MongoDB connected"))
   .catch((err): void => console.error("MongoDB error:", err));
 
-export = mongoose;
+export default mongoose;
 `.trim(),
         model: `
 import mongoose from "mongoose";
 
 // Import mongoose - add your schemas here
-export = mongoose;
+export default mongoose;
 `.trim()
     },
     prisma: {
@@ -99,13 +100,13 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-export = prisma;
+export default prisma;
 `.trim(),
         model: `
-import prisma from "../config/db";
+import prisma from "../config/db.js";
 
 // Import Prisma client
-export = prisma;
+export default prisma;
 `.trim(),
         schema: `
 generator client {
@@ -127,47 +128,48 @@ model User {
     mysql: {
         dbConfig: `
 import mysql from "mysql2/promise";
-import { DATABASE_URL } from "./env";
+import { DATABASE_URL } from "./env.js";
 
 const pool = mysql.createPool(DATABASE_URL);
 
 console.log("MySQL pool created");
 
-export = pool;
+export default pool;
 `.trim(),
         model: `
-import pool from "../config/db";
+import pool from "../config/db.js";
 
 // Import MySQL pool
-export = pool;
+export default pool;
 `.trim()
     },
     postgresql: {
         dbConfig: `
-import { Pool } from "pg";
-import { DATABASE_URL } from "./env";
+import pg from "pg";
+const { Pool } = pg;
+import { DATABASE_URL } from "./env.js";
 
 const pool = new Pool({ connectionString: DATABASE_URL });
 
 pool.on("connect", (): void => console.log("PostgreSQL connected"));
 
-export = pool;
+export default pool;
 `.trim(),
         model: `
-import pool from "../config/db";
+import pool from "../config/db.js";
 
 // Import PostgreSQL pool
-export = pool;
+export default pool;
 `.trim()
     },
     none: {
         dbConfig: `
 // No database selected
-export = {};
+export default {};
 `.trim(),
         model: `
 // No database selected
-export = {};
+export default {};
 `.trim()
     }
 };
@@ -179,23 +181,23 @@ const hashing = {
 import bcrypt from "bcrypt";
 
 // Import bcrypt
-export = bcrypt;
+export default bcrypt;
 `.trim(),
     argon2: `
 import argon2 from "argon2";
 
 // Import argon2
-export = argon2;
+export default argon2;
 `.trim(),
     crypto: `
 import crypto from "crypto";
 
 // Import crypto
-export = crypto;
+export default crypto;
 `.trim()
 };
 
-export default {
+module.exports = {
     server,
     app,
     homeRoute,

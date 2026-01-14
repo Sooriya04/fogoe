@@ -1,4 +1,4 @@
-// Fastify ES Module MVC TypeScript Templates
+// Express ES Module MVC TypeScript Templates
 // All templates in one file - databases + hashing included
 
 // ========== CORE TEMPLATES ==========
@@ -9,42 +9,41 @@ import "dotenv/config";
 import app from "./app.js";
 import { PORT } from "./config/env.js";
 
-try {
-  await app.listen({ port: PORT, host: "0.0.0.0" });
-  console.log(\\\`Server running on http://localhost:\\\${PORT}\\\`);
-} catch (err) {
-  console.error(err);
-  process.exit(1);
-}
+app.listen(PORT, (): void => {
+  console.log(\`Server running on http://localhost:\${PORT}\`);
+});
 `.trim();
 
 const app = `
-import Fastify, { FastifyInstance } from "fastify";
-import cors from "@fastify/cors";
+import express, { Application } from "express";
+import cors from "cors";
 import homeRoutes from "./routes/home.js";
 
-const fastify: FastifyInstance = Fastify();
+const app: Application = express();
 
-await fastify.register(cors);
-await fastify.register(homeRoutes);
+app.use(cors());
+app.use(express.json());
+app.use("/", homeRoutes);
 
-export default fastify;
+export default app;
 `.trim();
 
 const homeRoute = `
-import { FastifyInstance } from "fastify";
+import express, { Router } from "express";
 import { home } from "../controllers/homecontroller.js";
 
-export default async function homeRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get("/", home);
-}
+const router: Router = express.Router();
+
+router.get("/", home);
+
+export default router;
 `.trim();
 
 const homeController = `
-import { FastifyRequest, FastifyReply } from "fastify";
+import { Request, Response } from "express";
 
-export async function home(_req: FastifyRequest, reply: FastifyReply): Promise<void> {
-  reply.send("Fogoe running");
+export function home(_req: Request, res: Response): void {
+  res.send("Fogoe running");
 }
 `.trim();
 
@@ -197,7 +196,7 @@ export default crypto;
 `.trim()
 };
 
-export default {
+module.exports = {
     server,
     app,
     homeRoute,

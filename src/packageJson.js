@@ -1,12 +1,19 @@
 function buildPackageJson(meta) {
+  const isTypeScript = meta.language === "typescript";
+  const ext = isTypeScript ? "ts" : "js";
+  
   return {
     name: meta.name,
     version: meta.version,
     description: meta.description,
-    main: "src/server.js",
+    main: `src/server.${ext}`,
     scripts: {
-      dev: "nodemon src/server.js",
-      start: "node src/server.js"
+      dev: isTypeScript 
+        ? `tsx watch src/server.${ext}`
+        : `nodemon src/server.${ext}`,
+      start: isTypeScript
+        ? `tsx src/server.${ext}`
+        : `node src/server.${ext}`
     },
     author: meta.author,
     license: meta.license,
