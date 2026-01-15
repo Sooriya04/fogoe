@@ -116,9 +116,9 @@ const chalk = require("chalk");
     await initGit();
   }
 
+  // Show completion message and instructions after git process
   console.log("\n");
   console.log(chalk.green("Fogoe project ready"));
-  console.log(chalk.cyan("npm run dev"));
   
   // Prisma-specific instructions
   if (database === "prisma") {
@@ -126,5 +126,8 @@ const chalk = require("chalk");
     console.log(chalk.yellow("   1. Update DATABASE_URL in .env"));
     console.log(chalk.yellow("   2. Run: npx prisma generate"));
     console.log(chalk.yellow("   3. Run: npx prisma db push"));
+    console.log(chalk.yellow("   4. Then run: npm run dev\n"));
+  } else {
+    console.log(chalk.cyan("\nnpm run dev"));
   }
 })();
