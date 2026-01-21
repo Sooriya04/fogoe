@@ -96,6 +96,8 @@ const chalk = require("chalk");
     )
   );
 
+
+
   // Scaffold the project
   scaffold(language, runtime, type, architecture, database, hashing, useJwt);
 
@@ -111,6 +113,22 @@ const chalk = require("chalk");
     "no"
   ]);
   
+  // Write fogoe.config.json with project defaults
+  const fogoeConfig = {
+    defaults: {
+      language: language === "javascript" ? "js" : "ts",
+      arch: architecture,
+      runtime: runtime,
+      type: type === "commonjs" ? "cjs" : "esm",
+      git: gitChoice === "yes"
+    }
+  };
+  
+  fs.writeFileSync(
+    "fogoe.config.json",
+    JSON.stringify(fogoeConfig, null, 2)
+  );
+
   if (gitChoice === "yes") {
     const { initGit } = require("./git");
     await initGit();
