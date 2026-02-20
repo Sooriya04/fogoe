@@ -23,14 +23,17 @@ Fogoe generates only the essentials — a server, a single route, and a working 
 Run Fogoe directly without installation:
 
 ```bash
-npx fogoe
+npx fogoe          # Interactive initializer
+npx fogoe --help   # Show available commands
 ```
 
 Optionally, install globally:
 
 ```bash
 npm install -g fogoe
-fogoe
+fogoe              # Interactive initializer
+fogoe init         # Initialize Git in existing project
+fogoe push "msg"   # Push changes
 ```
 
 Local installation is not required.
@@ -38,6 +41,15 @@ Local installation is not required.
 ## What Fogoe Generates
 
 Fogoe generates a working backend project with server setup and one route. The generated code is intentionally minimal and extensible, designed to reach a "server is running" state immediately. You control what happens next.
+
+## Commands
+
+Fogoe provides specific commands to manage your project lifecycle:
+
+- **`fogoe`**: Launches the interactive setup wizard to scaffold a new project.
+- **`fogoe init`**: Initializes a Git repository in an existing project and updates `fogoe.config.json` to enable Git features.
+- **`fogoe push "<message>"`**: A shortcut to stage (`git add .`), commit (`git commit -m`), and push (`git push`) your changes to the remote repository.
+- **`fogoe --help`**: Displays the usage guide and command list.
 
 ## Architecture Options
 
@@ -108,20 +120,21 @@ Fogoe fully supports TypeScript with automatic configuration:
 
 ## Git Integration
 
-Optionally initialize a Git repository and push to GitHub during project setup:
+Fogoe provides a state-driven Git flow to manage your repository:
 
 - **Automatic .gitignore:** Configured with `node_modules/` and `.env`
 - **Initial Commit:** All project files committed automatically
 - **GitHub Push:** Connects to your repository and pushes the first commit
-- **Visual Feedback:** Progress shown with checkmarks for each step
-- **Completely Optional:** Skip if you prefer manual Git setup
+- **State Validation:** `fogoe push` validates the Git state from `fogoe.config.json` before executing.
+- **Initialization Shortcut:** `fogoe init` handles both repository setup and configuration state updates.
 
 ### Git Setup Flow:
 
-1. Select "yes" when prompted "Initialize Git repository?"
+1. Select "yes" when prompted "Initialize Git repository?" during setup (or run `fogoe init` later).
 2. Enter branch name (default: `main`)
 3. Provide your GitHub repository URL
 4. Fogoe handles the rest: init → add → commit → push
+5. Use `fogoe push "your message"` for all subsequent updates.
 
 ## Non-goals
 
