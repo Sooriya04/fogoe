@@ -4,7 +4,7 @@
   "description": "Open-source CLI for zero-friction Node.js backend initialization with TypeScript support.",
   "author": "Sooriya",
   "homepage": "https://sooriya04.github.io/fogoe-site/",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "type": "commonjs",
   "bin": {
     "fogoe": "./bin/cli.js"
