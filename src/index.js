@@ -101,6 +101,10 @@ const chalk = require('chalk');
   // Architecture selection
   const architecture = await select('Select architecture', ['minimal', 'mvc']);
 
+  // Tooling selection
+  const testing = await select('Include testing suite (Vitest)?', ['yes', 'no']);
+  const linting = await select('Include linting & formatting (ESLint + Prettier)?', ['yes', 'no']);
+
   // MVC-specific options
   let database = 'none';
   let hashing = 'bcrypt';
@@ -140,6 +144,8 @@ const chalk = require('chalk');
         license,
         type,
         language,
+        testing: testing === 'yes',
+        linting: linting === 'yes',
       }),
       null,
       2,
@@ -147,11 +153,11 @@ const chalk = require('chalk');
   );
 
   // Scaffold the project
-  scaffold(language, runtime, type, architecture, database, hashing, useJwt);
+  scaffold(language, runtime, type, architecture, database, hashing, useJwt, testing === 'yes', linting === 'yes');
 
   // Install dependencies
   console.log('\nInstalling dependencies...\n');
-  install(language, runtime, architecture, database, hashing, useJwt);
+  install(language, runtime, architecture, database, hashing, useJwt, testing === 'yes', linting === 'yes');
 
   console.log('\n');
 

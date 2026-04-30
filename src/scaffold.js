@@ -146,14 +146,68 @@ function scaffoldMVC(language, runtime, type, database, hashing, useJwt) {
 }
 
 /**
+ * Scaffold additional tooling (Testing, Linting)
+ */
+function scaffoldTooling(language, testing, linting, type) {
+  const isTypeScript = language === "typescript";
+  const ext = isTypeScript ? "ts" : "js";
+  const isCommonJS = type === "commonjs";
+
+  if (testing) {
+    fs.mkdirSync("src/__tests__", { recursive: true });
+    let testContent = "";
+    
+    if (isTypeScript || !isCommonJS) {
+      testContent = `import { describe, it, expect } from 'vitest';\n\ndescribe('Initial Test', () => {\n  it('should pass', () => {\n    expect(1 + 1).toBe(2);\n  });\n});`;
+    } else {
+      testContent = `const { describe, it, expect } = require('vitest');\n\ndescribe('Initial Test', () => {\n  it('should pass', () => {\n    expect(1 + 1).toBe(2);\n  });\n});`;
+    }
+    
+    fs.writeFileSync(`src/__tests__/app.test.${ext}`, testContent);
+  }
+
+  if (linting) {
+    const eslintConfig = {
+      env: {
+        node: true,
+        es2021: true
+      },
+      extends: ["eslint:recommended", "prettier"],
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "module"
+      },
+      rules: {}
+    };
+
+    if (isTypeScript) {
+      eslintConfig.parser = "@typescript-eslint/parser";
+      eslintConfig.plugins = ["@typescript-eslint"];
+      eslintConfig.extends.push("plugin:@typescript-eslint/recommended");
+    }
+
+    fs.writeFileSync(".eslintrc.json", JSON.stringify(eslintConfig, null, 2));
+    fs.writeFileSync(".prettierrc", JSON.stringify({
+      semi: true,
+      singleQuote: true,
+      tabWidth: 2,
+      trailingComma: "es5"
+    }, null, 2));
+  }
+}
+
+/**
  * Main scaffold function
  */
-function scaffold(language, runtime, type, architecture, database = "none", hashing = "bcrypt", useJwt = false) {
+function scaffold(language, runtime, type, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false) {
   if (architecture === "mvc") {
     scaffoldMVC(language, runtime, type, database, hashing, useJwt);
   } else {
     scaffoldMinimal(language, runtime, type);
   }
+
+  // Always scaffold tooling if selected
+  scaffoldTooling(language, testing, linting, type);
 }
 
 module.exports = { scaffold };

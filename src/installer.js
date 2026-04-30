@@ -35,7 +35,7 @@ const hashTypePackages = {
 /**
  * Install dependencies based on language, runtime, architecture, database, hashing, and JWT
  */
-function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false) {
+function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false) {
   // Base packages: runtime + nodemon + cors + dotenv
   let packages = `${runtime} nodemon cors dotenv`;
 
@@ -93,6 +93,18 @@ function install(language, runtime, architecture, database = "none", hashing = "
       if (useJwt) {
         devPackages += " @types/jsonwebtoken";
       }
+    }
+  }
+
+  // Tooling packages
+  if (testing) {
+    devPackages += " vitest";
+  }
+
+  if (linting) {
+    devPackages += " eslint prettier eslint-config-prettier";
+    if (language === "typescript") {
+      devPackages += " @typescript-eslint/parser @typescript-eslint/eslint-plugin";
     }
   }
 

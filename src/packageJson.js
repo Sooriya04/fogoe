@@ -13,7 +13,12 @@ function buildPackageJson(meta) {
         : `nodemon src/server.${ext}`,
       start: isTypeScript
         ? `tsx src/server.${ext}`
-        : `node src/server.${ext}`
+        : `node src/server.${ext}`,
+      ...(meta.testing && { test: "vitest" }),
+      ...(meta.linting && { 
+        lint: "eslint .",
+        format: "prettier --write ."
+      })
     },
     author: meta.author,
     license: meta.license,
