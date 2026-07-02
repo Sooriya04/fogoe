@@ -186,6 +186,48 @@
     </div>
   </section>
 
+  <!-- Performance / Benchmarks -->
+  <section class="section border-top" id="benchmarks">
+    <div class="container small-container">
+      <div class="section-header">
+        <h2 class="section-title">Framework Performance</h2>
+        <p class="section-subtitle">Fogoe scaffolds standard, zero-dependency servers. Choose the runtime framework that matches your performance targets.</p>
+      </div>
+
+      <div class="benchmark-chart">
+        <div class="chart-row">
+          <span class="chart-label">Hono</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar hono" style="width: 100%;"></div>
+          </div>
+          <span class="chart-value">102k req/s</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Fastify</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar fastify" style="width: 73%;"></div>
+          </div>
+          <span class="chart-value">75k req/s</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Koa</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar koa" style="width: 44%;"></div>
+          </div>
+          <span class="chart-value">45k req/s</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Express</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar express" style="width: 15%;"></div>
+          </div>
+          <span class="chart-value">15k req/s</span>
+        </div>
+      </div>
+      <p class="chart-note">Hello-world benchmark comparison running on Node.js v20. Real world performance varies by environment.</p>
+    </div>
+  </section>
+
   <!-- Commands Reference -->
   <section class="section border-top" id="commands">
     <div class="container">

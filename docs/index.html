@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Fogoe — Minimalist Node.js Backend Scaffolder</title>
-  <meta name="description" content="A fast, zero-dependency CLI to scaffold minimalist and MVC Node.js servers using Hono, Koa, Express, or Fastify. Built-in TypeScript & ESM support.">
+  <meta name="description"
+    content="A fast, zero-dependency CLI to scaffold minimalist and MVC Node.js servers using Hono, Koa, Express, or Fastify. Built-in TypeScript & ESM support.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script type="module" crossorigin src="/fogoe/assets/index-Dwh8Mhsb.js"></script>
-  <link rel="stylesheet" crossorigin href="/fogoe/assets/index-B02fNSG2.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <script type="module" crossorigin src="/fogoe/assets/index-DPw_1368.js"></script>
+  <link rel="stylesheet" crossorigin href="/fogoe/assets/index-j8tarHqA.css">
 </head>
+
 <body>
 
   <!-- Header -->
   <header class="header">
     <div class="container nav-container">
       <a href="#" class="logo">
-        <span class="logo-symbol">⚡</span>
         <span class="logo-text">fogoe</span>
       </a>
       <nav class="nav">
@@ -29,7 +33,10 @@
       <div class="nav-actions">
         <a href="https://github.com/Sooriya04/fogoe" target="_blank" class="nav-btn">
           <span>GitHub</span>
-          <svg class="icon-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3.5 2H10V8.5M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="icon-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M3.5 2H10V8.5M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+          </svg>
         </a>
       </div>
     </div>
@@ -41,7 +48,7 @@
       <h1 class="hero-title">
         Minimalist Backend Scaffolding <br>for Node.js
       </h1>
-      
+
       <p class="hero-subtitle">
         Scaffold Express, Fastify, Hono, or Koa servers in seconds. <br>
         Pre-configured with TypeScript, ES Modules, environment handling, and optional databases.
@@ -51,7 +58,11 @@
         <div class="command-box" onclick="copyCommand('npx fogoe')">
           <span class="prompt-sym">$</span>
           <code class="command-text">npx fogoe</code>
-          <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
         </div>
         <div class="install-line">
           Or run globally: <code>npm install -g fogoe</code>
@@ -65,7 +76,7 @@
     <div class="container small-container">
       <h2 class="section-title">Get Started in Seconds</h2>
       <p class="section-subtitle">No boilerplate configuration or dependency headaches.</p>
-      
+
       <div class="guide-steps">
         <div class="guide-step">
           <div class="step-meta">Step 1</div>
@@ -101,7 +112,8 @@
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">Interactive Scaffold Preview</h2>
-        <p class="section-subtitle">Pick options below to view the generated directory tree and entrypoint code in real-time.</p>
+        <p class="section-subtitle">Pick options below to view the generated directory tree and entrypoint code in
+          real-time.</p>
       </div>
 
       <div class="preview-layout">
@@ -175,12 +187,55 @@
     </div>
   </section>
 
+  <!-- Performance / Benchmarks -->
+  <section class="section border-top" id="benchmarks">
+    <div class="container small-container">
+      <div class="section-header">
+        <h2 class="section-title">Framework Performance</h2>
+        <p class="section-subtitle">Fogoe scaffolds standard, zero-dependency servers. Choose the runtime framework that matches your performance targets.</p>
+      </div>
+
+      <div class="benchmark-chart">
+        <div class="chart-row">
+          <span class="chart-label">Hono</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar hono" style="width: 100%;"></div>
+          </div>
+          <span class="chart-value">102k req/s</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Fastify</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar fastify" style="width: 73%;"></div>
+          </div>
+          <span class="chart-value">75k req/s</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Koa</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar koa" style="width: 44%;"></div>
+          </div>
+          <span class="chart-value">45k req/s</span>
+        </div>
+        <div class="chart-row">
+          <span class="chart-label">Express</span>
+          <div class="chart-bar-container">
+            <div class="chart-bar express" style="width: 15%;"></div>
+          </div>
+          <span class="chart-value">15k req/s</span>
+        </div>
+      </div>
+      <p class="chart-note">Hello-world benchmark comparison running on Node.js v20. Real world performance varies by environment.</p>
+    </div>
+  </section>
+
   <!-- Commands Reference -->
   <section class="section border-top" id="commands">
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">CLI Commands</h2>
-        <p class="section-subtitle">Manage project configurations, dependencies, and file scaffolding with zero friction.</p>
+        <p class="section-subtitle">Manage project configurations, dependencies, and file scaffolding with zero
+          friction.</p>
       </div>
 
       <div class="tbl-wrap">
@@ -206,11 +261,13 @@
             </tr>
             <tr>
               <td><code>fogoe generate &lt;type&gt; &lt;name&gt;</code></td>
-              <td>Scaffolds a route, controller, or model matching framework, database, and language configurations.</td>
+              <td>Scaffolds a route, controller, or model matching framework, database, and language configurations.
+              </td>
             </tr>
             <tr>
               <td><code>fogoe update</code></td>
-              <td>Upgrades project dependencies to their latest compatible releases using the detected package manager.</td>
+              <td>Upgrades project dependencies to their latest compatible releases using the detected package manager.
+              </td>
             </tr>
           </tbody>
         </table>
@@ -313,4 +370,5 @@
   </div>
 
 </body>
+
 </html>
