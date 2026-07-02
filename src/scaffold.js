@@ -10,6 +10,14 @@ const minimalTemplates = {
   fastify: {
     commonjs: require("./templates/javascript/fastify/commonjs"),
     module: require("./templates/javascript/fastify/module")
+  },
+  hono: {
+    commonjs: require("./templates/javascript/hono/commonjs"),
+    module: require("./templates/javascript/hono/module")
+  },
+  koa: {
+    commonjs: require("./templates/javascript/koa/commonjs"),
+    module: require("./templates/javascript/koa/module")
   }
 };
 
@@ -22,6 +30,14 @@ const minimalTemplatesTS = {
   fastify: {
     commonjs: require("./templates/typescript/fastify/commonjs"),
     module: require("./templates/typescript/fastify/module")
+  },
+  hono: {
+    commonjs: require("./templates/typescript/hono/commonjs"),
+    module: require("./templates/typescript/hono/module")
+  },
+  koa: {
+    commonjs: require("./templates/typescript/koa/commonjs"),
+    module: require("./templates/typescript/koa/module")
   }
 };
 
@@ -34,6 +50,14 @@ const mvcTemplates = {
   fastify: {
     commonjs: require("./templates/javascript/fastify/mvc-commonjs"),
     module: require("./templates/javascript/fastify/mvc-module")
+  },
+  hono: {
+    commonjs: require("./templates/javascript/hono/mvc-commonjs"),
+    module: require("./templates/javascript/hono/mvc-module")
+  },
+  koa: {
+    commonjs: require("./templates/javascript/koa/mvc-commonjs"),
+    module: require("./templates/javascript/koa/mvc-module")
   }
 };
 
@@ -46,6 +70,14 @@ const mvcTemplatesTS = {
   fastify: {
     commonjs: require("./templates/typescript/fastify/mvc-commonjs"),
     module: require("./templates/typescript/fastify/mvc-module")
+  },
+  hono: {
+    commonjs: require("./templates/typescript/hono/mvc-commonjs"),
+    module: require("./templates/typescript/hono/mvc-module")
+  },
+  koa: {
+    commonjs: require("./templates/typescript/koa/mvc-commonjs"),
+    module: require("./templates/typescript/koa/mvc-module")
   }
 };
 

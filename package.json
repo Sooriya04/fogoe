@@ -10,7 +10,7 @@
     "fogoe": "./bin/cli.js"
   },
   "scripts": {
-    "test": "echo \"No tests specified\" && exit 0"
+    "test": "node --test test/**/*.test.js"
   },
   "dependencies": {
     "chalk": "^4.1.2",
