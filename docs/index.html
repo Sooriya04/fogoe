@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fogoe — Minimalist Node.js Backend Scaffolder</title>
+  <meta name="description" content="A fast, zero-dependency CLI to scaffold minimalist and MVC Node.js servers using Hono, Koa, Express, or Fastify. Built-in TypeScript & ESM support.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script type="module" crossorigin src="/fogoe/assets/index-Dwh8Mhsb.js"></script>
+  <link rel="stylesheet" crossorigin href="/fogoe/assets/index-B02fNSG2.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container nav-container">
+      <a href="#" class="logo">
+        <span class="logo-symbol">⚡</span>
+        <span class="logo-text">fogoe</span>
+      </a>
+      <nav class="nav">
+        <a href="#quickstart" class="nav-link">Quickstart</a>
+        <a href="#configurator" class="nav-link">Interactive Preview</a>
+        <a href="#commands" class="nav-link">Commands</a>
+        <a href="#plugins" class="nav-link">Plugins</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="https://github.com/Sooriya04/fogoe" target="_blank" class="nav-btn">
+          <span>GitHub</span>
+          <svg class="icon-arrow" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3.5 2H10V8.5M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-container">
+      <h1 class="hero-title">
+        Minimalist Backend Scaffolding <br>for Node.js
+      </h1>
+      
+      <p class="hero-subtitle">
+        Scaffold Express, Fastify, Hono, or Koa servers in seconds. <br>
+        Pre-configured with TypeScript, ES Modules, environment handling, and optional databases.
+      </p>
+
+      <div class="hero-actions">
+        <div class="command-box" onclick="copyCommand('npx fogoe')">
+          <span class="prompt-sym">$</span>
+          <code class="command-text">npx fogoe</code>
+          <svg class="copy-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </div>
+        <div class="install-line">
+          Or run globally: <code>npm install -g fogoe</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Start -->
+  <section class="section" id="quickstart">
+    <div class="container small-container">
+      <h2 class="section-title">Get Started in Seconds</h2>
+      <p class="section-subtitle">No boilerplate configuration or dependency headaches.</p>
+      
+      <div class="guide-steps">
+        <div class="guide-step">
+          <div class="step-meta">Step 1</div>
+          <div class="step-content">
+            <h3>Scaffold the Project</h3>
+            <p>Run the initialization wizard in any directory to select your custom backend stack.</p>
+            <pre class="code-block"><code>npx fogoe</code></pre>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="step-meta">Step 2</div>
+          <div class="step-content">
+            <h3>Start the Server</h3>
+            <p>Navigate into the directory and launch the pre-configured live-reloading dev environment.</p>
+            <pre class="code-block"><code>cd my-app && npm run dev</code></pre>
+          </div>
+        </div>
+
+        <div class="guide-step">
+          <div class="step-meta">Step 3</div>
+          <div class="step-content">
+            <h3>Extend Natively</h3>
+            <p>Fogoe stays out of your way. Add routes, controllers, or databases as your project dictates.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Configuration Preview -->
+  <section class="section border-top" id="configurator">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Interactive Scaffold Preview</h2>
+        <p class="section-subtitle">Pick options below to view the generated directory tree and entrypoint code in real-time.</p>
+      </div>
+
+      <div class="preview-layout">
+        <!-- Controls -->
+        <div class="preview-sidebar">
+          <div class="config-group">
+            <span class="config-label">Language</span>
+            <div class="config-options" data-group="language">
+              <button class="config-btn active" data-val="typescript">TypeScript</button>
+              <button class="config-btn" data-val="javascript">JavaScript</button>
+            </div>
+          </div>
+
+          <div class="config-group">
+            <span class="config-label">Web Framework</span>
+            <div class="config-options" data-group="runtime">
+              <button class="config-btn active" data-val="hono">Hono</button>
+              <button class="config-btn" data-val="express">Express</button>
+              <button class="config-btn" data-val="fastify">Fastify</button>
+              <button class="config-btn" data-val="koa">Koa</button>
+            </div>
+          </div>
+
+          <div class="config-group">
+            <span class="config-label">Architecture</span>
+            <div class="config-options" data-group="arch">
+              <button class="config-btn active" data-val="mvc">MVC Structure</button>
+              <button class="config-btn" data-val="minimal">Minimal Single File</button>
+            </div>
+          </div>
+
+          <div class="config-group">
+            <span class="config-label">Module Standard</span>
+            <div class="config-options" data-group="type">
+              <button class="config-btn active" data-val="esm">ES Modules</button>
+              <button class="config-btn" data-val="cjs">CommonJS</button>
+            </div>
+          </div>
+
+          <div class="config-group">
+            <span class="config-label">Database Option</span>
+            <div class="config-options" data-group="database">
+              <button class="config-btn active" data-val="prisma">Prisma</button>
+              <button class="config-btn" data-val="mongodb">MongoDB</button>
+              <button class="config-btn" data-val="postgresql">PostgreSQL</button>
+              <button class="config-btn" data-val="none">None</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Previews -->
+        <div class="preview-display">
+          <div class="display-tabs">
+            <button class="display-tab active" data-tab="tree">Directory Structure</button>
+            <button class="display-tab" data-tab="code">server.ts</button>
+          </div>
+          <div class="display-body">
+            <div class="display-pane active" id="pane-tree">
+              <div class="tree-container" id="tree-output"></div>
+            </div>
+            <div class="display-pane" id="pane-code">
+              <div class="pane-header">
+                <span class="pane-title" id="file-title">src/server.ts</span>
+                <button class="copy-code-btn" onclick="copyCodeContent()">Copy Code</button>
+              </div>
+              <pre class="code-container"><code id="code-output"></code></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Commands Reference -->
+  <section class="section border-top" id="commands">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">CLI Commands</h2>
+        <p class="section-subtitle">Manage project configurations, dependencies, and file scaffolding with zero friction.</p>
+      </div>
+
+      <div class="tbl-wrap">
+        <table class="cmd-table">
+          <thead>
+            <tr>
+              <th>Command</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>npx fogoe</code></td>
+              <td>Starts the wizard to initialize a new backend in an empty folder.</td>
+            </tr>
+            <tr>
+              <td><code>fogoe init</code></td>
+              <td>Initializes git, creates <code>.gitignore</code>, binds remote URL and pushes first commit.</td>
+            </tr>
+            <tr>
+              <td><code>fogoe status</code></td>
+              <td>Queries config and directory state to display active runtime, databases, addons, and git flags.</td>
+            </tr>
+            <tr>
+              <td><code>fogoe generate &lt;type&gt; &lt;name&gt;</code></td>
+              <td>Scaffolds a route, controller, or model matching framework, database, and language configurations.</td>
+            </tr>
+            <tr>
+              <td><code>fogoe update</code></td>
+              <td>Upgrades project dependencies to their latest compatible releases using the detected package manager.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- Add-ons / Plugins -->
+  <section class="section border-top" id="plugins">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Add-on Plugins</h2>
+        <p class="section-subtitle">Need additional utilities? Scaffold complete plugins inside existing projects.</p>
+      </div>
+
+      <div class="plugins-list">
+        <div class="plugin-item" onclick="copyCommand('fogoe add redis')">
+          <div class="plugin-info">
+            <h3>Redis</h3>
+            <p>Configures a pre-connected ioredis client config and env variable helpers.</p>
+          </div>
+          <code class="plugin-command">fogoe add redis</code>
+        </div>
+
+        <div class="plugin-item" onclick="copyCommand('fogoe add stripe')">
+          <div class="plugin-info">
+            <h3>Stripe</h3>
+            <p>Sets up billing templates and imports the Stripe SDK configuration wrapper.</p>
+          </div>
+          <code class="plugin-command">fogoe add stripe</code>
+        </div>
+
+        <div class="plugin-item" onclick="copyCommand('fogoe add zod')">
+          <div class="plugin-info">
+            <h3>Zod Validation</h3>
+            <p>Scaffolds request validation frameworks and error-catching middleware.</p>
+          </div>
+          <code class="plugin-command">fogoe add zod</code>
+        </div>
+
+        <div class="plugin-item" onclick="copyCommand('fogoe add mailer')">
+          <div class="plugin-info">
+            <h3>Nodemailer</h3>
+            <p>Generates transport configs, authentication keys, and email templates.</p>
+          </div>
+          <code class="plugin-command">fogoe add mailer</code>
+        </div>
+
+        <div class="plugin-item" onclick="copyCommand('fogoe add ratelimit')">
+          <div class="plugin-info">
+            <h3>Rate Limiter</h3>
+            <p>Configures middleware limits to shield routes from denial-of-service traffic.</p>
+          </div>
+          <code class="plugin-command">fogoe add ratelimit</code>
+        </div>
+
+        <div class="plugin-item" onclick="copyCommand('fogoe add swagger')">
+          <div class="plugin-info">
+            <h3>Swagger Docs</h3>
+            <p>Injects UI dashboards and configures routes to serve interactive Open-API specifications.</p>
+          </div>
+          <code class="plugin-command">fogoe add swagger</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section border-top cta-section">
+    <div class="container small-container">
+      <h2>Build Better Backends, Faster.</h2>
+      <p>Clean code. Zero magic wrappers. Full extensibility.</p>
+      <div class="cta-actions">
+        <button class="cta-btn primary" onclick="copyCommand('npx fogoe')">
+          <span>npx fogoe</span>
+        </button>
+        <a href="https://github.com/Sooriya04/fogoe" target="_blank" class="cta-btn secondary">
+          <span>View Github</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-container">
+      <div class="footer-left">
+        <span class="footer-logo">⚡ fogoe</span>
+        <p>A minimalist backend scaffolding tool for Node.js developer productivity.</p>
+      </div>
+      <div class="footer-right">
+        <p>Apache License 2.0 • Created by <a href="https://github.com/Sooriya04" target="_blank">Sooriya B</a></p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div class="toast-alert" id="toast">
+    <span class="toast-message" id="toast-text">Command copied!</span>
+  </div>
+
+</body>
+</html>

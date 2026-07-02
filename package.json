@@ -10,7 +10,9 @@
     "fogoe": "./bin/cli.js"
   },
   "scripts": {
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test test/**/*.test.js",
+    "site:dev": "cd site && npm run dev",
+    "site:build": "cd site && npm install && npm run build"
   },
   "dependencies": {
     "chalk": "^4.1.2",
