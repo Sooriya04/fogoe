@@ -33,6 +33,37 @@ const hashTypePackages = {
 };
 
 /**
+ * Detect which package manager is being used or available.
+ */
+function getPackageManager() {
+  const agent = process.env.npm_config_user_agent || "";
+  if (agent.startsWith("bun")) return "bun";
+  if (agent.startsWith("pnpm")) return "pnpm";
+  if (agent.startsWith("yarn")) return "yarn";
+
+  const fs = require("fs");
+  if (fs.existsSync("bun.lockb") || fs.existsSync("bun.lock")) return "bun";
+  if (fs.existsSync("pnpm-lock.yaml")) return "pnpm";
+  if (fs.existsSync("yarn.lock")) return "yarn";
+
+  const { execSync } = require("child_process");
+  try {
+    execSync("bun --version", { stdio: "ignore" });
+    return "bun";
+  } catch {}
+  try {
+    execSync("pnpm --version", { stdio: "ignore" });
+    return "pnpm";
+  } catch {}
+  try {
+    execSync("yarn --version", { stdio: "ignore" });
+    return "yarn";
+  } catch {}
+
+  return "npm";
+}
+
+/**
  * Install dependencies based on language, runtime, architecture, database, hashing, and JWT
  */
 function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false) {
@@ -42,6 +73,10 @@ function install(language, runtime, architecture, database = "none", hashing = "
   // For Fastify, use @fastify/cors instead of cors
   if (runtime === "fastify") {
     packages = `${runtime} nodemon @fastify/cors dotenv`;
+  } else if (runtime === "hono") {
+    packages = `hono @hono/node-server nodemon dotenv`;
+  } else if (runtime === "koa") {
+    packages = `koa @koa/router @koa/cors @koa/bodyparser nodemon dotenv`;
   }
 
   // MVC architecture needs additional packages
@@ -76,6 +111,9 @@ function install(language, runtime, architecture, database = "none", hashing = "
     if (runtime === "fastify") {
       devPackages += " @fastify/type-provider-typebox";
     }
+    if (runtime === "koa") {
+      devPackages += " @types/koa @types/koa__router @types/koa__cors";
+    }
 
     // MVC architecture type packages
     if (architecture === "mvc") {
@@ -108,13 +146,35 @@ function install(language, runtime, architecture, database = "none", hashing = "
     }
   }
 
-  // Single npm install command
-  if (devPackages) {
-    // Install both regular and dev dependencies in one command
-    execSync(`npm install --save ${packages} --save-dev ${devPackages}`, { stdio: "inherit" });
-  } else {
-    execSync(`npm install ${packages}`, { stdio: "inherit" });
+  const pm = getPackageManager();
+  console.log(`\nUsing package manager: ${pm}`);
+
+  if (pm === "npm") {
+    if (devPackages) {
+      execSync(`npm install --save ${packages} --save-dev ${devPackages}`, { stdio: "inherit" });
+    } else {
+      execSync(`npm install ${packages}`, { stdio: "inherit" });
+    }
+  } else if (pm === "bun") {
+    if (devPackages) {
+      execSync(`bun add ${packages} && bun add -d ${devPackages}`, { stdio: "inherit" });
+    } else {
+      execSync(`bun add ${packages}`, { stdio: "inherit" });
+    }
+  } else if (pm === "pnpm") {
+    if (devPackages) {
+      execSync(`pnpm add ${packages} && pnpm add -D ${devPackages}`, { stdio: "inherit" });
+    } else {
+      execSync(`pnpm add ${packages}`, { stdio: "inherit" });
+    }
+  } else if (pm === "yarn") {
+    if (devPackages) {
+      execSync(`yarn add ${packages} && yarn add -D ${devPackages}`, { stdio: "inherit" });
+    } else {
+      execSync(`yarn add ${packages}`, { stdio: "inherit" });
+    }
   }
 }
 
-module.exports = { install };
+module.exports = { install, getPackageManager };
+

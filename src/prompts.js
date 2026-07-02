@@ -1,11 +1,12 @@
 const prompts = require("prompts");
 
-async function input(message, initial = "") {
+async function input(message, initial = "", validate = null) {
   const { value } = await prompts({
     type: "text",
     name: "value",
     message,
-    initial
+    initial,
+    validate: validate || (() => true)
   });
   return value;
 }
