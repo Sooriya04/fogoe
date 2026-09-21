@@ -259,3 +259,20 @@ test('Generator: .gitignore is always present with dist and .env', () => {
   assert.ok(gitignore.includes('.env'));
   assert.ok(gitignore.includes('dist/'));
 });
+
+test('Generator: vitest template is copied as app.test.ts without .tpl extension', () => {
+  const target = path.join(TEST_OUTPUT_DIR, 'vitest-check');
+  composeProject({
+    targetDir: target,
+    name: 'vitest-check',
+    language: 'typescript',
+    runtime: 'express',
+    type: 'module',
+    architecture: 'minimal',
+    testing: true,
+  });
+
+  const testFile = path.join(target, 'src/__tests__/app.test.ts');
+  assert.ok(fs.existsSync(testFile), 'app.test.ts should exist');
+  assert.ok(!fs.existsSync(path.join(target, 'src/__tests__/app.test.ts.tpl')), '.tpl should be stripped');
+});

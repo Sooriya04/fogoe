@@ -15,7 +15,8 @@ function copyTemplateDir(srcDir, destDir, vars = {}) {
 
   for (const entry of entries) {
     const srcPath = path.join(srcDir, entry.name);
-    const destPath = path.join(destDir, entry.name);
+    const targetName = entry.name.endsWith('.tpl') ? entry.name.slice(0, -4) : entry.name;
+    const destPath = path.join(destDir, targetName);
 
     if (entry.isDirectory()) {
       fs.mkdirSync(destPath, { recursive: true });

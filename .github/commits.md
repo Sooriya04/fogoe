@@ -25,3 +25,13 @@ Refactored Fogoe into a scalable, production-grade CLI generator modeled after i
 9. **Added SQLite Database Provider:** Added out-of-the-box support for SQLite (`better-sqlite3`) across all runtimes.
 10. **Enhanced CLI Usability:** Added support for directory arguments (`fogoe create <name>` and `fogoe [name]`), escaped commit messages in `fogoe push`, and handled `Ctrl+C` cleanly without unhandled rejections.
 11. **Comprehensive Cross-Platform CI/CD:** Added `.github/workflows/ci.yml` testing Linux, macOS, and Windows across Node.js 18, 20, and 22, along with an expanded test suite of 14 passing automated tests.
+
+
+## ISSUE 19: Fix Cross-Platform Test Runner for CI/CD Matrix
+Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
+
+1. **Portable Native Test Discovery:** Replaced the unexpanded glob pattern `"node --test test/**/*.test.js"` with `"node --test"` in `package.json`. On Windows (cmd/PowerShell) and non-globstar shells, globs were received as literal string paths (`Could not find test/**/*.test.js`), breaking the test job. Using `node --test` lets Node's native test runner discover test files automatically across all platforms and operating systems.
+2. **Template File Isolation:** Renamed Vitest template files in `templates/tooling/vitest/` to `.tpl` extension (`app.test.js.tpl` / `app.test.ts.tpl`) so that Node's root test runner does not mistakenly attempt to execute scaffold template files as project test suites.
+3. **Template Stripping in Composer:** Updated `src/composer.js` (`copyTemplateDir`) to automatically strip `.tpl` extensions upon file copy, preserving exact generated file names in scaffolded user projects.
+4. **CI Matrix Green:** All 15 unit tests pass deterministically across Node 18, 20, and 22 on Ubuntu, macOS, and Windows.
+
