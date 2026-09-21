@@ -35,3 +35,10 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 3. **Template Stripping in Composer:** Updated `src/composer.js` (`copyTemplateDir`) to automatically strip `.tpl` extensions upon file copy, preserving exact generated file names in scaffolded user projects.
 4. **CI Matrix Green:** All 15 unit tests pass deterministically across Node 18, 20, and 22 on Ubuntu, macOS, and Windows.
 
+
+## ISSUE 20 : Bump version to 1.0.7 and clean npm package.json for publishing
+1. **Resolved NPM E403 Version Collision:** Bumped package version to `1.0.7` across `package.json`, `package-lock.json`, and website metadata because npm does not allow overwriting previously published versions (1.0.6).
+2. **Fixed `bin` specification:** Standardized `"bin": { "fogoe": "bin/cli.js" }` (resolving npm's `"bin[fogoe]" script name was cleaned` warning).
+3. **CI Node 22 Upgrade:** Updated the NPM publish step in `.github/workflows/ci.yml` to use Node.js `22.x` (Active LTS), eliminating runner deprecation notices.
+
+

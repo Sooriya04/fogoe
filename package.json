@@ -1,13 +1,13 @@
 {
   "name": "fogoe",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Open-source CLI for zero-friction Node.js backend initialization with TypeScript support.",
   "author": "Sooriya",
   "homepage": "https://sooriya04.github.io/fogoe-site/",
   "license": "Apache-2.0",
   "type": "commonjs",
   "bin": {
-    "fogoe": "./bin/cli.js"
+    "fogoe": "bin/cli.js"
   },
   "scripts": {
     "test": "node --test",
