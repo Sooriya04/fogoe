@@ -14,6 +14,7 @@ function buildPackageJson(meta) {
       start: isTypeScript
         ? `tsx src/server.${ext}`
         : `node src/server.${ext}`,
+      ...(isTypeScript && { build: "tsc" }),
       ...(meta.testing && { test: "vitest" }),
       ...(meta.linting && { 
         lint: "eslint .",

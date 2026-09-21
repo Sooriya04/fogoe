@@ -1,0 +1,2 @@
+// No database selected
+export = {};

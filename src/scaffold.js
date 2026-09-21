@@ -1,245 +1,33 @@
-const fs = require("fs");
-const { buildTsConfig } = require("./tsconfig");
-
-// Minimal templates - JavaScript
-const minimalTemplates = {
-  express: {
-    commonjs: require("./templates/javascript/express/commonjs"),
-    module: require("./templates/javascript/express/module")
-  },
-  fastify: {
-    commonjs: require("./templates/javascript/fastify/commonjs"),
-    module: require("./templates/javascript/fastify/module")
-  },
-  hono: {
-    commonjs: require("./templates/javascript/hono/commonjs"),
-    module: require("./templates/javascript/hono/module")
-  },
-  koa: {
-    commonjs: require("./templates/javascript/koa/commonjs"),
-    module: require("./templates/javascript/koa/module")
-  }
-};
-
-// Minimal templates - TypeScript
-const minimalTemplatesTS = {
-  express: {
-    commonjs: require("./templates/typescript/express/commonjs"),
-    module: require("./templates/typescript/express/module")
-  },
-  fastify: {
-    commonjs: require("./templates/typescript/fastify/commonjs"),
-    module: require("./templates/typescript/fastify/module")
-  },
-  hono: {
-    commonjs: require("./templates/typescript/hono/commonjs"),
-    module: require("./templates/typescript/hono/module")
-  },
-  koa: {
-    commonjs: require("./templates/typescript/koa/commonjs"),
-    module: require("./templates/typescript/koa/module")
-  }
-};
-
-// MVC templates - JavaScript (includes databases + hashing)
-const mvcTemplates = {
-  express: {
-    commonjs: require("./templates/javascript/express/mvc-commonjs"),
-    module: require("./templates/javascript/express/mvc-module")
-  },
-  fastify: {
-    commonjs: require("./templates/javascript/fastify/mvc-commonjs"),
-    module: require("./templates/javascript/fastify/mvc-module")
-  },
-  hono: {
-    commonjs: require("./templates/javascript/hono/mvc-commonjs"),
-    module: require("./templates/javascript/hono/mvc-module")
-  },
-  koa: {
-    commonjs: require("./templates/javascript/koa/mvc-commonjs"),
-    module: require("./templates/javascript/koa/mvc-module")
-  }
-};
-
-// MVC templates - TypeScript
-const mvcTemplatesTS = {
-  express: {
-    commonjs: require("./templates/typescript/express/mvc-commonjs"),
-    module: require("./templates/typescript/express/mvc-module")
-  },
-  fastify: {
-    commonjs: require("./templates/typescript/fastify/mvc-commonjs"),
-    module: require("./templates/typescript/fastify/mvc-module")
-  },
-  hono: {
-    commonjs: require("./templates/typescript/hono/mvc-commonjs"),
-    module: require("./templates/typescript/hono/mvc-module")
-  },
-  koa: {
-    commonjs: require("./templates/typescript/koa/mvc-commonjs"),
-    module: require("./templates/typescript/koa/mvc-module")
-  }
-};
-
-/**
- * Scaffold a minimal project
- */
-function scaffoldMinimal(language, runtime, type) {
-  const isTypeScript = language === "typescript";
-  const templates = isTypeScript ? minimalTemplatesTS : minimalTemplates;
-  const template = templates[runtime]?.[type];
-
-  if (!template) {
-    throw new Error(`Minimal template not found for runtime="${runtime}" and type="${type}"`);
-  }
-
-  const ext = isTypeScript ? "ts" : "js";
-
-  fs.mkdirSync("src", { recursive: true });
-  fs.writeFileSync(`src/server.${ext}`, template);
-  fs.writeFileSync(".env", "PORT=3000\n");
-
-  // Generate tsconfig.json for TypeScript projects
-  if (isTypeScript) {
-    const tsConfig = buildTsConfig(type, "minimal");
-    fs.writeFileSync("tsconfig.json", JSON.stringify(tsConfig, null, 2));
-  }
-}
-
-/**
- * Scaffold an MVC project
- */
-function scaffoldMVC(language, runtime, type, database, hashing, useJwt) {
-  const isTypeScript = language === "typescript";
-  const templates = isTypeScript ? mvcTemplatesTS[runtime]?.[type] : mvcTemplates[runtime]?.[type];
-
-  if (!templates) {
-    throw new Error(`MVC template not found for runtime="${runtime}" and type="${type}"`);
-  }
-
-  // Get database templates
-  const db = templates.databases[database] || templates.databases.none;
-  
-  // Get hashing template
-  const hash = templates.hashing[hashing] || templates.hashing.bcrypt;
-
-  const ext = isTypeScript ? "ts" : "js";
-
-  // Create directories
-  const dirs = [
-    "src",
-    "src/routes",
-    "src/controllers",
-    "src/middlewares",
-    "src/utils",
-    "src/functions",
-    "src/models",
-    "src/config"
-  ];
-
-  if (database === "prisma") {
-    dirs.push("prisma");
-  }
-
-  dirs.forEach((dir) => fs.mkdirSync(dir, { recursive: true }));
-
-  // Write core files
-  fs.writeFileSync(`src/server.${ext}`, templates.server);
-  fs.writeFileSync(`src/app.${ext}`, templates.app);
-  fs.writeFileSync(`src/routes/home.${ext}`, templates.homeRoute);
-  fs.writeFileSync(`src/controllers/homecontroller.${ext}`, templates.homeController);
-  fs.writeFileSync(`src/functions/helper.${ext}`, templates.helper);
-  fs.writeFileSync(`src/config/env.${ext}`, templates.envConfig);
-
-  // Write auth middleware only if JWT is selected
-  if (useJwt) {
-    fs.writeFileSync(`src/middlewares/authMiddleware.${ext}`, templates.authMiddleware);
-  }
-
-  // Write hashing file
-  fs.writeFileSync(`src/utils/hashing.${ext}`, hash);
-
-  // Write database files
-  fs.writeFileSync(`src/config/db.${ext}`, db.dbConfig);
-  fs.writeFileSync(`src/models/model.${ext}`, db.model);
-  
-  // Write Prisma schema if using Prisma
-  if (database === "prisma" && db.schema) {
-    fs.writeFileSync("prisma/schema.prisma", db.schema);
-  }
-
-  fs.writeFileSync(".env", templates.envFile);
-
-  // Generate tsconfig.json for TypeScript projects
-  if (isTypeScript) {
-    const tsConfig = buildTsConfig(type, "mvc");
-    fs.writeFileSync("tsconfig.json", JSON.stringify(tsConfig, null, 2));
-  }
-}
-
-/**
- * Scaffold additional tooling (Testing, Linting)
- */
-function scaffoldTooling(language, testing, linting, type) {
-  const isTypeScript = language === "typescript";
-  const ext = isTypeScript ? "ts" : "js";
-  const isCommonJS = type === "commonjs";
-
-  if (testing) {
-    fs.mkdirSync("src/__tests__", { recursive: true });
-    let testContent = "";
-    
-    if (isTypeScript || !isCommonJS) {
-      testContent = `import { describe, it, expect } from 'vitest';\n\ndescribe('Initial Test', () => {\n  it('should pass', () => {\n    expect(1 + 1).toBe(2);\n  });\n});`;
-    } else {
-      testContent = `const { describe, it, expect } = require('vitest');\n\ndescribe('Initial Test', () => {\n  it('should pass', () => {\n    expect(1 + 1).toBe(2);\n  });\n});`;
-    }
-    
-    fs.writeFileSync(`src/__tests__/app.test.${ext}`, testContent);
-  }
-
-  if (linting) {
-    const eslintConfig = {
-      env: {
-        node: true,
-        es2021: true
-      },
-      extends: ["eslint:recommended", "prettier"],
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module"
-      },
-      rules: {}
-    };
-
-    if (isTypeScript) {
-      eslintConfig.parser = "@typescript-eslint/parser";
-      eslintConfig.plugins = ["@typescript-eslint"];
-      eslintConfig.extends.push("plugin:@typescript-eslint/recommended");
-    }
-
-    fs.writeFileSync(".eslintrc.json", JSON.stringify(eslintConfig, null, 2));
-    fs.writeFileSync(".prettierrc", JSON.stringify({
-      semi: true,
-      singleQuote: true,
-      tabWidth: 2,
-      trailingComma: "es5"
-    }, null, 2));
-  }
-}
+const { composeProject } = require('./composer');
 
 /**
  * Main scaffold function
+ * Delegates to the template-based composeProject engine.
  */
-function scaffold(language, runtime, type, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false) {
-  if (architecture === "mvc") {
-    scaffoldMVC(language, runtime, type, database, hashing, useJwt);
-  } else {
-    scaffoldMinimal(language, runtime, type);
-  }
-
-  // Always scaffold tooling if selected
-  scaffoldTooling(language, testing, linting, type);
+function scaffold(
+  language,
+  runtime,
+  type,
+  architecture,
+  database = "none",
+  hashing = "bcrypt",
+  useJwt = false,
+  testing = false,
+  linting = false,
+  targetDir = process.cwd()
+) {
+  return composeProject({
+    targetDir,
+    language,
+    runtime,
+    type,
+    architecture,
+    database,
+    hashing,
+    useJwt,
+    testing,
+    linting,
+  });
 }
 
-module.exports = { scaffold };
+module.exports = { scaffold, composeProject };

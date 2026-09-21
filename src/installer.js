@@ -3,9 +3,10 @@ const { execSync } = require("child_process");
 // Database package mapping
 const dbPackages = {
   mongodb: "mongoose",
-  prisma: "prisma @prisma/client",
+  prisma: "@prisma/client",
   mysql: "mysql2",
   postgresql: "pg",
+  sqlite: "better-sqlite3",
   none: ""
 };
 
@@ -22,6 +23,7 @@ const dbTypePackages = {
   prisma: "", // prisma includes types
   mysql: "@types/mysql2",
   postgresql: "@types/pg",
+  sqlite: "@types/better-sqlite3",
   none: ""
 };
 
@@ -46,7 +48,6 @@ function getPackageManager() {
   if (fs.existsSync("pnpm-lock.yaml")) return "pnpm";
   if (fs.existsSync("yarn.lock")) return "yarn";
 
-  const { execSync } = require("child_process");
   try {
     execSync("bun --version", { stdio: "ignore" });
     return "bun";
@@ -67,67 +68,66 @@ function getPackageManager() {
  * Install dependencies based on language, runtime, architecture, database, hashing, and JWT
  */
 function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false) {
-  // Base packages: runtime + nodemon + cors + dotenv
-  let packages = `${runtime} nodemon cors dotenv`;
+  // Base runtime packages
+  let packages = `${runtime} cors dotenv`;
+  let devPackages = "";
 
-  // For Fastify, use @fastify/cors instead of cors
-  if (runtime === "fastify") {
-    packages = `${runtime} nodemon @fastify/cors dotenv`;
-  } else if (runtime === "hono") {
-    packages = `hono @hono/node-server nodemon dotenv`;
-  } else if (runtime === "koa") {
-    packages = `koa @koa/router @koa/cors @koa/bodyparser nodemon dotenv`;
+  // Nodemon is a development tool for JavaScript
+  if (language === "javascript") {
+    devPackages = "nodemon";
   }
 
-  // MVC architecture needs additional packages
+  // Runtime-specific adjustments
+  if (runtime === "fastify") {
+    packages = `${runtime} @fastify/cors dotenv`;
+  } else if (runtime === "hono") {
+    packages = `hono @hono/node-server dotenv`;
+  } else if (runtime === "koa") {
+    packages = `koa @koa/router @koa/cors @koa/bodyparser dotenv`;
+  }
+
+  // MVC architecture packages
   if (architecture === "mvc") {
-    // Add hashing package
+    // Hashing package
     if (hashPackages[hashing]) {
       packages += ` ${hashPackages[hashing]}`;
     }
     
-    // Add JWT if selected
+    // JWT package
     if (useJwt) {
       packages += " jsonwebtoken";
     }
     
-    // Add database package if selected
+    // Database package
     if (database && database !== "none") {
-      packages += ` ${dbPackages[database]}`;
+      if (database === "prisma") {
+        packages += " @prisma/client";
+        devPackages += (devPackages ? " " : "") + "prisma";
+      } else if (dbPackages[database]) {
+        packages += ` ${dbPackages[database]}`;
+      }
     }
   }
 
-  // TypeScript specific packages (as dev dependencies)
-  let devPackages = "";
+  // TypeScript specific packages (dev dependencies)
   if (language === "typescript") {
-    // Base TypeScript packages (dev dependencies)
-    devPackages = "typescript ts-node tsx @types/node";
+    devPackages += (devPackages ? " " : "") + "typescript ts-node tsx @types/node";
 
-    // Framework type packages
     if (runtime === "express") {
       devPackages += " @types/express @types/cors";
-    }
-    // Fastify has built-in TypeScript support, but we can add type provider
-    if (runtime === "fastify") {
+    } else if (runtime === "fastify") {
       devPackages += " @fastify/type-provider-typebox";
-    }
-    if (runtime === "koa") {
+    } else if (runtime === "koa") {
       devPackages += " @types/koa @types/koa__router @types/koa__cors";
     }
 
-    // MVC architecture type packages
     if (architecture === "mvc") {
-      // Database types
       if (database && database !== "none" && dbTypePackages[database]) {
         devPackages += ` ${dbTypePackages[database]}`;
       }
-
-      // Hashing types
       if (hashTypePackages[hashing]) {
         devPackages += ` ${hashTypePackages[hashing]}`;
       }
-
-      // JWT types
       if (useJwt) {
         devPackages += " @types/jsonwebtoken";
       }
@@ -136,11 +136,11 @@ function install(language, runtime, architecture, database = "none", hashing = "
 
   // Tooling packages
   if (testing) {
-    devPackages += " vitest";
+    devPackages += (devPackages ? " " : "") + "vitest";
   }
 
   if (linting) {
-    devPackages += " eslint prettier eslint-config-prettier";
+    devPackages += (devPackages ? " " : "") + "eslint prettier eslint-config-prettier";
     if (language === "typescript") {
       devPackages += " @typescript-eslint/parser @typescript-eslint/eslint-plugin";
     }
@@ -149,32 +149,39 @@ function install(language, runtime, architecture, database = "none", hashing = "
   const pm = getPackageManager();
   console.log(`\nUsing package manager: ${pm}`);
 
+  const trimPkgs = packages.trim();
+  const trimDev = devPackages.trim();
+
+  // Run separate commands for runtime dependencies and devDependencies
   if (pm === "npm") {
-    if (devPackages) {
-      execSync(`npm install --save ${packages} --save-dev ${devPackages}`, { stdio: "inherit" });
-    } else {
-      execSync(`npm install ${packages}`, { stdio: "inherit" });
+    if (trimPkgs) {
+      execSync(`npm install --save ${trimPkgs}`, { stdio: "inherit" });
+    }
+    if (trimDev) {
+      execSync(`npm install --save-dev ${trimDev}`, { stdio: "inherit" });
     }
   } else if (pm === "bun") {
-    if (devPackages) {
-      execSync(`bun add ${packages} && bun add -d ${devPackages}`, { stdio: "inherit" });
-    } else {
-      execSync(`bun add ${packages}`, { stdio: "inherit" });
+    if (trimPkgs) {
+      execSync(`bun add ${trimPkgs}`, { stdio: "inherit" });
+    }
+    if (trimDev) {
+      execSync(`bun add -d ${trimDev}`, { stdio: "inherit" });
     }
   } else if (pm === "pnpm") {
-    if (devPackages) {
-      execSync(`pnpm add ${packages} && pnpm add -D ${devPackages}`, { stdio: "inherit" });
-    } else {
-      execSync(`pnpm add ${packages}`, { stdio: "inherit" });
+    if (trimPkgs) {
+      execSync(`pnpm add ${trimPkgs}`, { stdio: "inherit" });
+    }
+    if (trimDev) {
+      execSync(`pnpm add -D ${trimDev}`, { stdio: "inherit" });
     }
   } else if (pm === "yarn") {
-    if (devPackages) {
-      execSync(`yarn add ${packages} && yarn add -D ${devPackages}`, { stdio: "inherit" });
-    } else {
-      execSync(`yarn add ${packages}`, { stdio: "inherit" });
+    if (trimPkgs) {
+      execSync(`yarn add ${trimPkgs}`, { stdio: "inherit" });
+    }
+    if (trimDev) {
+      execSync(`yarn add -D ${trimDev}`, { stdio: "inherit" });
     }
   }
 }
 
 module.exports = { install, getPackageManager };
-

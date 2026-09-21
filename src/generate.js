@@ -38,7 +38,7 @@ function generateComponent(typeArg, nameArg) {
   const rawName = nameArg.toLowerCase();
   const capName = capitalize(rawName);
   const ext = language === 'ts' ? 'ts' : 'js';
-  const importSuffix = type === 'esm' ? `.${ext}` : '';
+  const importSuffix = type === 'esm' ? '.js' : '';
 
   if (!['route', 'controller', 'model'].includes(compType)) {
     console.error(chalk.red(`\n  ✗ Invalid type: "${typeArg}". Expected "route", "controller", or "model".`));
@@ -58,13 +58,24 @@ function generateComponent(typeArg, nameArg) {
     let template = '';
     if (runtime === 'express') {
       if (type === 'cjs') {
-        template = `const express = require('express');
+        if (language === 'ts') {
+          template = `import express, { Router } from 'express';
+import { index } from '../controllers/${rawName}controller';
+
+const router: Router = express.Router();
+
+router.get('/', index);
+
+export = router;`;
+        } else {
+          template = `const express = require('express');
 const router = express.Router();
 const controller = require('../controllers/${rawName}controller');
 
 router.get('/', controller.index);
 
 module.exports = router;`;
+        }
       } else {
         template = `import express from 'express';
 const router = express.Router();
@@ -76,29 +87,59 @@ export default router;`;
       }
     } else if (runtime === 'fastify') {
       if (type === 'cjs') {
-        template = `const controller = require('../controllers/${rawName}controller');
+        if (language === 'ts') {
+          template = `import { FastifyInstance } from 'fastify';
+import { index } from '../controllers/${rawName}controller';
+
+async function ${rawName}Routes(fastify: FastifyInstance): Promise<void> {
+  fastify.get('/', index);
+}
+
+export = ${rawName}Routes;`;
+        } else {
+          template = `const controller = require('../controllers/${rawName}controller');
 
 async function ${rawName}Routes(fastify, options) {
   fastify.get('/', controller.index);
 }
 
 module.exports = ${rawName}Routes;`;
+        }
       } else {
-        template = `import { index } from '../controllers/${rawName}controller${importSuffix}';
+        if (language === 'ts') {
+          template = `import { FastifyInstance } from 'fastify';
+import { index } from '../controllers/${rawName}controller${importSuffix}';
+
+export default async function ${rawName}Routes(fastify: FastifyInstance): Promise<void> {
+  fastify.get('/', index);
+}`;
+        } else {
+          template = `import { index } from '../controllers/${rawName}controller${importSuffix}';
 
 export default async function ${rawName}Routes(fastify, options) {
   fastify.get('/', index);
 }`;
+        }
       }
     } else if (runtime === 'hono') {
       if (type === 'cjs') {
-        template = `const { Hono } = require('hono');
+        if (language === 'ts') {
+          template = `import { Hono } from 'hono';
+import { index } from '../controllers/${rawName}controller';
+
+const router = new Hono();
+router.get('/', index);
+
+export = router;`;
+        } else {
+          template = `const { Hono } = require('hono');
 const controller = require('../controllers/${rawName}controller');
 
 const router = new Hono();
 router.get('/', controller.index);
 
 module.exports = router;`;
+        }
       } else {
         template = `import { Hono } from 'hono';
 import { index } from '../controllers/${rawName}controller${importSuffix}';
@@ -110,13 +151,23 @@ export default router;`;
       }
     } else if (runtime === 'koa') {
       if (type === 'cjs') {
-        template = `const Router = require('@koa/router');
+        if (language === 'ts') {
+          template = `import Router from '@koa/router';
+import { index } from '../controllers/${rawName}controller';
+
+const router = new Router();
+router.get('/', index);
+
+export = router;`;
+        } else {
+          template = `const Router = require('@koa/router');
 const controller = require('../controllers/${rawName}controller');
 
 const router = new Router();
 router.get('/', controller.index);
 
 module.exports = router;`;
+        }
       } else {
         template = `import Router from '@koa/router';
 import { index } from '../controllers/${rawName}controller${importSuffix}';
@@ -165,16 +216,16 @@ module.exports = { index };`;
       if (language === 'ts') {
         template = `import { FastifyRequest, FastifyReply } from 'fastify';
 
-export async function index(req: FastifyRequest, reply: FastifyReply) {
-  return '${capName} index';
+export async function index(req: FastifyRequest, reply: FastifyReply): Promise<void> {
+  reply.type('text/plain').send('${capName} index');
 }`;
       } else if (type === 'esm') {
         template = `export async function index(req, reply) {
-  return '${capName} index';
+  reply.type('text/plain').send('${capName} index');
 }`;
       } else {
         template = `async function index(req, reply) {
-  return '${capName} index';
+  reply.type('text/plain').send('${capName} index');
 }
 
 module.exports = { index };`;
@@ -235,6 +286,7 @@ module.exports = { index };`;
         if (content.includes('mongoose')) database = 'mongodb';
         else if (content.includes('mysql2')) database = 'mysql';
         else if (content.includes('pg')) database = 'postgresql';
+        else if (content.includes('better-sqlite3')) database = 'sqlite';
       }
     }
 
@@ -284,7 +336,7 @@ const ${rawName}Schema = new Schema({
 export default mongoose.model('${capName}', ${rawName}Schema);`;
       }
     } else {
-      // mysql/postgresql or none
+      // sqlite/mysql/postgresql or none
       if (type === 'cjs') {
         template = `const db = require('../config/db');
 

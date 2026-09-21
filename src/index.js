@@ -1,7 +1,7 @@
 const fs = require('fs');
+const path = require('path');
 const { input, select } = require('./prompts');
-const { scaffold } = require('./scaffold');
-const { buildPackageJson } = require('./packageJson');
+const { composeProject } = require('./composer');
 const { install } = require('./installer');
 const { addPlugin } = require('./plugins');
 const { checkStatus } = require('./status');
@@ -22,7 +22,8 @@ const chalk = require('chalk');
   if (args.includes('--help') || args.includes('-h') || args[0] === 'help') {
     console.log(chalk.cyan('\nFogoe CLI - Usage Guide\n'));
     console.log(chalk.yellow('Commands:'));
-    console.log(`  ${chalk.green('fogoe')}                        Start the interactive project initializer`);
+    console.log(`  ${chalk.green('fogoe [name]')}                 Start the interactive project initializer`);
+    console.log(`  ${chalk.green('fogoe create <name>')}          Create a new project in a specific directory`);
     console.log(`  ${chalk.green('fogoe init')}                   Initialize Git repository and update config`);
     console.log(`  ${chalk.green('fogoe push <message>')}          Stage, commit, and push changes to remote`);
     console.log(`  ${chalk.green('fogoe add [plugin]')}            Add a plugin to an existing Fogoe project`);
@@ -42,6 +43,7 @@ const chalk = require('chalk');
     console.log(chalk.yellow('Examples:'));
     console.log(`  ${chalk.gray('# Using npx (no installation required)')}`);
     console.log('  npx fogoe');
+    console.log('  npx fogoe create my-api');
     console.log('  npx fogoe init');
     console.log('  npx fogoe push "feat: add login"');
     console.log('  npx fogoe add redis');
@@ -50,6 +52,7 @@ const chalk = require('chalk');
     console.log('  npx fogoe generate route user\n');
 
     console.log(`  ${chalk.gray('# If installed globally (npm install -g fogoe)')}`);
+    console.log('  fogoe create my-api');
     console.log('  fogoe add stripe');
     console.log('  fogoe status');
     console.log('  fogoe update');
@@ -69,11 +72,11 @@ const chalk = require('chalk');
       process.exit(1);
     }
 
-    // Config has git: true
     try {
       const { execSync } = require('child_process');
+      const safeMsg = message.replace(/"/g, '\\"');
       execSync('git add .', { stdio: 'inherit' });
-      execSync(`git commit -m "${message}"`, { stdio: 'inherit' });
+      execSync(`git commit -m "${safeMsg}"`, { stdio: 'inherit' });
       execSync('git push', { stdio: 'inherit' });
       console.log(chalk.green('✓ Repository pushed successfully'));
     } catch (err) {
@@ -84,8 +87,6 @@ const chalk = require('chalk');
   }
 
   if (args[0] === 'add') {
-    // fogoe add [pluginName] — add a plugin to an existing project
-    // pluginName is optional; if omitted, shows interactive picker
     const pluginName = args[1] || undefined;
     await addPlugin(pluginName);
     return;
@@ -116,7 +117,6 @@ const chalk = require('chalk');
     const { initGit } = require('./github');
     await initGit();
 
-    // Update config after initialization
     const config = JSON.parse(fs.readFileSync('fogoe.config.json', 'utf8'));
     if (!config.defaults) {
       config.defaults = {};
@@ -135,6 +135,23 @@ const chalk = require('chalk');
 
   console.log('\nFogoe Initializer\n');
 
+  // Determine target directory and initial package name
+  let initialName = '';
+  let targetDir = process.cwd();
+
+  if (args[0] === 'create' && args[1]) {
+    initialName = args[1];
+    targetDir = path.resolve(process.cwd(), args[1]);
+  } else if (args[0] && !args[0].startsWith('-')) {
+    initialName = args[0];
+    targetDir = path.resolve(process.cwd(), args[0]);
+  }
+
+  if (targetDir !== process.cwd()) {
+    fs.mkdirSync(targetDir, { recursive: true });
+    process.chdir(targetDir);
+  }
+
   // Check if directory is non-empty
   const files = fs.readdirSync(process.cwd());
   const hasExistingProjectFiles = files.some(file => 
@@ -150,7 +167,7 @@ const chalk = require('chalk');
   }
 
   // Project metadata
-  const name = await input('Package name', '', (val) => {
+  const name = await input('Package name', initialName || path.basename(process.cwd()), (val) => {
     if (!val) return 'Package name is required';
     if (!/^[a-z0-9-_]+$/.test(val)) {
       return 'Package name must be lowercase, alphanumeric, and can contain hyphens/underscores';
@@ -193,6 +210,7 @@ const chalk = require('chalk');
       'prisma',
       'mysql',
       'postgresql',
+      'sqlite',
       'none',
     ]);
 
@@ -208,28 +226,24 @@ const chalk = require('chalk');
     useJwt = jwtChoice === 'yes';
   }
 
-  // Write package.json
-  fs.writeFileSync(
-    'package.json',
-    JSON.stringify(
-      buildPackageJson({
-        name,
-        version,
-        description,
-        author,
-        license,
-        type,
-        language,
-        testing: testing === 'yes',
-        linting: linting === 'yes',
-      }),
-      null,
-      2,
-    ),
-  );
-
-  // Scaffold the project
-  scaffold(language, runtime, type, architecture, database, hashing, useJwt, testing === 'yes', linting === 'yes');
+  // Compose the project using real disk templates
+  composeProject({
+    targetDir: process.cwd(),
+    name,
+    version,
+    description,
+    author,
+    license,
+    language,
+    runtime,
+    type,
+    architecture,
+    database,
+    hashing,
+    useJwt,
+    testing: testing === 'yes',
+    linting: linting === 'yes',
+  });
 
   // Install dependencies
   console.log('\nInstalling dependencies...\n');

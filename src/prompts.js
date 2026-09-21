@@ -1,5 +1,10 @@
 const prompts = require("prompts");
 
+const onCancel = () => {
+  console.log("\nAborted.");
+  process.exit(0);
+};
+
 async function input(message, initial = "", validate = null) {
   const { value } = await prompts({
     type: "text",
@@ -7,7 +12,7 @@ async function input(message, initial = "", validate = null) {
     message,
     initial,
     validate: validate || (() => true)
-  });
+  }, { onCancel });
   return value;
 }
 
@@ -21,7 +26,7 @@ async function select(message, options) {
       value: opt,
       disabled: opt.includes("coming soon")
     }))
-  });
+  }, { onCancel });
   return value;
 }
 

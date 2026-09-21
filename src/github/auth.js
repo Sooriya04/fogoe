@@ -29,29 +29,21 @@ function hasGitHubCLI() {
  * Validates GitHub authentication via gh CLI or git config
  */
 function checkGitHubAuth() {
-  try {
-    if (hasGitHubCLI()) {
-      try {
-        execSync('gh auth status', { stdio: 'ignore' });
-      } catch (err) {
-        console.error(
-          'GitHub authentication not found. Please log in to GitHub before continuing.',
-        );
-        process.exit(1);
-      }
-    } else {
-      try {
-        execSync('git config user.name', { stdio: 'ignore' });
-      } catch (err) {
-        console.error(
-          'GitHub authentication not found. Please log in to GitHub before continuing.',
-        );
-        process.exit(1);
-      }
+  if (hasGitHubCLI()) {
+    try {
+      execSync('gh auth status', { stdio: 'ignore' });
+      return true;
+    } catch {
+      // Fall through to git config check
     }
+  }
+
+  try {
+    execSync('git config user.name', { stdio: 'ignore' });
+    return true;
   } catch (err) {
     console.error(
-      'GitHub authentication not found. Please log in to GitHub before continuing.',
+      'Git user configuration not found. Please set git config user.name and user.email before continuing.',
     );
     process.exit(1);
   }
