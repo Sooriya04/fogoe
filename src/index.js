@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { input, select } = require('./prompts');
+const { intro, outro, input, select, confirm, spinner } = require('./prompts');
 const { composeProject } = require('./composer');
 const { install } = require('./installer');
 const { addPlugin } = require('./plugins');
@@ -9,27 +9,129 @@ const { updateProject } = require('./update');
 const { generateComponent } = require('./generate');
 const chalk = require('chalk');
 
-(async () => {
-  // Check arguments
-  const args = process.argv.slice(2);
+function parseCliArgs(args) {
+  const flags = {
+    framework: null,
+    language: null,
+    type: null,
+    architecture: null,
+    database: null,
+    hashing: null,
+    auth: null,
+    jwt: null,
+    testing: null,
+    linting: null,
+    install: null,
+    git: null,
+    yes: false,
+    help: false,
+    version: false,
+  };
+  const positionals = [];
 
-  if (args.includes('--version') || args.includes('-v') || args[0] === 'version') {
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg === '--help' || arg === '-h' || arg === 'help') {
+      flags.help = true;
+    } else if (arg === '--version' || arg === '-v' || arg === 'version') {
+      flags.version = true;
+    } else if (arg === '--yes' || arg === '-y') {
+      flags.yes = true;
+    } else if (arg === '--framework' || arg === '-f' || arg === '--runtime') {
+      flags.framework = args[++i];
+    } else if (arg.startsWith('--framework=')) {
+      flags.framework = arg.split('=')[1];
+    } else if (arg.startsWith('--runtime=')) {
+      flags.framework = arg.split('=')[1];
+    } else if (arg === '--lang' || arg === '-l' || arg === '--language') {
+      flags.language = args[++i];
+    } else if (arg.startsWith('--lang=') || arg.startsWith('--language=')) {
+      flags.language = arg.split('=')[1];
+    } else if (arg === '--type' || arg === '-t') {
+      flags.type = args[++i];
+    } else if (arg.startsWith('--type=')) {
+      flags.type = arg.split('=')[1];
+    } else if (arg === '--arch' || arg === '-a' || arg === '--architecture') {
+      flags.architecture = args[++i];
+    } else if (arg.startsWith('--arch=') || arg.startsWith('--architecture=')) {
+      flags.architecture = arg.split('=')[1];
+    } else if (arg === '--db' || arg === '-d' || arg === '--database') {
+      flags.database = args[++i];
+    } else if (arg.startsWith('--db=') || arg.startsWith('--database=')) {
+      flags.database = arg.split('=')[1];
+    } else if (arg === '--hashing') {
+      flags.hashing = args[++i];
+    } else if (arg.startsWith('--hashing=')) {
+      flags.hashing = arg.split('=')[1];
+    } else if (arg === '--auth') {
+      flags.auth = args[++i];
+    } else if (arg.startsWith('--auth=')) {
+      flags.auth = arg.split('=')[1];
+    } else if (arg === '--jwt') {
+      flags.jwt = true;
+    } else if (arg === '--no-jwt') {
+      flags.jwt = false;
+    } else if (arg === '--test' || arg === '--testing') {
+      flags.testing = true;
+    } else if (arg === '--no-test' || arg === '--no-testing') {
+      flags.testing = false;
+    } else if (arg === '--lint' || arg === '--linting') {
+      flags.linting = true;
+    } else if (arg === '--no-lint' || arg === '--no-linting') {
+      flags.linting = false;
+    } else if (arg === '--install' || arg === '-i') {
+      flags.install = true;
+    } else if (arg === '--no-install') {
+      flags.install = false;
+    } else if (arg === '--git' || arg === '-g') {
+      flags.git = true;
+    } else if (arg === '--no-git') {
+      flags.git = false;
+    } else if (!arg.startsWith('-')) {
+      positionals.push(arg);
+    }
+  }
+
+  return { flags, positionals };
+}
+
+(async () => {
+  const args = process.argv.slice(2);
+  const { flags, positionals } = parseCliArgs(args);
+
+  if (flags.version) {
     const pkg = require('../package.json');
     console.log(chalk.cyan(`Fogoe CLI v${pkg.version}`));
     return;
   }
 
-  if (args.includes('--help') || args.includes('-h') || args[0] === 'help') {
-    console.log(chalk.cyan('\nFogoe CLI - Usage Guide\n'));
+  if (flags.help) {
+    console.log(chalk.cyan('\nFogoe CLI — Usage Guide\n'));
     console.log(chalk.yellow('Commands:'));
     console.log(`  ${chalk.green('fogoe [name]')}                 Start the interactive project initializer`);
-    console.log(`  ${chalk.green('fogoe create <name>')}          Create a new project in a specific directory`);
+    console.log(`  ${chalk.green('fogoe create <name> [flags]')}  Create a new project in a specific directory`);
     console.log(`  ${chalk.green('fogoe init')}                   Initialize Git repository and update config`);
     console.log(`  ${chalk.green('fogoe push <message>')}          Stage, commit, and push changes to remote`);
     console.log(`  ${chalk.green('fogoe add [plugin]')}            Add a plugin to an existing Fogoe project`);
     console.log(`  ${chalk.green('fogoe status')}                  Show project details and status`);
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
-    console.log(`  ${chalk.green('fogoe generate <type> <name>')}  Generate MVC route, controller, or model\n`);
+    console.log(`  ${chalk.green('fogoe generate <type> <name>')}  Generate route, controller, model, or full crud`);
+    console.log(`  ${chalk.green('fogoe g crud <name>')}           Vertical slice: Model + Controller + Routes\n`);
+
+    console.log(chalk.yellow('CLI Flags (Non-Interactive Scaffolding):'));
+    console.log(`  ${chalk.green('-f, --framework <name>')}       Runtime: express, fastify, hono, koa`);
+    console.log(`  ${chalk.green('-l, --lang <language>')}        Language: js, ts (javascript, typescript)`);
+    console.log(`  ${chalk.green('-t, --type <module>')}          Module type: cjs, esm (commonjs, module)`);
+    console.log(`  ${chalk.green('-a, --arch <architecture>')}    Architecture: minimal, mvc`);
+    console.log(`  ${chalk.green('-d, --db <database>')}          Database: mongodb, prisma, drizzle, mysql, postgres, sqlite, none`);
+    console.log(`  ${chalk.green('--hashing <lib>')}              Hashing: bcrypt, argon2, crypto`);
+    console.log(`  ${chalk.green('--auth <jwt|none>')}            Auth strategy`);
+    console.log(`  ${chalk.green('--test, --no-test')}            Vitest testing suite`);
+    console.log(`  ${chalk.green('--lint, --no-lint')}            ESLint + Prettier`);
+    console.log(`  ${chalk.green('-i, --install')}                Auto-install dependencies`);
+    console.log(`  ${chalk.green('-g, --git')}                    Auto-initialize git repository`);
+    console.log(`  ${chalk.green('-y, --yes')}                    Accept default choices without prompting\n`);
 
     console.log(chalk.yellow('Available Plugins:'));
     console.log(`  ${chalk.cyan('redis')}      — Redis client (ioredis)`);
@@ -41,27 +143,20 @@ const chalk = require('chalk');
     console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)\n`);
 
     console.log(chalk.yellow('Examples:'));
-    console.log(`  ${chalk.gray('# Using npx (no installation required)')}`);
+    console.log(`  ${chalk.gray('# Interactive prompt mode')}`);
     console.log('  npx fogoe');
-    console.log('  npx fogoe create my-api');
-    console.log('  npx fogoe init');
-    console.log('  npx fogoe push "feat: add login"');
-    console.log('  npx fogoe add redis');
-    console.log('  npx fogoe status');
-    console.log('  npx fogoe update');
-    console.log('  npx fogoe generate route user\n');
-
-    console.log(`  ${chalk.gray('# If installed globally (npm install -g fogoe)')}`);
-    console.log('  fogoe create my-api');
-    console.log('  fogoe add stripe');
-    console.log('  fogoe status');
-    console.log('  fogoe update');
-    console.log('  fogoe generate controller user\n');
+    console.log('  fogoe create my-api\n');
+    console.log(`  ${chalk.gray('# Fully automated non-interactive scaffolding')}`);
+    console.log('  fogoe create my-api --framework fastify --lang ts --db drizzle --auth jwt --install -y');
+    console.log('  fogoe create blog --framework express --lang ts --db postgres --install -y\n');
+    console.log(`  ${chalk.gray('# Generate full CRUD vertical slice')}`);
+    console.log('  fogoe g crud product');
+    console.log('  fogoe generate crud user\n');
     return;
   }
 
-  if (args[0] === 'push') {
-    const message = args[1] || 'Update';
+  if (positionals[0] === 'push') {
+    const message = positionals[1] || 'Update';
     if (!fs.existsSync('fogoe.config.json')) {
       console.error(chalk.red('fogoe.config.json not found. Are you in a Fogoe project?'));
       process.exit(1);
@@ -86,30 +181,30 @@ const chalk = require('chalk');
     return;
   }
 
-  if (args[0] === 'add') {
-    const pluginName = args[1] || undefined;
+  if (positionals[0] === 'add') {
+    const pluginName = positionals[1] || undefined;
     await addPlugin(pluginName);
     return;
   }
 
-  if (args[0] === 'status') {
+  if (positionals[0] === 'status') {
     checkStatus();
     return;
   }
 
-  if (args[0] === 'update') {
+  if (positionals[0] === 'update') {
     await updateProject();
     return;
   }
 
-  if (args[0] === 'generate' || args[0] === 'g') {
-    const typeArg = args[1];
-    const nameArg = args[2];
+  if (positionals[0] === 'generate' || positionals[0] === 'g') {
+    const typeArg = positionals[1];
+    const nameArg = positionals[2];
     generateComponent(typeArg, nameArg);
     return;
   }
 
-  if (args[0] === 'init') {
+  if (positionals[0] === 'init') {
     if (!fs.existsSync('fogoe.config.json')) {
       console.error(chalk.red('fogoe.config.json not found. Are you in a Fogoe project?'));
       process.exit(1);
@@ -133,18 +228,16 @@ const chalk = require('chalk');
     return;
   }
 
-  console.log('\nFogoe Initializer\n');
-
   // Determine target directory and initial package name
   let initialName = '';
   let targetDir = process.cwd();
 
-  if (args[0] === 'create' && args[1]) {
-    initialName = args[1];
-    targetDir = path.resolve(process.cwd(), args[1]);
-  } else if (args[0] && !args[0].startsWith('-')) {
-    initialName = args[0];
-    targetDir = path.resolve(process.cwd(), args[0]);
+  if (positionals[0] === 'create' && positionals[1]) {
+    initialName = positionals[1];
+    targetDir = path.resolve(process.cwd(), positionals[1]);
+  } else if (positionals[0] && positionals[0] !== 'create') {
+    initialName = positionals[0];
+    targetDir = path.resolve(process.cwd(), positionals[0]);
   }
 
   if (targetDir !== process.cwd()) {
@@ -152,107 +245,227 @@ const chalk = require('chalk');
     process.chdir(targetDir);
   }
 
+  const isNonInteractive = flags.yes;
+
+  if (!isNonInteractive) {
+    await intro(chalk.bold.cyan('Fogoe') + chalk.dim(' — Next-gen Node.js Scaffolding'));
+  } else {
+    console.log(chalk.cyan(`\nFogoe: Initializing project in ${targetDir}...\n`));
+  }
+
   // Check if directory is non-empty
   const files = fs.readdirSync(process.cwd());
-  const hasExistingProjectFiles = files.some(file => 
-    file !== '.git' && file !== '.gitignore' && file !== 'README.md' && file !== 'LICENSE'
+  const hasExistingProjectFiles = files.some(
+    (file) => file !== '.git' && file !== '.gitignore' && file !== 'README.md' && file !== 'LICENSE'
   );
   if (hasExistingProjectFiles) {
     console.log(chalk.yellow('⚠ Warning: Current directory is not empty. Existing files may be overwritten.'));
-    const proceed = await select('Do you want to proceed?', ['yes', 'no']);
-    if (proceed !== 'yes') {
-      console.log(chalk.cyan('Aborted.'));
-      process.exit(0);
+    if (!isNonInteractive) {
+      const proceed = await select('Do you want to proceed?', ['yes', 'no']);
+      if (proceed !== 'yes') {
+        console.log(chalk.cyan('Aborted.'));
+        process.exit(0);
+      }
     }
   }
 
-  // Project metadata
-  const name = await input('Package name', initialName || path.basename(process.cwd()), (val) => {
-    if (!val) return 'Package name is required';
-    if (!/^[a-z0-9-_]+$/.test(val)) {
-      return 'Package name must be lowercase, alphanumeric, and can contain hyphens/underscores';
+  // 1. Project metadata
+  let name = initialName || path.basename(process.cwd());
+  if (!isNonInteractive && !initialName) {
+    name = await input('Package name', name, (val) => {
+      if (!val) return 'Package name is required';
+      if (!/^[a-z0-9-_]+$/.test(val)) {
+        return 'Package name must be lowercase, alphanumeric, and can contain hyphens/underscores';
+      }
+      return true;
+    });
+  }
+
+  let version = '1.0.0';
+  let description = '';
+  let author = '';
+  let license = 'ISC';
+
+  if (!isNonInteractive && !flags.framework && !flags.language) {
+    version = (await input('Version', '1.0.0')) || '1.0.0';
+    description = await input('Description');
+    author = await input('Author');
+    license = (await input('License', 'ISC')) || 'ISC';
+  }
+
+  // 2. Language selection
+  let language = 'javascript';
+  if (flags.language) {
+    const l = flags.language.toLowerCase();
+    language = (l === 'ts' || l === 'typescript') ? 'typescript' : 'javascript';
+  } else if (!isNonInteractive) {
+    language = await select('Select language', [
+      { value: 'javascript', label: 'JavaScript' },
+      { value: 'typescript', label: 'TypeScript' },
+    ]);
+  }
+
+  // 3. Module type selection
+  let type = language === 'typescript' ? 'module' : 'commonjs';
+  if (flags.type) {
+    const t = flags.type.toLowerCase();
+    type = (t === 'esm' || t === 'module') ? 'module' : 'commonjs';
+  } else if (!isNonInteractive) {
+    type = await select('Select module type', [
+      { value: 'commonjs', label: 'CommonJS (require/exports)' },
+      { value: 'module', label: 'ES Modules (import/export)' },
+    ]);
+  }
+
+  // 4. Runtime selection
+  let runtime = 'express';
+  if (flags.framework) {
+    const r = flags.framework.toLowerCase();
+    if (['express', 'fastify', 'hono', 'koa'].includes(r)) {
+      runtime = r;
     }
-    return true;
-  });
-  const version = (await input('Version', '1.0.0')) || '1.0.0';
-  const description = await input('Description');
-  const author = await input('Author');
-  const license = (await input('License', 'ISC')) || 'ISC';
+  } else if (!isNonInteractive) {
+    runtime = await select('Select runtime', [
+      { value: 'express', label: 'Express', hint: 'Fast, unopinionated, classic' },
+      { value: 'fastify', label: 'Fastify', hint: 'High performance & low overhead' },
+      { value: 'hono', label: 'Hono', hint: 'Ultrafast, modern web framework' },
+      { value: 'koa', label: 'Koa', hint: 'Expressive HTTP middleware' },
+    ]);
+  }
 
-  // Module type selection
-  const type = await select('Select module type', ['commonjs', 'module']);
+  // 5. Architecture selection
+  let architecture = 'minimal';
+  if (flags.architecture) {
+    const a = flags.architecture.toLowerCase();
+    architecture = a === 'mvc' ? 'mvc' : 'minimal';
+  } else if (flags.database || flags.auth || flags.jwt !== null) {
+    architecture = 'mvc';
+  } else if (!isNonInteractive) {
+    architecture = await select('Select architecture', [
+      { value: 'minimal', label: 'Minimal', hint: 'Single-file or simple entry structure' },
+      { value: 'mvc', label: 'MVC', hint: 'Models, Views/Routes, Controllers' },
+    ]);
+  }
 
-  // Language selection
-  const language = await select('Select language', [
-    'javascript',
-    'typescript',
-  ]);
+  // 6. Tooling selection
+  let testing = flags.testing === true;
+  if (flags.testing === null && !isNonInteractive) {
+    const testChoice = await select('Include testing suite (Vitest)?', ['yes', 'no']);
+    testing = testChoice === 'yes';
+  }
 
-  // Runtime selection
-  const runtime = await select('Select runtime', ['express', 'fastify', 'hono', 'koa']);
+  let linting = flags.linting === true;
+  if (flags.linting === null && !isNonInteractive) {
+    const lintChoice = await select('Include linting & formatting (ESLint + Prettier)?', ['yes', 'no']);
+    linting = lintChoice === 'yes';
+  }
 
-  // Architecture selection
-  const architecture = await select('Select architecture', ['minimal', 'mvc']);
-
-  // Tooling selection
-  const testing = await select('Include testing suite (Vitest)?', ['yes', 'no']);
-  const linting = await select('Include linting & formatting (ESLint + Prettier)?', ['yes', 'no']);
-
-  // MVC-specific options
+  // 7. MVC-specific options
   let database = 'none';
   let hashing = 'bcrypt';
   let useJwt = false;
 
   if (architecture === 'mvc') {
-    // Database selection
-    database = await select('Select database', [
-      'mongodb',
-      'prisma',
-      'mysql',
-      'postgresql',
-      'sqlite',
-      'none',
-    ]);
+    if (flags.database) {
+      const d = flags.database.toLowerCase();
+      if (d === 'postgres' || d === 'postgresql' || d === 'pg') database = 'postgresql';
+      else if (d === 'mongo' || d === 'mongodb') database = 'mongodb';
+      else if (['prisma', 'drizzle', 'mysql', 'sqlite', 'none'].includes(d)) database = d;
+    } else if (!isNonInteractive) {
+      database = await select('Select database', [
+        { value: 'mongodb', label: 'MongoDB', hint: 'Mongoose ODM' },
+        { value: 'prisma', label: 'Prisma', hint: 'Next-gen ORM with migrations' },
+        { value: 'drizzle', label: 'Drizzle ORM', hint: 'TypeScript ORM with drizzle-kit' },
+        { value: 'postgresql', label: 'PostgreSQL', hint: 'pg driver with connection pool' },
+        { value: 'mysql', label: 'MySQL', hint: 'mysql2 driver' },
+        { value: 'sqlite', label: 'SQLite', hint: 'better-sqlite3' },
+        { value: 'none', label: 'None', hint: 'No database setup' },
+      ]);
+    }
 
-    // Hashing selection
-    hashing = await select('Select hashing library', [
-      'bcrypt',
-      'argon2',
-      'crypto',
-    ]);
+    if (flags.hashing) {
+      const h = flags.hashing.toLowerCase();
+      if (['bcrypt', 'argon2', 'crypto'].includes(h)) hashing = h;
+    } else if (!isNonInteractive) {
+      hashing = await select('Select hashing library', [
+        { value: 'bcrypt', label: 'bcrypt' },
+        { value: 'argon2', label: 'argon2' },
+        { value: 'crypto', label: 'crypto (built-in)' },
+      ]);
+    }
 
-    // JWT selection
-    const jwtChoice = await select('Include jsonwebtoken?', ['yes', 'no']);
-    useJwt = jwtChoice === 'yes';
+    if (flags.jwt !== null) {
+      useJwt = flags.jwt;
+    } else if (flags.auth) {
+      useJwt = flags.auth.toLowerCase() === 'jwt';
+    } else if (!isNonInteractive) {
+      const jwtChoice = await select('Include jsonwebtoken?', ['yes', 'no']);
+      useJwt = jwtChoice === 'yes';
+    }
   }
 
-  // Compose the project using real disk templates
-  composeProject({
-    targetDir: process.cwd(),
-    name,
-    version,
-    description,
-    author,
-    license,
-    language,
-    runtime,
-    type,
-    architecture,
-    database,
-    hashing,
-    useJwt,
-    testing: testing === 'yes',
-    linting: linting === 'yes',
-  });
+  // Compose project files
+  if (!isNonInteractive) {
+    const s = await spinner();
+    s.start('Scaffolding project files...');
+    composeProject({
+      targetDir: process.cwd(),
+      name,
+      version,
+      description,
+      author,
+      license,
+      language,
+      runtime,
+      type,
+      architecture,
+      database,
+      hashing,
+      useJwt,
+      testing,
+      linting,
+    });
+    s.stop(chalk.green('✓ Scaffolding complete'));
+  } else {
+    composeProject({
+      targetDir: process.cwd(),
+      name,
+      version,
+      description,
+      author,
+      license,
+      language,
+      runtime,
+      type,
+      architecture,
+      database,
+      hashing,
+      useJwt,
+      testing,
+      linting,
+    });
+    console.log(chalk.green('✓ Scaffolding complete'));
+  }
 
   // Install dependencies
-  console.log('\nInstalling dependencies...\n');
-  install(language, runtime, architecture, database, hashing, useJwt, testing === 'yes', linting === 'yes');
+  let installDeps = flags.install === true;
+  if (flags.install === null && !isNonInteractive) {
+    const installChoice = await select('Install dependencies now?', ['yes', 'no']);
+    installDeps = installChoice === 'yes';
+  }
 
-  console.log('\n');
+  if (installDeps) {
+    console.log(chalk.cyan('\nInstalling dependencies...\n'));
+    install(language, runtime, architecture, database, hashing, useJwt, testing, linting);
+    console.log(chalk.green('\n✓ Dependencies installed'));
+  }
 
-  // Git initialization (optional)
-  const gitChoice = await select('Initialize Git repository?', ['yes', 'no']);
+  // Git initialization
+  let initGitRepo = flags.git === true;
+  if (flags.git === null && !isNonInteractive) {
+    const gitChoice = await select('Initialize Git repository?', ['yes', 'no']);
+    initGitRepo = gitChoice === 'yes';
+  }
 
   // Write fogoe.config.json with project defaults
   const fogoeConfig = {
@@ -261,29 +474,38 @@ const chalk = require('chalk');
       arch: architecture,
       runtime: runtime,
       type: type === 'commonjs' ? 'cjs' : 'esm',
-      git: gitChoice === 'yes',
+      database: database,
+      git: initGitRepo,
     },
   };
 
   fs.writeFileSync('fogoe.config.json', JSON.stringify(fogoeConfig, null, 2));
 
-  if (gitChoice === 'yes') {
+  if (initGitRepo) {
     const { initGit } = require('./github');
     await initGit();
   }
 
-  // Show completion message and instructions after git process
-  console.log('\n');
-  console.log(chalk.green('Fogoe project ready'));
+  if (!isNonInteractive) {
+    await outro(chalk.bold.green('Fogoe project ready! 🚀'));
+  } else {
+    console.log(chalk.bold.green('\nFogoe project ready! 🚀'));
+  }
 
-  // Prisma-specific instructions
+  // Database-specific instructions
   if (database === 'prisma') {
     console.log(chalk.yellow('\nPrisma setup:'));
     console.log(chalk.yellow('   1. Update DATABASE_URL in .env'));
     console.log(chalk.yellow('   2. Run: npx prisma generate'));
     console.log(chalk.yellow('   3. Run: npx prisma db push'));
     console.log(chalk.yellow('   4. Then run: npm run dev\n'));
+  } else if (database === 'drizzle') {
+    console.log(chalk.yellow('\nDrizzle ORM setup:'));
+    console.log(chalk.yellow('   1. Update DATABASE_URL in .env'));
+    console.log(chalk.yellow('   2. Run: npm run db:generate'));
+    console.log(chalk.yellow('   3. Run: npm run db:migrate'));
+    console.log(chalk.yellow('   4. Then run: npm run dev\n'));
   } else {
-    console.log(chalk.cyan('\nnpm run dev'));
+    console.log(chalk.cyan('\nnpm run dev\n'));
   }
 })();

@@ -1,6 +1,6 @@
 {
   "name": "fogoe",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Open-source CLI for zero-friction Node.js backend initialization with TypeScript support.",
   "author": "Sooriya",
   "homepage": "https://sooriya04.github.io/fogoe-site/",
@@ -15,6 +15,7 @@
     "site:build": "cd site && npm install && npm run build"
   },
   "dependencies": {
+    "@clack/prompts": "^1.8.1",
     "chalk": "^4.1.2",
     "prompts": "^2.4.2"
   },

@@ -4,6 +4,7 @@ const { execSync } = require("child_process");
 const dbPackages = {
   mongodb: "mongoose",
   prisma: "@prisma/client",
+  drizzle: "drizzle-orm pg",
   mysql: "mysql2",
   postgresql: "pg",
   sqlite: "better-sqlite3",
@@ -21,6 +22,7 @@ const hashPackages = {
 const dbTypePackages = {
   mongodb: "", // mongoose includes types
   prisma: "", // prisma includes types
+  drizzle: "@types/pg",
   mysql: "@types/mysql2",
   postgresql: "@types/pg",
   sqlite: "@types/better-sqlite3",
@@ -103,6 +105,9 @@ function install(language, runtime, architecture, database = "none", hashing = "
       if (database === "prisma") {
         packages += " @prisma/client";
         devPackages += (devPackages ? " " : "") + "prisma";
+      } else if (database === "drizzle") {
+        packages += ` ${dbPackages.drizzle}`;
+        devPackages += (devPackages ? " " : "") + "drizzle-kit";
       } else if (dbPackages[database]) {
         packages += ` ${dbPackages[database]}`;
       }

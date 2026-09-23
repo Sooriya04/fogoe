@@ -36,9 +36,10 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 4. **CI Matrix Green:** All 15 unit tests pass deterministically across Node 18, 20, and 22 on Ubuntu, macOS, and Windows.
 
 
-## ISSUE 20 : Bump version to 1.0.7 and clean npm package.json for publishing
-1. **Resolved NPM E403 Version Collision:** Bumped package version to `1.0.7` across `package.json`, `package-lock.json`, and website metadata because npm does not allow overwriting previously published versions (1.0.6).
-2. **Fixed `bin` specification:** Standardized `"bin": { "fogoe": "bin/cli.js" }` (resolving npm's `"bin[fogoe]" script name was cleaned` warning).
-3. **CI Node 22 Upgrade:** Updated the NPM publish step in `.github/workflows/ci.yml` to use Node.js `22.x` (Active LTS), eliminating runner deprecation notices.
+## Release v1.0.8 — Clack TUI, CLI Flags, CRUD Generator, Drizzle ORM & Automated NPM CI
 
-
+1. **NPM Publishing & Versioning:** Bumped the package to `1.0.7`, fixed the `bin` configuration, and upgraded the CI publish environment to Node.js 22.x.
+2. **Decoupled NPM Publishing:** Restricted NPM publishing to `v*` release tags or manual workflow execution, preventing publishing on regular `main` branch pushes.
+3. **Enhanced CLI & TUI:** Added Clack-based interactive prompts, spinners, banners, cancellation handling, and comprehensive non-interactive CLI flags for automated scaffolding.
+4. **Full CRUD Generator:** Added `fogoe generate crud` with Model, Controller, and Route generation across Express, Fastify, Hono, and Koa for JavaScript and TypeScript.
+5. **Drizzle ORM & Testing:** Added Drizzle ORM scaffolding and database scripts, while expanding automated coverage to 20 tests for CRUD generation, Drizzle integration, and CLI-based scaffolding.

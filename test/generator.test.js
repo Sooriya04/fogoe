@@ -276,3 +276,71 @@ test('Generator: vitest template is copied as app.test.ts without .tpl extension
   assert.ok(fs.existsSync(testFile), 'app.test.ts should exist');
   assert.ok(!fs.existsSync(path.join(target, 'src/__tests__/app.test.ts.tpl')), '.tpl should be stripped');
 });
+
+test('Generator: Express + TypeScript MVC with Drizzle ORM', () => {
+  const target = path.join(TEST_OUTPUT_DIR, 'express-ts-drizzle');
+  composeProject({
+    targetDir: target,
+    name: 'test-drizzle-ts-app',
+    language: 'typescript',
+    runtime: 'express',
+    type: 'module',
+    architecture: 'mvc',
+    database: 'drizzle',
+    hashing: 'bcrypt',
+    useJwt: false,
+  });
+
+  validateTsFile(path.join(target, 'src/server.ts'));
+  validateTsFile(path.join(target, 'src/config/db.ts'));
+  validateTsFile(path.join(target, 'src/models/model.ts'));
+  validateTsFile(path.join(target, 'drizzle.config.ts'));
+
+  const pkg = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
+  assert.ok(pkg.scripts['db:generate'], 'package.json must contain db:generate script');
+  assert.ok(pkg.scripts['db:migrate'], 'package.json must contain db:migrate script');
+  assert.ok(pkg.scripts['db:studio'], 'package.json must contain db:studio script');
+});
+
+test('Generator: Express + JavaScript MVC with Drizzle ORM', () => {
+  const target = path.join(TEST_OUTPUT_DIR, 'express-js-drizzle');
+  composeProject({
+    targetDir: target,
+    name: 'test-drizzle-js-app',
+    language: 'javascript',
+    runtime: 'express',
+    type: 'commonjs',
+    architecture: 'mvc',
+    database: 'drizzle',
+    hashing: 'bcrypt',
+    useJwt: false,
+  });
+
+  validateJsFile(path.join(target, 'src/server.js'));
+  validateJsFile(path.join(target, 'src/config/db.js'));
+  validateJsFile(path.join(target, 'src/models/model.js'));
+  validateJsFile(path.join(target, 'drizzle.config.js'));
+
+  const pkg = JSON.parse(fs.readFileSync(path.join(target, 'package.json'), 'utf8'));
+  assert.ok(pkg.scripts['db:generate'], 'package.json must contain db:generate script');
+  assert.ok(pkg.scripts['db:migrate'], 'package.json must contain db:migrate script');
+});
+
+test('CLI: Non-interactive flag scaffolding with -y and CLI flags', () => {
+  const target = path.join(TEST_OUTPUT_DIR, 'cli-flag-project');
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+
+  execSync(`node "${cliPath}" create "${target}" --framework fastify --lang js --arch minimal -y`, {
+    stdio: 'pipe',
+  });
+
+  assert.ok(fs.existsSync(path.join(target, 'package.json')), 'package.json should be generated');
+  assert.ok(fs.existsSync(path.join(target, 'src/server.js')), 'server.js should be generated');
+  assert.ok(fs.existsSync(path.join(target, 'fogoe.config.json')), 'fogoe.config.json should be generated');
+
+  const config = JSON.parse(fs.readFileSync(path.join(target, 'fogoe.config.json'), 'utf8'));
+  assert.strictEqual(config.defaults.runtime, 'fastify');
+  assert.strictEqual(config.defaults.language, 'js');
+  assert.strictEqual(config.defaults.arch, 'minimal');
+});
+

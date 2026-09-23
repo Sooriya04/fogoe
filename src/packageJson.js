@@ -15,6 +15,11 @@ function buildPackageJson(meta) {
         ? `tsx src/server.${ext}`
         : `node src/server.${ext}`,
       ...(isTypeScript && { build: "tsc" }),
+      ...(meta.database === "drizzle" && {
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:studio": "drizzle-kit studio"
+      }),
       ...(meta.testing && { test: "vitest" }),
       ...(meta.linting && { 
         lint: "eslint .",

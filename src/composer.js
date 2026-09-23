@@ -70,6 +70,7 @@ function composeProject(options) {
     mysql: 'mysql://root:password@localhost:3306/mydb',
     sqlite: 'dev.db',
     prisma: 'postgresql://postgres:password@localhost:5432/mydb',
+    drizzle: 'postgresql://postgres:password@localhost:5432/mydb',
     none: '',
   };
   const databaseUrl = dbUrls[database] || '';
@@ -200,6 +201,7 @@ function composeProject(options) {
     license,
     type,
     language,
+    database,
     testing,
     linting,
   });
