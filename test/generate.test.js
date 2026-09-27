@@ -51,9 +51,9 @@ test('CLI generate: route, controller, and model in MVC project', () => {
     assert.ok(fs.existsSync(path.join(TEST_OUTPUT_DIR, 'src/models/user.js')));
 
     // Syntax check
-    execSync(`node --check ${path.join(TEST_OUTPUT_DIR, 'src/routes/user.js')}`);
-    execSync(`node --check ${path.join(TEST_OUTPUT_DIR, 'src/controllers/usercontroller.js')}`);
-    execSync(`node --check ${path.join(TEST_OUTPUT_DIR, 'src/models/user.js')}`);
+    execSync(`node --check "${path.join(TEST_OUTPUT_DIR, 'src/routes/user.js')}"`);
+    execSync(`node --check "${path.join(TEST_OUTPUT_DIR, 'src/controllers/usercontroller.js')}"`);
+    execSync(`node --check "${path.join(TEST_OUTPUT_DIR, 'src/models/user.js')}"`);
   } finally {
     process.chdir(prevCwd);
     if (fs.existsSync(TEST_OUTPUT_DIR)) {

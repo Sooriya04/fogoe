@@ -45,7 +45,7 @@ jobs:
         run: npm pack --dry-run
 
   publish:
-    name: Publish to NPM
+    name: Publish to NPM (if version bumped)
     needs: test
     if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
@@ -62,7 +62,19 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Publish package to NPM
-        run: npm publish --access public
+      - name: Check version and publish to NPM
+        run: |
+          LOCAL_VERSION=$(node -p "require('./package.json').version")
+          NPM_VERSION=$(npm view fogoe version 2>/dev/null || echo "")
+
+          echo "Local version:    $LOCAL_VERSION"
+          echo "Registry version: $NPM_VERSION"
+
+          if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
+            echo "🚀 New version detected ($LOCAL_VERSION != $NPM_VERSION). Publishing to NPM..."
+            npm publish --access public
+          else
+            echo "ℹ️ Version $LOCAL_VERSION is already published on NPM. Skipping publish."
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

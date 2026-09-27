@@ -43,3 +43,12 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 3. **Enhanced CLI & TUI:** Added Clack-based interactive prompts, spinners, banners, cancellation handling, and comprehensive non-interactive CLI flags for automated scaffolding.
 4. **Full CRUD Generator:** Added `fogoe generate crud` with Model, Controller, and Route generation across Express, Fastify, Hono, and Koa for JavaScript and TypeScript.
 5. **Drizzle ORM & Testing:** Added Drizzle ORM scaffolding and database scripts, while expanding automated coverage to 20 tests for CRUD generation, Drizzle integration, and CLI-based scaffolding.
+
+
+## ISSUE 23 : Non-Interactive CLI Scaffolding, AI-Assisted Generation, and Agent Automation Support
+1. **Non-Interactive Flag Execution:** Supported headless, zero-prompt project initialization via `fogoe create <name> --framework --lang --db --auth --git --install`, automatically removing dependency on interactive prompts when configuration flags are provided.
+2. **AI-Assisted Natural Language Scaffolding:** Added `--ai "<prompt>"` parsing via `src/ai.js`, converting natural-language requirements (e.g. `"Fastify with Drizzle ORM and JWT in TypeScript"`) into structured generator configuration options.
+3. **Coding Agent & CI Automation Support:** Introduced `--json` flag to emit clean, machine-readable JSON representations of scaffolded projects directly to `stdout`, suppressing terminal noise for seamless ingestion by autonomous coding agents and automated CI pipelines.
+4. **Smart Version-Diff NPM CI Workflow:** Updated `.github/workflows/ci.yml` with automated version comparison against the NPM registry, allowing routine commits to `main` without publishing errors, while automatically publishing upon version increments.
+5. **Expanded Test Suite:** Added unit and integration tests in `test/ai.test.js` and `test/generator.test.js`, bringing automated coverage to 26 passing tests across all execution paths.
+

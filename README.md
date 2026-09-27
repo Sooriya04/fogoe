@@ -39,17 +39,19 @@ Scaffold fully automated projects with custom flags and skip prompts using `-y`:
 # Fastify + TypeScript + Drizzle ORM + JWT Auth
 npx fogoe create my-api --framework fastify --lang ts --db drizzle --auth jwt --install -y
 
-# Express + TypeScript + PostgreSQL + Vitest + ESLint
-npx fogoe create blog-api -f express -l ts -d postgres --test --lint -i -y
+# AI-Assisted Scaffolding (Natural Language)
+npx fogoe create blog-api --ai "High-performance Fastify backend with Drizzle ORM and JWT in TypeScript"
 
-# Minimal single-file Hono server
-npx fogoe create microservice -f hono -l js -a minimal -y
+# Agent & CI Automation (Machine-readable JSON output)
+npx fogoe create microservice --framework hono --lang js --arch minimal --json
 ```
 
 ---
 
 ## ✨ Features
 
+- **🤖 AI-Assisted Scaffolding:** Describe your backend requirements in plain English (`--ai "..."`) and let Fogoe automatically configure runtime, database, auth, and tooling.
+- **⚡ Agent & CI Ready (`--json`):** Pure machine-readable JSON output on stdout, eliminating terminal noise for autonomous coding agents (Antigravity, Cursor, Copilot) and CI workflows.
 - **Interactive Clack TUI:** Fluid terminal wizard powered by `@clack/prompts` with animated spinners, hints, and error recovery.
 - **Headless Non-Interactive CLI:** Complete flag set (`--framework`, `--lang`, `--db`, `--auth`, `--install`, `--yes`) for automated scripts, CI/CD, and dockerization.
 - **4 Modern HTTP Runtimes:** Express, Fastify, Hono (`@hono/node-server`), and Koa.
@@ -74,6 +76,7 @@ npx fogoe create microservice -f hono -l js -a minimal -y
 |---|---|
 | `fogoe [name]` | Interactive project initializer |
 | `fogoe create <name> [flags]` | Scaffold project into a named directory |
+| `fogoe create <name> --ai "<prompt>"` | AI-assisted scaffolding from natural-language description |
 | `fogoe generate <type> <name>` | Generate MVC components (`route`, `controller`, `model`, `crud`) |
 | `fogoe g crud <name>` | Generate complete 3-layer vertical slice (Model + Controller + Routes) |
 | `fogoe add [plugin]` | Add extensions: `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
@@ -90,6 +93,9 @@ npx fogoe create microservice -f hono -l js -a minimal -y
 
 | Flag | Short | Allowed Values | Default |
 |---|---|---|---|
+| `--ai` | — | Natural-language project description | — |
+| `--json` | — | Output machine-readable JSON result | `false` |
+| `--non-interactive` | — | Run without interactive prompts | `false` |
 | `--framework` | `-f` | `express`, `fastify`, `hono`, `koa` | `express` |
 | `--lang` | `-l` | `ts`, `typescript`, `js`, `javascript` | `javascript` |
 | `--type` | `-t` | `esm`, `module`, `cjs`, `commonjs` | `commonjs` (`module` if TS) |
@@ -102,6 +108,63 @@ npx fogoe create microservice -f hono -l js -a minimal -y
 | `--install` | `-i` | Run package manager installation | `false` |
 | `--git` | `-g` | Initialize Git repository | `false` |
 | `--yes` | `-y` | Accept defaults for unspecified options | `false` |
+
+---
+
+## 🤖 AI-Assisted Scaffolding
+
+Describe what you want to build in plain English using the `--ai` flag. Fogoe parses your requirements, infers the best runtime, language, database, auth strategy, and architecture, and scaffolds the project immediately:
+
+```bash
+fogoe create store-api --ai "High-performance Fastify backend with PostgreSQL using Drizzle ORM and JWT auth in TypeScript"
+```
+
+You can combine `--ai` with explicit flags whenever you want to override a specific option:
+
+```bash
+# Inferred by AI, but explicitly force Express runtime:
+fogoe create store-api --ai "TypeScript API with Drizzle and JWT" --framework express
+```
+
+---
+
+## 🤖 Coding Agent & CI Automation (`--json`)
+
+Coding agents and CI pipelines can scaffold projects and ingest clean, structured JSON results without parsing ANSI terminal codes:
+
+```bash
+fogoe create user-service --framework fastify --lang ts --db postgres --auth jwt --json
+```
+
+**JSON Output Example:**
+```json
+{
+  "success": true,
+  "name": "user-service",
+  "targetDir": "/workspace/user-service",
+  "config": {
+    "runtime": "fastify",
+    "language": "ts",
+    "type": "esm",
+    "architecture": "mvc",
+    "database": "postgresql",
+    "hashing": "bcrypt",
+    "useJwt": true,
+    "testing": false,
+    "linting": false,
+    "git": false,
+    "install": false
+  },
+  "files": [
+    ".env",
+    ".gitignore",
+    "package.json",
+    "src/app.ts",
+    "src/server.ts",
+    "tsconfig.json"
+  ]
+}
+```
 
 ---
 

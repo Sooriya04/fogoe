@@ -344,3 +344,43 @@ test('CLI: Non-interactive flag scaffolding with -y and CLI flags', () => {
   assert.strictEqual(config.defaults.arch, 'minimal');
 });
 
+test('CLI: Machine-readable JSON output via --json flag', () => {
+  const target = path.join(TEST_OUTPUT_DIR, 'cli-json-project');
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+
+  const stdout = execSync(`node "${cliPath}" create "${target}" --framework fastify --lang ts --db postgres --auth jwt --json`, {
+    encoding: 'utf8',
+  });
+
+  const parsed = JSON.parse(stdout.trim());
+  assert.strictEqual(parsed.success, true);
+  assert.strictEqual(parsed.config.runtime, 'fastify');
+  assert.strictEqual(parsed.config.language, 'ts');
+  assert.strictEqual(parsed.config.database, 'postgresql');
+  assert.strictEqual(parsed.config.useJwt, true);
+  assert.ok(Array.isArray(parsed.files), 'Result must contain files array');
+  assert.ok(parsed.files.includes('package.json'), 'package.json must be in files list');
+  assert.ok(fs.existsSync(path.join(target, 'package.json')));
+});
+
+test('CLI: AI-assisted project scaffolding via --ai flag', () => {
+  const target = path.join(TEST_OUTPUT_DIR, 'cli-ai-project');
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+
+  const stdout = execSync(`node "${cliPath}" create "${target}" --ai "A high performance Fastify backend with Drizzle ORM and JWT in TypeScript" --json`, {
+    encoding: 'utf8',
+  });
+
+  const parsed = JSON.parse(stdout.trim());
+  assert.strictEqual(parsed.success, true);
+  assert.strictEqual(parsed.config.runtime, 'fastify');
+  assert.strictEqual(parsed.config.language, 'ts');
+  assert.strictEqual(parsed.config.database, 'drizzle');
+  assert.strictEqual(parsed.config.useJwt, true);
+  assert.ok(parsed.ai, 'Parsed output should contain ai object');
+  assert.ok(parsed.ai.prompt.includes('Fastify'));
+  assert.ok(fs.existsSync(path.join(target, 'drizzle.config.ts')));
+  assert.ok(fs.existsSync(path.join(target, 'src/server.ts')));
+});
+
+

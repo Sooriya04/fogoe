@@ -7,6 +7,7 @@ const { addPlugin } = require('./plugins');
 const { checkStatus } = require('./status');
 const { updateProject } = require('./update');
 const { generateComponent } = require('./generate');
+const { parseAiPrompt } = require('./ai');
 const chalk = require('chalk');
 
 function parseCliArgs(args) {
@@ -24,6 +25,9 @@ function parseCliArgs(args) {
     install: null,
     git: null,
     yes: false,
+    nonInteractive: false,
+    ai: null,
+    json: false,
     help: false,
     version: false,
   };
@@ -38,6 +42,14 @@ function parseCliArgs(args) {
       flags.version = true;
     } else if (arg === '--yes' || arg === '-y') {
       flags.yes = true;
+    } else if (arg === '--non-interactive') {
+      flags.nonInteractive = true;
+    } else if (arg === '--json') {
+      flags.json = true;
+    } else if (arg === '--ai') {
+      flags.ai = args[++i];
+    } else if (arg.startsWith('--ai=')) {
+      flags.ai = arg.slice(5);
     } else if (arg === '--framework' || arg === '-f' || arg === '--runtime') {
       flags.framework = args[++i];
     } else if (arg.startsWith('--framework=')) {
@@ -101,6 +113,11 @@ function parseCliArgs(args) {
   const { flags, positionals } = parseCliArgs(args);
 
   if (flags.version) {
+    if (flags.json) {
+      const pkg = require('../package.json');
+      console.log(JSON.stringify({ version: pkg.version }));
+      return;
+    }
     const pkg = require('../package.json');
     console.log(chalk.cyan(`Fogoe CLI v${pkg.version}`));
     return;
@@ -118,6 +135,11 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
     console.log(`  ${chalk.green('fogoe generate <type> <name>')}  Generate route, controller, model, or full crud`);
     console.log(`  ${chalk.green('fogoe g crud <name>')}           Vertical slice: Model + Controller + Routes\n`);
+
+    console.log(chalk.yellow('AI & Automation Flags:'));
+    console.log(`  ${chalk.green('--ai "<prompt>"')}              Natural-language AI-assisted scaffolding`);
+    console.log(`  ${chalk.green('--json')}                       Machine-readable JSON output for agents & CI`);
+    console.log(`  ${chalk.green('--non-interactive')}           Run headlessly without interactive prompts\n`);
 
     console.log(chalk.yellow('CLI Flags (Non-Interactive Scaffolding):'));
     console.log(`  ${chalk.green('-f, --framework <name>')}       Runtime: express, fastify, hono, koa`);
@@ -143,12 +165,13 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)\n`);
 
     console.log(chalk.yellow('Examples:'));
-    console.log(`  ${chalk.gray('# Interactive prompt mode')}`);
-    console.log('  npx fogoe');
-    console.log('  fogoe create my-api\n');
-    console.log(`  ${chalk.gray('# Fully automated non-interactive scaffolding')}`);
-    console.log('  fogoe create my-api --framework fastify --lang ts --db drizzle --auth jwt --install -y');
-    console.log('  fogoe create blog --framework express --lang ts --db postgres --install -y\n');
+    console.log(`  ${chalk.gray('# AI-Assisted Scaffolding')}`);
+    console.log('  fogoe create my-api --ai "High-performance Fastify backend with Drizzle ORM and JWT in TypeScript"');
+    console.log('  fogoe create blog --ai "Minimal Hono API with SQLite and Vitest tests"\n');
+    console.log(`  ${chalk.gray('# Coding Agent & CI Automation (JSON output)')}`);
+    console.log('  fogoe create my-api --framework fastify --lang ts --db postgres --auth jwt --json\n');
+    console.log(`  ${chalk.gray('# Fully automated CLI scaffolding')}`);
+    console.log('  fogoe create my-api --framework fastify --lang ts --db drizzle --auth jwt --install\n');
     console.log(`  ${chalk.gray('# Generate full CRUD vertical slice')}`);
     console.log('  fogoe g crud product');
     console.log('  fogoe generate crud user\n');
@@ -228,6 +251,12 @@ function parseCliArgs(args) {
     return;
   }
 
+  // Parse AI prompt if provided
+  let aiConfig = null;
+  if (flags.ai) {
+    aiConfig = parseAiPrompt(flags.ai);
+  }
+
   // Determine target directory and initial package name
   let initialName = '';
   let targetDir = process.cwd();
@@ -240,17 +269,44 @@ function parseCliArgs(args) {
     targetDir = path.resolve(process.cwd(), positionals[0]);
   }
 
+  // Determine if non-interactive mode should be active
+  const hasExplicitFlags = Boolean(
+    flags.yes ||
+    flags.nonInteractive ||
+    flags.json ||
+    flags.ai ||
+    flags.framework ||
+    flags.language ||
+    flags.type ||
+    flags.architecture ||
+    flags.database ||
+    flags.auth ||
+    flags.jwt !== null ||
+    flags.install !== null ||
+    flags.git !== null ||
+    flags.testing !== null ||
+    flags.linting !== null
+  );
+
+  const isNonInteractive = hasExplicitFlags;
+
   if (targetDir !== process.cwd()) {
     fs.mkdirSync(targetDir, { recursive: true });
     process.chdir(targetDir);
   }
 
-  const isNonInteractive = flags.yes;
-
-  if (!isNonInteractive) {
-    await intro(chalk.bold.cyan('Fogoe') + chalk.dim(' — Next-gen Node.js Scaffolding'));
-  } else {
-    console.log(chalk.cyan(`\nFogoe: Initializing project in ${targetDir}...\n`));
+  // Display banner unless in JSON mode
+  if (!flags.json) {
+    if (!isNonInteractive) {
+      await intro(chalk.bold.cyan('Fogoe') + chalk.dim(' — Next-gen Node.js Scaffolding'));
+    } else {
+      console.log(chalk.cyan(`\nFogoe: Initializing project in ${targetDir}...`));
+      if (aiConfig && aiConfig.summary.length > 0) {
+        console.log(chalk.magenta('\n🤖 AI Requirements Interpreted:'));
+        aiConfig.summary.forEach((item) => console.log(chalk.gray(`   • ${item}`)));
+        console.log('');
+      }
+    }
   }
 
   // Check if directory is non-empty
@@ -259,7 +315,9 @@ function parseCliArgs(args) {
     (file) => file !== '.git' && file !== '.gitignore' && file !== 'README.md' && file !== 'LICENSE'
   );
   if (hasExistingProjectFiles) {
-    console.log(chalk.yellow('⚠ Warning: Current directory is not empty. Existing files may be overwritten.'));
+    if (!flags.json) {
+      console.log(chalk.yellow('⚠ Warning: Current directory is not empty. Existing files may be overwritten.'));
+    }
     if (!isNonInteractive) {
       const proceed = await select('Do you want to proceed?', ['yes', 'no']);
       if (proceed !== 'yes') {
@@ -270,7 +328,7 @@ function parseCliArgs(args) {
   }
 
   // 1. Project metadata
-  let name = initialName || path.basename(process.cwd());
+  let name = initialName ? path.basename(initialName) : path.basename(process.cwd());
   if (!isNonInteractive && !initialName) {
     name = await input('Package name', name, (val) => {
       if (!val) return 'Package name is required';
@@ -286,7 +344,7 @@ function parseCliArgs(args) {
   let author = '';
   let license = 'ISC';
 
-  if (!isNonInteractive && !flags.framework && !flags.language) {
+  if (!isNonInteractive && !flags.framework && !flags.language && !flags.ai) {
     version = (await input('Version', '1.0.0')) || '1.0.0';
     description = await input('Description');
     author = await input('Author');
@@ -298,6 +356,8 @@ function parseCliArgs(args) {
   if (flags.language) {
     const l = flags.language.toLowerCase();
     language = (l === 'ts' || l === 'typescript') ? 'typescript' : 'javascript';
+  } else if (aiConfig && aiConfig.language) {
+    language = aiConfig.language;
   } else if (!isNonInteractive) {
     language = await select('Select language', [
       { value: 'javascript', label: 'JavaScript' },
@@ -310,6 +370,8 @@ function parseCliArgs(args) {
   if (flags.type) {
     const t = flags.type.toLowerCase();
     type = (t === 'esm' || t === 'module') ? 'module' : 'commonjs';
+  } else if (aiConfig && aiConfig.type) {
+    type = aiConfig.type;
   } else if (!isNonInteractive) {
     type = await select('Select module type', [
       { value: 'commonjs', label: 'CommonJS (require/exports)' },
@@ -324,6 +386,8 @@ function parseCliArgs(args) {
     if (['express', 'fastify', 'hono', 'koa'].includes(r)) {
       runtime = r;
     }
+  } else if (aiConfig && aiConfig.runtime) {
+    runtime = aiConfig.runtime;
   } else if (!isNonInteractive) {
     runtime = await select('Select runtime', [
       { value: 'express', label: 'Express', hint: 'Fast, unopinionated, classic' },
@@ -340,6 +404,8 @@ function parseCliArgs(args) {
     architecture = a === 'mvc' ? 'mvc' : 'minimal';
   } else if (flags.database || flags.auth || flags.jwt !== null) {
     architecture = 'mvc';
+  } else if (aiConfig && aiConfig.architecture) {
+    architecture = aiConfig.architecture;
   } else if (!isNonInteractive) {
     architecture = await select('Select architecture', [
       { value: 'minimal', label: 'Minimal', hint: 'Single-file or simple entry structure' },
@@ -348,14 +414,22 @@ function parseCliArgs(args) {
   }
 
   // 6. Tooling selection
-  let testing = flags.testing === true;
-  if (flags.testing === null && !isNonInteractive) {
+  let testing = false;
+  if (flags.testing !== null) {
+    testing = flags.testing === true;
+  } else if (aiConfig && aiConfig.testing) {
+    testing = true;
+  } else if (!isNonInteractive) {
     const testChoice = await select('Include testing suite (Vitest)?', ['yes', 'no']);
     testing = testChoice === 'yes';
   }
 
-  let linting = flags.linting === true;
-  if (flags.linting === null && !isNonInteractive) {
+  let linting = false;
+  if (flags.linting !== null) {
+    linting = flags.linting === true;
+  } else if (aiConfig && aiConfig.linting) {
+    linting = true;
+  } else if (!isNonInteractive) {
     const lintChoice = await select('Include linting & formatting (ESLint + Prettier)?', ['yes', 'no']);
     linting = lintChoice === 'yes';
   }
@@ -371,6 +445,8 @@ function parseCliArgs(args) {
       if (d === 'postgres' || d === 'postgresql' || d === 'pg') database = 'postgresql';
       else if (d === 'mongo' || d === 'mongodb') database = 'mongodb';
       else if (['prisma', 'drizzle', 'mysql', 'sqlite', 'none'].includes(d)) database = d;
+    } else if (aiConfig && aiConfig.database) {
+      database = aiConfig.database;
     } else if (!isNonInteractive) {
       database = await select('Select database', [
         { value: 'mongodb', label: 'MongoDB', hint: 'Mongoose ODM' },
@@ -386,6 +462,8 @@ function parseCliArgs(args) {
     if (flags.hashing) {
       const h = flags.hashing.toLowerCase();
       if (['bcrypt', 'argon2', 'crypto'].includes(h)) hashing = h;
+    } else if (aiConfig && aiConfig.hashing) {
+      hashing = aiConfig.hashing;
     } else if (!isNonInteractive) {
       hashing = await select('Select hashing library', [
         { value: 'bcrypt', label: 'bcrypt' },
@@ -398,6 +476,8 @@ function parseCliArgs(args) {
       useJwt = flags.jwt;
     } else if (flags.auth) {
       useJwt = flags.auth.toLowerCase() === 'jwt';
+    } else if (aiConfig && aiConfig.useJwt !== undefined) {
+      useJwt = aiConfig.useJwt;
     } else if (!isNonInteractive) {
       const jwtChoice = await select('Include jsonwebtoken?', ['yes', 'no']);
       useJwt = jwtChoice === 'yes';
@@ -405,7 +485,7 @@ function parseCliArgs(args) {
   }
 
   // Compose project files
-  if (!isNonInteractive) {
+  if (!isNonInteractive && !flags.json) {
     const s = await spinner();
     s.start('Scaffolding project files...');
     composeProject({
@@ -444,25 +524,39 @@ function parseCliArgs(args) {
       testing,
       linting,
     });
-    console.log(chalk.green('✓ Scaffolding complete'));
+    if (!flags.json) {
+      console.log(chalk.green('✓ Scaffolding complete'));
+    }
   }
 
   // Install dependencies
-  let installDeps = flags.install === true;
-  if (flags.install === null && !isNonInteractive) {
+  let installDeps = false;
+  if (flags.install !== null) {
+    installDeps = flags.install === true;
+  } else if (aiConfig && aiConfig.install) {
+    installDeps = true;
+  } else if (!isNonInteractive) {
     const installChoice = await select('Install dependencies now?', ['yes', 'no']);
     installDeps = installChoice === 'yes';
   }
 
   if (installDeps) {
-    console.log(chalk.cyan('\nInstalling dependencies...\n'));
-    install(language, runtime, architecture, database, hashing, useJwt, testing, linting);
-    console.log(chalk.green('\n✓ Dependencies installed'));
+    if (!flags.json) {
+      console.log(chalk.cyan('\nInstalling dependencies...\n'));
+    }
+    install(language, runtime, architecture, database, hashing, useJwt, testing, linting, flags.json);
+    if (!flags.json) {
+      console.log(chalk.green('\n✓ Dependencies installed'));
+    }
   }
 
   // Git initialization
-  let initGitRepo = flags.git === true;
-  if (flags.git === null && !isNonInteractive) {
+  let initGitRepo = false;
+  if (flags.git !== null) {
+    initGitRepo = flags.git === true;
+  } else if (aiConfig && aiConfig.git) {
+    initGitRepo = true;
+  } else if (!isNonInteractive) {
     const gitChoice = await select('Initialize Git repository?', ['yes', 'no']);
     initGitRepo = gitChoice === 'yes';
   }
@@ -484,6 +578,54 @@ function parseCliArgs(args) {
   if (initGitRepo) {
     const { initGit } = require('./github');
     await initGit();
+  }
+
+  // Machine-readable JSON output for Coding Agents and CI
+  if (flags.json) {
+    const createdFiles = [];
+    function collectFiles(dir, relativeTo) {
+      if (!fs.existsSync(dir)) return;
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          collectFiles(full, relativeTo);
+        } else {
+          createdFiles.push(path.relative(relativeTo, full).replace(/\\/g, '/'));
+        }
+      }
+    }
+    collectFiles(targetDir, targetDir);
+
+    const jsonResult = {
+      success: true,
+      name,
+      targetDir,
+      config: {
+        runtime,
+        language: language === 'javascript' ? 'js' : 'ts',
+        type: type === 'commonjs' ? 'cjs' : 'esm',
+        architecture,
+        database,
+        hashing: architecture === 'mvc' ? hashing : undefined,
+        useJwt: architecture === 'mvc' ? useJwt : undefined,
+        testing,
+        linting,
+        git: initGitRepo,
+        install: installDeps,
+      },
+      files: createdFiles.sort(),
+    };
+
+    if (aiConfig) {
+      jsonResult.ai = {
+        prompt: flags.ai,
+        interpreted: aiConfig.summary,
+      };
+    }
+
+    console.log(JSON.stringify(jsonResult, null, 2));
+    return;
   }
 
   if (!isNonInteractive) {

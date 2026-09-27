@@ -69,7 +69,7 @@ function getPackageManager() {
 /**
  * Install dependencies based on language, runtime, architecture, database, hashing, and JWT
  */
-function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false) {
+function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false, silent = false) {
   // Base runtime packages
   let packages = `${runtime} cors dotenv`;
   let devPackages = "";
@@ -152,39 +152,42 @@ function install(language, runtime, architecture, database = "none", hashing = "
   }
 
   const pm = getPackageManager();
-  console.log(`\nUsing package manager: ${pm}`);
+  if (!silent) {
+    console.log(`\nUsing package manager: ${pm}`);
+  }
 
   const trimPkgs = packages.trim();
   const trimDev = devPackages.trim();
+  const stdio = silent ? "ignore" : "inherit";
 
   // Run separate commands for runtime dependencies and devDependencies
   if (pm === "npm") {
     if (trimPkgs) {
-      execSync(`npm install --save ${trimPkgs}`, { stdio: "inherit" });
+      execSync(`npm install --save ${trimPkgs}`, { stdio });
     }
     if (trimDev) {
-      execSync(`npm install --save-dev ${trimDev}`, { stdio: "inherit" });
+      execSync(`npm install --save-dev ${trimDev}`, { stdio });
     }
   } else if (pm === "bun") {
     if (trimPkgs) {
-      execSync(`bun add ${trimPkgs}`, { stdio: "inherit" });
+      execSync(`bun add ${trimPkgs}`, { stdio });
     }
     if (trimDev) {
-      execSync(`bun add -d ${trimDev}`, { stdio: "inherit" });
+      execSync(`bun add -d ${trimDev}`, { stdio });
     }
   } else if (pm === "pnpm") {
     if (trimPkgs) {
-      execSync(`pnpm add ${trimPkgs}`, { stdio: "inherit" });
+      execSync(`pnpm add ${trimPkgs}`, { stdio });
     }
     if (trimDev) {
-      execSync(`pnpm add -D ${trimDev}`, { stdio: "inherit" });
+      execSync(`pnpm add -D ${trimDev}`, { stdio });
     }
   } else if (pm === "yarn") {
     if (trimPkgs) {
-      execSync(`yarn add ${trimPkgs}`, { stdio: "inherit" });
+      execSync(`yarn add ${trimPkgs}`, { stdio });
     }
     if (trimDev) {
-      execSync(`yarn add -D ${trimDev}`, { stdio: "inherit" });
+      execSync(`yarn add -D ${trimDev}`, { stdio });
     }
   }
 }
