@@ -107,6 +107,7 @@ Fogoe sets up database connections and sample models out of the box:
 |---|---|---|
 | **MongoDB** | `mongoose` | Mongoose client connecting via `DATABASE_URL` with connection event listeners. |
 | **PostgreSQL** | `pg` | PostgreSQL connection pool (`new Pool()`) connected to `DATABASE_URL`. |
+| **Drizzle ORM** | `drizzle-orm` + `pg` | Type-safe schema definition with Drizzle client connected via node-postgres pool. |
 | **MySQL** | `mysql2/promise` | Promise-based MySQL connection pool (`mysql.createPool()`). |
 | **SQLite** | `better-sqlite3` | High-performance embedded synchronous SQLite database. |
 | **Prisma** | `@prisma/client` + `prisma` | Includes `prisma/schema.prisma` with User model and initialized `PrismaClient`. |
@@ -148,9 +149,19 @@ Provides password hashing helpers in `src/utils/hashing`:
 
 ---
 
-## 8. CLI Features
+## 8. CLI Generators & Plugins
 
-### Project Generators (`fogoe generate`)
+### Vertical Slice CRUD Generator (`fogoe g crud`)
+Generates a complete 3-tier architectural slice in one command:
+```bash
+fogoe g crud product
+```
+Creates:
+* `src/models/product.model.{js,ts}`
+* `src/controllers/product.controller.{js,ts}`
+* `src/routes/product.routes.{js,ts}`
+
+### Individual Component Generators (`fogoe generate`)
 Quickly scaffold new MVC components:
 ```bash
 fogoe generate route user       # Generates src/routes/user.{js,ts}
@@ -168,7 +179,90 @@ Easily integrate common backend capabilities into existing Fogoe projects:
 * `swagger`: Interactive OpenAPI docs via `swagger-ui-express`.
 * `socket`: Real-time WebSocket support via `socket.io`.
 
-### Project Lifecycle
+---
+
+## 9. Non-Interactive Scaffolding & CLI Flags
+
+Fogoe supports 100% headless project generation for CI pipelines, Docker builds, and scripting:
+
+```bash
+fogoe create <name> \
+  --framework <fastify|express|hono|koa> \
+  --lang <ts|js> \
+  --arch <mvc|minimal> \
+  --db <postgresql|drizzle|prisma|mongodb|sqlite|mysql|none> \
+  --auth <jwt|none> \
+  --git \
+  --install
+```
+
+### Supported Automation Flags
+* `--framework <name>`: Target web framework (`fastify`, `express`, `hono`, `koa`).
+* `--lang <ts|js>`: Programming language / TypeScript support.
+* `--arch <mvc|minimal>`: Project layout pattern.
+* `--db <name>`: Database driver or ORM (`postgresql`, `drizzle`, `prisma`, `mongodb`, `sqlite`, `mysql`, `none`).
+* `--auth <jwt|none>`: Authentication middleware.
+* `--git / --no-git`: Initialize Git repository with default `.gitignore`.
+* `--install / --no-install`: Run dependency installation automatically.
+* `--yes`, `-y`, `--non-interactive`: Skip all prompts and use defaults or provided flags.
+
+---
+
+## 10. AI-Assisted Scaffolding (`--ai`)
+
+Describe your backend requirements in natural language and Fogoe decomposes the prompt into internal configuration parameters:
+
+```bash
+fogoe create store-api --ai "e-commerce backend with fastify, postgresql, drizzle orm, and jwt auth"
+```
+
+The AI interpreter extracts:
+* Target framework
+* Language and TypeScript configuration
+* Database driver or ORM
+* Authentication requirements
+* Best-fit architectural pattern
+
+---
+
+## 11. Coding Agent & CI Automation (`--json`)
+
+Autonomous coding agents (Claude Code, Cursor, Copilot, Antigravity) and CI runners can consume Fogoe output programmatically via `--json`:
+
+```bash
+fogoe create my-api --framework express --lang ts --db postgresql --auth jwt --non-interactive --json
+```
+
+Emits structured JSON to `stdout`:
+```json
+{
+  "success": true,
+  "projectName": "my-api",
+  "targetDir": "/workspace/my-api",
+  "config": {
+    "framework": "express",
+    "language": "ts",
+    "architecture": "mvc",
+    "database": "postgresql",
+    "auth": "jwt",
+    "git": true,
+    "install": false
+  },
+  "stats": {
+    "filesWritten": 14,
+    "durationMs": 42
+  }
+}
+```
+
+* Zero stdin blocking.
+* Exit code `0` on success, non-zero on failure.
+* Error details written cleanly to `stderr` or structured `error` field in JSON.
+
+---
+
+## 12. Project Lifecycle Diagnostics
+
 * `fogoe status`: Displays current framework, language, database status, and Git state.
 * `fogoe update`: Upgrades project dependencies using the active package manager (`npm`, `pnpm`, `bun`, `yarn`).
 * `fogoe init`: Initializes Git, sets branch, adds remote, and updates `fogoe.config.json`.

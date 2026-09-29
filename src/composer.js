@@ -210,6 +210,25 @@ function composeProject(options) {
     JSON.stringify(pkgData, null, 2),
   );
 
+  // 8. Generate fogoe.config.json if not present
+  const configPath = path.join(targetDir, 'fogoe.config.json');
+  if (!fs.existsSync(configPath)) {
+    const fogoeConfig = {
+      defaults: {
+        language: isTypeScript ? 'ts' : 'js',
+        runtime,
+        arch: architecture,
+        type: typeCode,
+        database,
+        hashing: architecture === 'mvc' ? hashing : undefined,
+        auth: useJwt ? 'jwt' : 'none',
+        git: false,
+      },
+      addons: [],
+    };
+    fs.writeFileSync(configPath, JSON.stringify(fogoeConfig, null, 2));
+  }
+
   return {
     targetDir,
     options,

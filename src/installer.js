@@ -38,30 +38,24 @@ const hashTypePackages = {
 
 /**
  * Detect which package manager is being used or available.
+ * Defaults to 'npm' unless invoked via bun/pnpm/yarn or a lockfile is detected.
  */
-function getPackageManager() {
+function getPackageManager(preferredPm = null) {
+  if (preferredPm && ["npm", "pnpm", "bun", "yarn"].includes(preferredPm.toLowerCase())) {
+    return preferredPm.toLowerCase();
+  }
+
   const agent = process.env.npm_config_user_agent || "";
   if (agent.startsWith("bun")) return "bun";
   if (agent.startsWith("pnpm")) return "pnpm";
   if (agent.startsWith("yarn")) return "yarn";
+  if (agent.startsWith("npm")) return "npm";
 
   const fs = require("fs");
   if (fs.existsSync("bun.lockb") || fs.existsSync("bun.lock")) return "bun";
   if (fs.existsSync("pnpm-lock.yaml")) return "pnpm";
   if (fs.existsSync("yarn.lock")) return "yarn";
-
-  try {
-    execSync("bun --version", { stdio: "ignore" });
-    return "bun";
-  } catch {}
-  try {
-    execSync("pnpm --version", { stdio: "ignore" });
-    return "pnpm";
-  } catch {}
-  try {
-    execSync("yarn --version", { stdio: "ignore" });
-    return "yarn";
-  } catch {}
+  if (fs.existsSync("package-lock.json")) return "npm";
 
   return "npm";
 }
@@ -69,7 +63,7 @@ function getPackageManager() {
 /**
  * Install dependencies based on language, runtime, architecture, database, hashing, and JWT
  */
-function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false, silent = false) {
+function install(language, runtime, architecture, database = "none", hashing = "bcrypt", useJwt = false, testing = false, linting = false, silent = false, preferredPm = null) {
   // Base runtime packages
   let packages = `${runtime} cors dotenv`;
   let devPackages = "";
@@ -151,7 +145,7 @@ function install(language, runtime, architecture, database = "none", hashing = "
     }
   }
 
-  const pm = getPackageManager();
+  const pm = getPackageManager(preferredPm);
   if (!silent) {
     console.log(`\nUsing package manager: ${pm}`);
   }
@@ -176,11 +170,27 @@ function install(language, runtime, architecture, database = "none", hashing = "
       execSync(`bun add -d ${trimDev}`, { stdio });
     }
   } else if (pm === "pnpm") {
-    if (trimPkgs) {
-      execSync(`pnpm add ${trimPkgs}`, { stdio });
-    }
-    if (trimDev) {
-      execSync(`pnpm add -D ${trimDev}`, { stdio });
+    try {
+      if (trimPkgs) {
+        execSync(`pnpm add ${trimPkgs}`, { stdio });
+      }
+      if (trimDev) {
+        execSync(`pnpm add -D ${trimDev}`, { stdio });
+      }
+    } catch (err) {
+      // In pnpm v10+, build scripts (like esbuild in tsx/vitest) are blocked by default.
+      // Retry with dangerouslyAllowAllBuilds to unblock development tools.
+      try {
+        if (trimDev) {
+          execSync(`pnpm add -D ${trimDev} --config.dangerouslyAllowAllBuilds=true`, { stdio });
+        }
+      } catch (retryErr) {
+        if (!silent) {
+          console.warn("pnpm install encountered build script restrictions; falling back to npm...");
+        }
+        if (trimPkgs) execSync(`npm install --save ${trimPkgs}`, { stdio });
+        if (trimDev) execSync(`npm install --save-dev ${trimDev}`, { stdio });
+      }
     }
   } else if (pm === "yarn") {
     if (trimPkgs) {

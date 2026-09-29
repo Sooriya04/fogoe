@@ -24,6 +24,7 @@ function parseCliArgs(args) {
     linting: null,
     install: null,
     git: null,
+    pm: null,
     yes: false,
     nonInteractive: false,
     ai: null,
@@ -100,6 +101,12 @@ function parseCliArgs(args) {
       flags.git = true;
     } else if (arg === '--no-git') {
       flags.git = false;
+    } else if (arg === '--pm' || arg === '--package-manager') {
+      flags.pm = args[++i];
+    } else if (arg.startsWith('--pm=')) {
+      flags.pm = arg.split('=')[1];
+    } else if (arg.startsWith('--package-manager=')) {
+      flags.pm = arg.split('=')[1];
     } else if (!arg.startsWith('-')) {
       positionals.push(arg);
     }
@@ -152,6 +159,7 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('--test, --no-test')}            Vitest testing suite`);
     console.log(`  ${chalk.green('--lint, --no-lint')}            ESLint + Prettier`);
     console.log(`  ${chalk.green('-i, --install')}                Auto-install dependencies`);
+    console.log(`  ${chalk.green('--pm <npm|pnpm|bun|yarn>')}      Package manager (default: npm)`);
     console.log(`  ${chalk.green('-g, --git')}                    Auto-initialize git repository`);
     console.log(`  ${chalk.green('-y, --yes')}                    Accept default choices without prompting\n`);
 
@@ -544,7 +552,7 @@ function parseCliArgs(args) {
     if (!flags.json) {
       console.log(chalk.cyan('\nInstalling dependencies...\n'));
     }
-    install(language, runtime, architecture, database, hashing, useJwt, testing, linting, flags.json);
+    install(language, runtime, architecture, database, hashing, useJwt, testing, linting, flags.json, flags.pm);
     if (!flags.json) {
       console.log(chalk.green('\n✓ Dependencies installed'));
     }

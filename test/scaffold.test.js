@@ -41,5 +41,12 @@ test('packageJson builder for typescript', (t) => {
 
 test('package manager detection fallback', (t) => {
   const pm = getPackageManager();
-  assert.ok(['npm', 'yarn', 'pnpm', 'bun'].includes(pm));
+  assert.strictEqual(pm, 'npm');
+});
+
+test('package manager preferred PM override', (t) => {
+  assert.strictEqual(getPackageManager('pnpm'), 'pnpm');
+  assert.strictEqual(getPackageManager('bun'), 'bun');
+  assert.strictEqual(getPackageManager('yarn'), 'yarn');
+  assert.strictEqual(getPackageManager('npm'), 'npm');
 });

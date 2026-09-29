@@ -51,7 +51,9 @@ function checkStatus() {
     if (dbFile) {
       const content = fs.readFileSync(dbFile, 'utf8');
       if (content.includes('mongoose')) database = 'MongoDB (Mongoose)';
+      else if (content.includes('drizzle')) database = 'Drizzle ORM (PostgreSQL)';
       else if (content.includes('mysql2')) database = 'MySQL';
+      else if (content.includes('better-sqlite3')) database = 'SQLite (better-sqlite3)';
       else if (content.includes('pg')) database = 'PostgreSQL';
     }
   }

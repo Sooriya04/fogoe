@@ -9,6 +9,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=flat-square)](LICENSE)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org)
 [![CI / CD](https://img.shields.io/github/actions/workflow/status/Sooriya04/fogoe/ci.yml?branch=main&style=flat-square&label=CI%2FCD)](https://github.com/Sooriya04/fogoe/actions)
+[![Website](https://img.shields.io/badge/website-sooriya04.github.io%2Ffogoe-06b6d4.svg?style=flat-square)](https://sooriya04.github.io/fogoe/)
 
 <p align="center">
   Scaffold production-grade backend projects in seconds across <b>Express</b>, <b>Fastify</b>, <b>Hono</b>, and <b>Koa</b>.<br/>
@@ -106,6 +107,7 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `--test` / `--no-test` | — | Vitest testing suite | `false` |
 | `--lint` / `--no-lint` | — | ESLint + Prettier configuration | `false` |
 | `--install` | `-i` | Run package manager installation | `false` |
+| `--pm` | — | `npm`, `pnpm`, `bun`, `yarn` (preferred package manager) | `npm` |
 | `--git` | `-g` | Initialize Git repository | `false` |
 | `--yes` | `-y` | Accept defaults for unspecified options | `false` |
 
@@ -268,12 +270,28 @@ Fogoe is rigorously tested across operating systems and Node versions:
 
 - **OS Matrix**: Ubuntu (Linux), macOS, Windows
 - **Node Matrix**: Node.js 18.x, 20.x, 22.x
-- **Test Suite**: Native `node --test` runner with 20 passing integration tests
+- **Test Suite**: Native `node --test` runner with 27 passing unit & integration tests
 
 Run tests locally:
 ```bash
 npm test
 ```
+
+---
+
+## 📁 Repository Structure
+
+```text
+fogoe/
+├── bin/              # CLI executable entry point (#!/usr/bin/env node)
+├── src/              # Core CLI engine, AI parser, composer, CRUD generators, installer
+├── templates/        # Clean on-disk project templates (Fastify, Express, Hono, Koa)
+├── site/             # Interactive web configurator & docs showcase source (Vite)
+├── test/             # Native node:test unit & integration test suites
+└── .github/          # GitHub Actions CI matrix and Pages deployment workflows
+```
+
+> **Note on Website Deployment:** The documentation website in `site/` is built dynamically into `site/dist/` and deployed to [GitHub Pages](https://sooriya04.github.io/fogoe/) via `.github/workflows/pages.yml`. When publishing to the NPM registry, only `bin/`, `src/`, `templates/`, and root documentation are packaged—`site/` is excluded.
 
 ---
 

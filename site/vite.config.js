@@ -1,10 +1,9 @@
 import { defineConfig } from 'vite';
-import { resolve } from 'path';
 
 export default defineConfig({
   base: '/fogoe/',
   build: {
-    outDir: resolve(__dirname, '../docs'),
+    outDir: 'dist',
     emptyOutDir: true,
   },
   server: {
