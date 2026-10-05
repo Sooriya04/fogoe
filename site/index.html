@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
@@ -26,11 +26,44 @@
     href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap"
     rel="stylesheet" />
 
+  <!-- Instant Theme Initializer (Multi-layer storage & URL sync) -->
+  <script>
+    (function () {
+      var theme = 'dark';
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var urlTheme = params.get('theme');
+        var localTheme = window.localStorage && localStorage.getItem('fogoe-theme');
+        var sessionTheme = window.sessionStorage && sessionStorage.getItem('fogoe-theme');
+        var cookieMatch = document.cookie.match(/(?:^|;\s*)fogoe-theme=([^;]+)/);
+        var cookieTheme = cookieMatch ? cookieMatch[1] : null;
+
+        if (urlTheme === 'light' || urlTheme === 'dark') {
+          theme = urlTheme;
+        } else if (localTheme === 'light' || localTheme === 'dark') {
+          theme = localTheme;
+        } else if (sessionTheme === 'light' || sessionTheme === 'dark') {
+          theme = sessionTheme;
+        } else if (cookieTheme === 'light' || cookieTheme === 'dark') {
+          theme = cookieTheme;
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          theme = 'light';
+        }
+      } catch (e) {}
+
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
+    })();
+  </script>
+
   <style>
     /* ==========================================================================
        DESIGN SYSTEM & TOKENS
        ========================================================================== */
-    :root {
+    :root,
+    html.dark,
+    [data-theme="dark"] {
       --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
@@ -40,11 +73,14 @@
       --bg-card: #16161a;
       --bg-elevated: #1e1e24;
       --bg-overlay: rgba(9, 9, 11, 0.88);
+      --bg-code: #0a0a0d;
+      --bg-code-header: #141418;
+      --bg-terminal: #0a0a0d;
 
-      /* Borders */
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-default: rgba(255, 255, 255, 0.13);
-      --border-hover: rgba(255, 255, 255, 0.24);
+      /* Borders - Thick & High Contrast */
+      --border-subtle: rgba(255, 255, 255, 0.18);
+      --border-default: rgba(255, 255, 255, 0.32);
+      --border-hover: rgba(255, 255, 255, 0.60);
 
       /* Typography */
       --text-primary: #f4f4f6;
@@ -57,6 +93,12 @@
       --accent-green: #34d399;
       --accent-purple: #c084fc;
       --accent-amber: #fbbf24;
+
+      /* Button & Highlights */
+      --btn-primary-bg: #ffffff;
+      --btn-primary-text: #09090b;
+      --brand-mark-bg: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+      --brand-mark-text: #09090b;
 
       /* Syntax colors */
       --syn-keyword: #f472b6;
@@ -74,6 +116,48 @@
 
       /* Layout */
       --max-width: 1180px;
+      --shadow-card: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Light Theme Tokens (High-Contrast, Thick Dark Borders) */
+    html.light,
+    [data-theme="light"] {
+      --bg-canvas: #ffffff;
+      --bg-surface: #fbfbfd;
+      --bg-card: #ffffff;
+      --bg-elevated: #f4f4f7;
+      --bg-overlay: rgba(255, 255, 255, 0.92);
+      --bg-code: #f6f8fa;
+      --bg-code-header: #ebeef2;
+      --bg-terminal: #0f172a;
+
+      /* Bold, thick, clearly visible dark borders */
+      --border-subtle: #94a3b8;
+      --border-default: #475569;
+      --border-hover: #0f172a;
+
+      --text-primary: #09090b;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+
+      --accent-cyan: #0284c7;
+      --accent-green: #059669;
+      --accent-purple: #7c3aed;
+      --accent-amber: #d97706;
+
+      --btn-primary-bg: #09090b;
+      --btn-primary-text: #ffffff;
+      --brand-mark-bg: linear-gradient(135deg, #09090b 0%, #27272a 100%);
+      --brand-mark-text: #ffffff;
+
+      --syn-keyword: #c026d3;
+      --syn-fn: #1d4ed8;
+      --syn-str: #047857;
+      --syn-comment: #64748b;
+      --syn-type: #b45309;
+
+      --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
     }
 
     /* Reset */
@@ -92,6 +176,7 @@
       line-height: 1.55;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     body {
@@ -117,6 +202,13 @@
       -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
       pointer-events: none;
       z-index: 0;
+    }
+
+    [data-theme="light"] .grid-bg {
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 0, 0, 0.04) 0%, transparent 65%),
+        linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
     }
 
     /* Outer section container */
@@ -175,14 +267,14 @@
       width: 26px;
       height: 26px;
       border-radius: var(--r-sm);
-      background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+      background: var(--brand-mark-bg);
       display: grid;
       place-items: center;
-      color: #09090b;
+      color: var(--brand-mark-text);
       font-size: 13px;
       font-weight: 800;
       font-family: var(--font-mono);
-      box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .version-badge {
@@ -227,6 +319,32 @@
       gap: 10px;
     }
 
+    .theme-toggle-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      width: 34px;
+      height: 34px;
+      border-radius: var(--r-sm);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-toggle-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+      background: var(--bg-card);
+    }
+
+    .theme-toggle-btn .sun-icon { display: block; }
+    .theme-toggle-btn .moon-icon { display: none; }
+
+    [data-theme="light"] .theme-toggle-btn .sun-icon { display: none; }
+    [data-theme="light"] .theme-toggle-btn .moon-icon { display: block; }
+
     .btn {
       display: inline-flex;
       align-items: center;
@@ -247,7 +365,6 @@
       background: var(--bg-surface);
       color: var(--text-primary);
       border-color: var(--border-default);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
     .btn-secondary:hover {
@@ -256,14 +373,14 @@
     }
 
     .btn-primary {
-      background: #ffffff;
-      color: #09090b;
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
       font-weight: 600;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
 
     .btn-primary:hover {
-      background: #e4e4e7;
+      opacity: 0.9;
     }
 
     /* ==========================================================================
@@ -286,7 +403,6 @@
       font-weight: 500;
       color: var(--text-secondary);
       margin-bottom: 24px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
       max-width: 90vw;
     }
 
@@ -316,7 +432,7 @@
     }
 
     .hero-section h1 span.gradient-text {
-      background: linear-gradient(180deg, #ffffff 40%, #a1a1aa 100%);
+      background: linear-gradient(180deg, var(--text-primary) 30%, var(--text-secondary) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -338,7 +454,7 @@
       background: var(--bg-surface);
       border: 1px solid var(--border-default);
       border-radius: var(--r-md);
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      box-shadow: var(--shadow-card);
       overflow: hidden;
       text-align: left;
     }
@@ -376,7 +492,7 @@
 
     .pkg-tab.active {
       color: var(--text-primary);
-      border-bottom-color: #ffffff;
+      border-bottom-color: var(--text-primary);
       font-weight: 600;
     }
 
@@ -596,11 +712,11 @@
     }
 
     .seg-pill.active {
-      background: #ffffff;
-      color: #09090b;
-      border-color: #ffffff;
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      border-color: var(--btn-primary-bg);
       font-weight: 600;
-      box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     .workbench-display {
@@ -667,7 +783,7 @@
     }
 
     .tree-col {
-      background: #141418;
+      background: var(--bg-surface);
       border-right: 1px solid var(--border-subtle);
       padding: 16px 12px;
       font-family: var(--font-mono);
@@ -704,9 +820,9 @@
     }
 
     .tree-node.active-file {
-      background: rgba(255, 255, 255, 0.09);
-      color: #ffffff;
-      font-weight: 500;
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-weight: 600;
     }
 
     .tree-node svg {
@@ -752,7 +868,7 @@
 
     /* Workbench Command Bar below display */
     .wb-command-bar {
-      background: #121216;
+      background: var(--bg-code-header);
       border-top: 1px solid var(--border-subtle);
       padding: 12px 18px;
       display: flex;
@@ -816,17 +932,17 @@
     }
 
     .terminal-card {
-      background: #0a0a0d;
+      background: var(--bg-code);
       border: 1px solid var(--border-default);
       border-radius: var(--r-md);
       overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      box-shadow: var(--shadow-card);
       display: flex;
       flex-direction: column;
     }
 
     .terminal-header {
-      background: #141418;
+      background: var(--bg-code-header);
       padding: 10px 16px;
       display: flex;
       align-items: center;
@@ -959,7 +1075,7 @@
     }
 
     .agent-card-header {
-      background: #141418;
+      background: var(--bg-code-header);
       padding: 12px 18px;
       display: flex;
       align-items: center;
@@ -1019,7 +1135,7 @@
     }
 
     .crud-header-bar {
-      background: #141418;
+      background: var(--bg-code-header);
       border-bottom: 1px solid var(--border-subtle);
       padding: 12px 20px;
       display: flex;
@@ -1060,14 +1176,14 @@
     }
 
     .crud-tab.active {
-      background: #ffffff;
-      color: #09090b;
-      border-color: #ffffff;
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      border-color: var(--btn-primary-bg);
       font-weight: 600;
     }
 
     .crud-flow-bar {
-      background: #0f0f12;
+      background: var(--bg-surface);
       border-bottom: 1px solid var(--border-subtle);
       padding: 12px 20px;
       display: flex;
@@ -1444,15 +1560,28 @@
 
       <nav class="nav-menu">
         <a href="#workbench">Configurator</a>
-        <a href="#ai-scaffolding">AI Engine</a>
-        <a href="#agent-mode">Agents &amp; CI</a>
-        <a href="#crud-generator">CRUD Generator</a>
-        <a href="#architecture">Architecture</a>
-        <a href="#commands">Commands</a>
-        <a href="./features.md" target="_blank">Docs</a>
+        <a href="#features">Features</a>
+        <a href="#frameworks">Frameworks</a>
+        <a href="./docs.html" style="color: var(--accent-cyan); font-weight: 600;">Documentation</a>
       </nav>
 
       <div class="nav-actions">
+        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark theme" title="Toggle theme">
+          <svg class="sun-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
         <a href="https://www.npmjs.com/package/fogoe" target="_blank" rel="noreferrer" class="btn btn-secondary">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
             <path d="M0 0v24h24V0H0zm20.5 20.5h-5V7.5h-3.5v13H3.5V3.5h17v17z"/>
@@ -1516,6 +1645,7 @@
           <a href="#ai-scaffolding" class="quick-pill"><span>AI Scaffolding:</span> fogoe create my-api --ai "..."</a>
           <a href="#crud-generator" class="quick-pill"><span>CRUD Generator:</span> fogoe g crud product</a>
           <a href="#agent-mode" class="quick-pill"><span>Headless Agents:</span> fogoe create ... --json</a>
+          <a href="./docs.html" class="quick-pill" style="border-color: rgba(56, 189, 248, 0.4); color: var(--text-primary);"><span>Docs:</span> Full CLI Reference &rarr;</a>
         </div>
 
         <!-- Metrics Row -->
@@ -1673,215 +1803,8 @@
       </div>
     </section>
 
-    <!-- NEW: AI-Assisted Scaffolding Section -->
-    <section id="ai-scaffolding" class="site-section">
-      <div class="container">
-        <div class="section-eyebrow">AI-Assisted Scaffolding Engine</div>
-        <h2 class="section-heading">Describe your stack in plain English. Fogoe compiles it.</h2>
-        <p class="section-caption">
-          Fogoe's deterministic requirement interpreter parses natural-language prompts into verified internal configuration parameters—bypassing fuzzy code generation and hallucinations with 100% template precision.
-        </p>
-
-        <!-- Prompt Presets Selector -->
-        <div class="prompt-pills-row">
-          <button class="prompt-pill active" onclick="selectAiPrompt(0, this)">
-            "Fastify e-commerce API with PostgreSQL, Drizzle ORM, and JWT authentication"
-          </button>
-          <button class="prompt-pill" onclick="selectAiPrompt(1, this)">
-            "High-throughput Hono microservice with SQLite and strict TypeScript"
-          </button>
-          <button class="prompt-pill" onclick="selectAiPrompt(2, this)">
-            "Express SaaS backend with MongoDB, Mongoose, and JWT auth"
-          </button>
-          <button class="prompt-pill" onclick="selectAiPrompt(3, this)">
-            "Minimal Koa service with zero database and TypeScript"
-          </button>
-        </div>
-
-        <div class="ai-showcase-grid">
-          <!-- Terminal Execution Column -->
-          <div class="terminal-card">
-            <div class="terminal-header">
-              <div class="terminal-dots">
-                <span class="terminal-dot dot-red"></span>
-                <span class="terminal-dot dot-yellow"></span>
-                <span class="terminal-dot dot-green"></span>
-              </div>
-              <div class="terminal-title">terminal — fogoe create --ai</div>
-              <button class="copy-action-btn" onclick="copyAiCommand()">
-                <span id="ai-copy-label">Copy</span>
-              </button>
-            </div>
-            <div class="terminal-body" id="ai-terminal-body">
-              <!-- Rendered via JS -->
-            </div>
-          </div>
-
-          <!-- Parsed Configuration Spec Inspector -->
-          <div class="ai-ast-card">
-            <div>
-              <div class="ast-header">
-                <span class="ast-title">Compiled Project AST</span>
-                <span class="ast-status">Deterministic Match</span>
-              </div>
-
-              <div class="ast-specs-list" id="ast-specs-container">
-                <!-- Rendered dynamically -->
-              </div>
-            </div>
-
-            <div class="ast-footer-info">
-              Fogoe's AI engine translates natural language directly into validated CLI flags. No external cloud API keys or runtime subscriptions required.
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- NEW: Coding Agents & CI Automation Section -->
-    <section id="agent-mode" class="site-section">
-      <div class="container">
-        <div class="section-eyebrow">Agent &amp; CI Automation</div>
-        <h2 class="section-heading">Engineered for coding agents and CI/CD pipelines</h2>
-        <p class="section-caption">
-          Zero prompt blocking. Pass headless flags or <code>--non-interactive</code> and pipe structured JSON directly to Claude Code, Cursor, Copilot, Antigravity, and CI runners.
-        </p>
-
-        <div class="agent-grid">
-          <!-- Headless Flags & Invocation -->
-          <div class="agent-card">
-            <div class="agent-card-header">
-              <span>Automated Execution</span>
-              <span>Headless CLI Flags</span>
-            </div>
-            <div class="agent-card-body">
-              <div class="cmd-code" style="margin-bottom: 14px;">
-                <span class="prompt-char">$</span>
-                <code style="color: var(--text-primary); font-size: 0.86rem;">fogoe create payment-svc \
-  --framework express \
-  --lang ts \
-  --db postgresql \
-  --auth jwt \
-  --git \
-  --install \
-  --json</code>
-              </div>
-
-              <div class="flag-pills-list">
-                <div class="flag-row">
-                  <span class="flag-name">--framework &lt;name&gt;</span>
-                  <span class="flag-desc">fastify | express | hono | koa</span>
-                </div>
-                <div class="flag-row">
-                  <span class="flag-name">--lang &lt;ts|js&gt;</span>
-                  <span class="flag-desc">Strict TypeScript (NodeNext) or clean ESM JavaScript</span>
-                </div>
-                <div class="flag-row">
-                  <span class="flag-name">--db &lt;name&gt;</span>
-                  <span class="flag-desc">drizzle | prisma | postgresql | mongodb | sqlite | mysql | none</span>
-                </div>
-                <div class="flag-row">
-                  <span class="flag-name">--auth &lt;jwt|none&gt;</span>
-                  <span class="flag-desc">JWT bearer authentication middleware with secure hashing</span>
-                </div>
-                <div class="flag-row">
-                  <span class="flag-name">--non-interactive</span>
-                  <span class="flag-desc">Bypasses all stdin prompts; perfect for CI runners and agent loops</span>
-                </div>
-                <div class="flag-row">
-                  <span class="flag-name">--json</span>
-                  <span class="flag-desc">Outputs pure machine-readable JSON to stdout</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Structured JSON Machine Output -->
-          <div class="agent-card">
-            <div class="agent-card-header">
-              <span>Machine-Readable Stdout</span>
-              <span>exitCode: 0</span>
-            </div>
-            <div class="agent-card-body" style="background: #0a0a0d;">
-<span class="typ">{</span>
-  <span class="str">"success"</span>: <span class="kwd">true</span>,
-  <span class="str">"projectName"</span>: <span class="str">"payment-svc"</span>,
-  <span class="str">"targetDir"</span>: <span class="str">"/workspace/payment-svc"</span>,
-  <span class="str">"config"</span>: <span class="typ">{</span>
-    <span class="str">"framework"</span>: <span class="str">"express"</span>,
-    <span class="str">"language"</span>: <span class="str">"ts"</span>,
-    <span class="str">"architecture"</span>: <span class="str">"mvc"</span>,
-    <span class="str">"database"</span>: <span class="str">"postgresql"</span>,
-    <span class="str">"auth"</span>: <span class="str">"jwt"</span>,
-    <span class="str">"git"</span>: <span class="kwd">true</span>,
-    <span class="str">"install"</span>: <span class="kwd">true</span>
-  <span class="typ">}</span>,
-  <span class="str">"stats"</span>: <span class="typ">{</span>
-    <span class="str">"filesWritten"</span>: <span class="typ">16</span>,
-    <span class="str">"durationMs"</span>: <span class="typ">38</span>
-  <span class="typ">}</span>
-<span class="typ">}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- NEW: Full CRUD Vertical Slice Generator Section -->
-    <section id="crud-generator" class="site-section">
-      <div class="container">
-        <div class="section-eyebrow">Vertical Slice Architecture</div>
-        <h2 class="section-heading">Generate full CRUD features in a single command</h2>
-        <p class="section-caption">
-          <code>fogoe g crud &lt;name&gt;</code> writes production-ready Models, Controllers, and Routes in one atomic step. Wired to standard REST conventions with request validation and error safety.
-        </p>
-
-        <div class="crud-card">
-          <div class="crud-header-bar">
-            <div class="crud-cmd-badge">
-              <span class="prompt-char">$</span>
-              <code>fogoe g crud product</code>
-            </div>
-
-            <div class="crud-tabs">
-              <button class="crud-tab active" onclick="switchCrudTab('route', this)">Route (product.routes.ts)</button>
-              <button class="crud-tab" onclick="switchCrudTab('controller', this)">Controller (product.controller.ts)</button>
-              <button class="crud-tab" onclick="switchCrudTab('model', this)">Model (product.model.ts)</button>
-            </div>
-          </div>
-
-          <!-- Visual Architecture Sequence Flow -->
-          <div class="crud-flow-bar">
-            <div class="crud-flow-step">
-              <span class="crud-flow-pill">HTTP Request</span>
-              <span class="crud-flow-arrow">➔</span>
-            </div>
-            <div class="crud-flow-step">
-              <span class="crud-flow-pill">Route Binding (/api/products)</span>
-              <span class="crud-flow-arrow">➔</span>
-            </div>
-            <div class="crud-flow-step">
-              <span class="crud-flow-pill">Controller Action</span>
-              <span class="crud-flow-arrow">➔</span>
-            </div>
-            <div class="crud-flow-step">
-              <span class="crud-flow-pill">Model / ORM Query</span>
-              <span class="crud-flow-arrow">➔</span>
-            </div>
-            <div class="crud-flow-step">
-              <span class="crud-flow-pill">Database Pool</span>
-            </div>
-          </div>
-
-          <div class="crud-code-pane" id="crud-code-display">
-            <!-- Rendered via JS -->
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Architecture & Core Guarantees -->
-    <section id="architecture" class="site-section">
+    <!-- Architecture & Core Features -->
+    <section id="features" class="site-section">
       <div class="container">
         <div class="section-eyebrow">Engineering First</div>
         <h2 class="section-heading">Why developers prefer Fogoe</h2>
@@ -2021,143 +1944,68 @@
       </div>
     </section>
 
-    <!-- CLI Command Reference (Updated for v1.1.1) -->
-    <section id="commands" class="site-section">
+    <!-- Documentation Spotlight Section -->
+    <section id="docs-spotlight" class="site-section">
       <div class="container">
-        <div class="section-eyebrow">CLI Suite</div>
-        <h2 class="section-heading">Complete developer command reference</h2>
+        <div class="section-eyebrow">Comprehensive Guides</div>
+        <h2 class="section-heading">Explore the Fogoe documentation</h2>
         <p class="section-caption">
-          Single-command project creation, non-interactive CI automation, AI requirements parsing, and modular code generation.
+          In-depth references, CLI flags, database integrations, agent setups, and architectural best practices.
         </p>
 
-        <div class="commands-table-card">
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe</code></div>
-            <div class="cmd-explain">Launches interactive project scaffolding wizard with Clack TUI.</div>
-            <div class="cmd-type">Interactive</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe create &lt;name&gt; [flags]</code></div>
-            <div class="cmd-explain">Headless scaffolding bypassing prompts via <code>--framework</code>, <code>--lang</code>, <code>--db</code>, <code>--auth</code>, <code>--git</code>, <code>--install</code>.</div>
-            <div class="cmd-type">Headless / CI</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe create &lt;name&gt; --ai "..."</code></div>
-            <div class="cmd-explain">Parses natural-language requirements into verified internal configuration options.</div>
-            <div class="cmd-type">AI Scaffolding</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe create &lt;name&gt; --json</code></div>
-            <div class="cmd-explain">Emits machine-readable JSON to stdout for coding agents and automated pipelines.</div>
-            <div class="cmd-type">Automation</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe g crud &lt;name&gt;</code></div>
-            <div class="cmd-explain">Generates full 3-tier vertical slice: Model, Controller, and REST Route endpoints.</div>
-            <div class="cmd-type">CRUD Slice</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe g route &lt;name&gt;</code></div>
-            <div class="cmd-explain">Generates a typed API route in <code>src/routes/</code> linked to its controller.</div>
-            <div class="cmd-type">Generator</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe g controller &lt;name&gt;</code></div>
-            <div class="cmd-explain">Generates a framework-aware controller handler with request &amp; response types.</div>
-            <div class="cmd-type">Generator</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe g model &lt;name&gt;</code></div>
-            <div class="cmd-explain">Scaffolds a database model configured for Drizzle, PostgreSQL, MongoDB, SQLite, or Prisma.</div>
-            <div class="cmd-type">Generator</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe add [plugin]</code></div>
-            <div class="cmd-explain">Installs and injects plugins into an existing project (Redis, Zod, Stripe, Swagger, etc.).</div>
-            <div class="cmd-type">Plugin</div>
-          </div>
-          <div class="cmd-row">
-            <div><code class="cmd-badge">fogoe status</code></div>
-            <div class="cmd-explain">Inspects current project runtime, module system, and Git repository state.</div>
-            <div class="cmd-type">Diagnostics</div>
-          </div>
+        <div class="bento-grid" style="margin-bottom: 24px;">
+          <a href="./docs.html#flags-table" class="bento-card" style="text-decoration: none; cursor: pointer;">
+            <div>
+              <div class="bento-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                  <polyline points="2 17 12 22 22 17"></polyline>
+                  <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+              </div>
+              <h3>Complete CLI Flags Reference</h3>
+              <p>Explore all 18+ headless flags for framework, language, database, auth, Git, and automated CI pipelines.</p>
+            </div>
+            <span style="color: var(--accent-cyan); font-size: 0.84rem; font-weight: 500;">View Reference &rarr;</span>
+          </a>
+
+          <a href="./docs.html#ai-engine" class="bento-card" style="text-decoration: none; cursor: pointer;">
+            <div>
+              <div class="bento-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+              </div>
+              <h3>AI Prompt Compiler Guide</h3>
+              <p>Learn how to craft natural-language descriptions that compile into exact backend architectures.</p>
+            </div>
+            <span style="color: var(--accent-cyan); font-size: 0.84rem; font-weight: 500;">Explore Prompts &rarr;</span>
+          </a>
+
+          <a href="./docs.html#databases" class="bento-card" style="text-decoration: none; cursor: pointer;">
+            <div>
+              <div class="bento-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                </svg>
+              </div>
+              <h3>Drizzle, Prisma &amp; DB Guides</h3>
+              <p>Setup instructions and client usage patterns for Drizzle ORM, Prisma, PostgreSQL, MongoDB, and SQLite.</p>
+            </div>
+            <span style="color: var(--accent-cyan); font-size: 0.84rem; font-weight: 500;">Read DB Guides &rarr;</span>
+          </a>
         </div>
-      </div>
-    </section>
 
-    <!-- Plugin Ecosystem -->
-    <section id="plugins" class="site-section">
-      <div class="container">
-        <div class="section-eyebrow">Modular Extensions</div>
-        <h2 class="section-heading">Production plugin ecosystem</h2>
-        <p class="section-caption">
-          Extend any existing Fogoe application instantly with verified production integrations.
-        </p>
-
-        <div class="plugins-grid">
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Redis</span>
-              <span class="plugin-cli">ioredis</span>
-            </div>
-            <p class="plugin-about">High-speed cache client with automatic reconnect handling and connection pooling.</p>
-          </div>
-
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Zod</span>
-              <span class="plugin-cli">validation</span>
-            </div>
-            <p class="plugin-about">TypeScript-first schema validation middleware for request parameters and bodies.</p>
-          </div>
-
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Nodemailer</span>
-              <span class="plugin-cli">mailer</span>
-            </div>
-            <p class="plugin-about">Preconfigured transactional email client with secure .env credentials.</p>
-          </div>
-
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Stripe</span>
-              <span class="plugin-cli">billing</span>
-            </div>
-            <p class="plugin-about">Payment processing SDK initialization with webhook signature verification.</p>
-          </div>
-
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Rate Limiter</span>
-              <span class="plugin-cli">security</span>
-            </div>
-            <p class="plugin-about">Standard sliding-window rate limiting middleware against brute-force attacks.</p>
-          </div>
-
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Swagger / OpenAPI</span>
-              <span class="plugin-cli">documentation</span>
-            </div>
-            <p class="plugin-about">Interactive OpenAPI documentation explorer mounted at <code>/api-docs</code>.</p>
-          </div>
-
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Socket.io</span>
-              <span class="plugin-cli">websockets</span>
-            </div>
-            <p class="plugin-about">Real-time bi-directional event communication server setup and client handlers.</p>
-          </div>
-
-          <div class="plugin-box">
-            <div class="plugin-head">
-              <span class="plugin-title">Helmet</span>
-              <span class="plugin-cli">headers</span>
-            </div>
-            <p class="plugin-about">Essential HTTP security headers configuration protecting against common vectors.</p>
-          </div>
+        <div style="text-align: center;">
+          <a href="./docs.html" class="btn btn-secondary" style="padding: 10px 24px; font-size: 0.92rem;">
+            <span>Browse Full Documentation Portal</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
         </div>
       </div>
     </section>
@@ -2189,7 +2037,7 @@
       <div class="footer-links">
         <a href="https://github.com/Sooriya04/fogoe" target="_blank" rel="noreferrer">GitHub</a>
         <a href="https://www.npmjs.com/package/fogoe" target="_blank" rel="noreferrer">npm</a>
-        <a href="./features.md" target="_blank">Documentation</a>
+        <a href="./docs.html">Documentation</a>
         <a href="https://github.com/Sooriya04/fogoe/issues" target="_blank" rel="noreferrer">Issues</a>
         <a href="https://github.com/Sooriya04/fogoe/blob/main/LICENSE" target="_blank" rel="noreferrer">License</a>
       </div>
@@ -2592,186 +2440,59 @@ ${db !== 'none' ? `    <span class="kwd">await</span> <span class="fn">connectDB
       }
     }
 
-    // 2. AI Requirements Parser Interactive Demo
-    const aiPresets = [
-      {
-        prompt: "Fastify e-commerce API with PostgreSQL, Drizzle ORM, and JWT authentication",
-        name: "store-api",
-        fw: "fastify",
-        lang: "ts (TypeScript 5.x ESM)",
-        db: "drizzle (PostgreSQL)",
-        auth: "jwt (Bearer)",
-        arch: "mvc (Layered)",
-        files: 16,
-        time: "38ms"
-      },
-      {
-        prompt: "High-throughput Hono microservice with SQLite and strict TypeScript",
-        name: "edge-service",
-        fw: "hono",
-        lang: "ts (TypeScript 5.x ESM)",
-        db: "sqlite (better-sqlite3)",
-        auth: "none",
-        arch: "minimal (Single Entry)",
-        files: 8,
-        time: "29ms"
-      },
-      {
-        prompt: "Express SaaS backend with MongoDB, Mongoose, and JWT auth",
-        name: "saas-api",
-        fw: "express",
-        lang: "ts (TypeScript 5.x ESM)",
-        db: "mongodb (Mongoose)",
-        auth: "jwt (Bearer)",
-        arch: "mvc (Layered)",
-        files: 16,
-        time: "42ms"
-      },
-      {
-        prompt: "Minimal Koa service with zero database and TypeScript",
-        name: "koa-micro",
-        fw: "koa",
-        lang: "ts (TypeScript 5.x ESM)",
-        db: "none",
-        auth: "none",
-        arch: "minimal (Single Entry)",
-        files: 7,
-        time: "24ms"
-      }
-    ];
+    // Unified Theme Manager (Multi-layer sync across pages, tabs & URL state)
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
 
-    let currentAiIndex = 0;
+      try { localStorage.setItem('fogoe-theme', theme); } catch (e) {}
+      try { sessionStorage.setItem('fogoe-theme', theme); } catch (e) {}
+      try { document.cookie = 'fogoe-theme=' + encodeURIComponent(theme) + '; path=/; max-age=31536000; SameSite=Lax'; } catch (e) {}
 
-    function selectAiPrompt(index, btnEl) {
-      currentAiIndex = index;
-      document.querySelectorAll('.prompt-pill').forEach(el => el.classList.remove('active'));
-      btnEl.classList.add('active');
-      renderAiShowcase();
-    }
-
-    function renderAiShowcase() {
-      const p = aiPresets[currentAiIndex];
-      const termBody = document.getElementById('ai-terminal-body');
-      
-      termBody.innerHTML = `<span class="prompt-char">$</span> <span style="color:#ffffff;">fogoe create ${p.name} --ai "${p.prompt}"</span>
-
-<span style="color:#38bdf8;">◇</span>  <span style="font-weight:600;">Fogoe v1.1.1 AI Engine</span>
-<span style="color:#71717a;">│</span>  Decomposing architectural prompt...
-<span style="color:#71717a;">│</span>  ✔ Detected framework  : <span style="color:#34d399;">${p.fw}</span>
-<span style="color:#71717a;">│</span>  ✔ Target language     : <span style="color:#34d399;">${p.lang}</span>
-<span style="color:#71717a;">│</span>  ✔ Database driver     : <span style="color:#34d399;">${p.db}</span>
-<span style="color:#71717a;">│</span>  ✔ Security layer      : <span style="color:#34d399;">${p.auth}</span>
-<span style="color:#71717a;">│</span>  ✔ Architecture pattern: <span style="color:#34d399;">${p.arch}</span>
-<span style="color:#71717a;">│</span>  Atomic scaffolding writes committed.
-<span style="color:#38bdf8;">└</span>  <span style="color:#34d399; font-weight:600;">Scaffolded ${p.files} files in ${p.time}</span>`;
-
-      const specsEl = document.getElementById('ast-specs-container');
-      specsEl.innerHTML = `
-        <div class="ast-spec-item">
-          <span class="ast-spec-label">Framework</span>
-          <span class="ast-spec-val">${p.fw}</span>
-        </div>
-        <div class="ast-spec-item">
-          <span class="ast-spec-label">Language</span>
-          <span class="ast-spec-val">TypeScript (NodeNext)</span>
-        </div>
-        <div class="ast-spec-item">
-          <span class="ast-spec-label">Database / ORM</span>
-          <span class="ast-spec-val">${p.db}</span>
-        </div>
-        <div class="ast-spec-item">
-          <span class="ast-spec-label">Auth Middleware</span>
-          <span class="ast-spec-val">${p.auth}</span>
-        </div>
-        <div class="ast-spec-item">
-          <span class="ast-spec-label">Architecture</span>
-          <span class="ast-spec-val">${p.arch}</span>
-        </div>
-      `;
-    }
-
-    function copyAiCommand() {
-      const p = aiPresets[currentAiIndex];
-      const cmd = `fogoe create ${p.name} --ai "${p.prompt}"`;
-      navigator.clipboard.writeText(cmd).then(() => {
-        const label = document.getElementById('ai-copy-label');
-        const orig = label.innerText;
-        label.innerText = 'Copied!';
-        setTimeout(() => { label.innerText = orig; }, 1800);
+      // Keep internal links synchronized with active theme query param
+      document.querySelectorAll('a[href*="docs.html"], a[href*="index.html"]').forEach(function (a) {
+        var href = a.getAttribute('href');
+        if (!href) return;
+        var parts = href.split('?');
+        var base = parts[0];
+        var hashParts = (parts[1] || '').split('#');
+        var hash = hashParts[1] ? '#' + hashParts[1] : (base.includes('#') ? '#' + base.split('#')[1] : '');
+        base = base.split('#')[0];
+        a.setAttribute('href', base + '?theme=' + theme + hash);
       });
     }
 
-    // 3. CRUD Vertical Slice Interactive Preview
-    const crudSnippets = {
-      route: `<span class="cmt">// src/routes/product.routes.ts — Full REST CRUD Endpoints</span>
-<span class="kwd">import</span> { Router } <span class="kwd">from</span> <span class="str">"express"</span>;
-<span class="kwd">import</span> * <span class="kwd">as</span> productController <span class="kwd">from</span> <span class="str">"../controllers/product.controller.js"</span>;
-
-<span class="kwd">const</span> router = <span class="fn">Router</span>();
-
-router.<span class="fn">get</span>(<span class="str">"/"</span>, productController.listProducts);
-router.<span class="fn">get</span>(<span class="str">"/:id"</span>, productController.getProductById);
-router.<span class="fn">post</span>(<span class="str">"/"</span>, productController.createProduct);
-router.<span class="fn">put</span>(<span class="str">"/:id"</span>, productController.updateProduct);
-router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productController.deleteProduct);
-
-<span class="kwd">export default</span> router;`,
-      controller: `<span class="cmt">// src/controllers/product.controller.ts — CRUD Request Handlers</span>
-<span class="kwd">import</span> { Request, Response } <span class="kwd">from</span> <span class="str">"express"</span>;
-<span class="kwd">import</span> * <span class="kwd">as</span> ProductModel <span class="kwd">from</span> <span class="str">"../models/product.model.js"</span>;
-
-<span class="kwd">export const</span> listProducts = <span class="kwd">async</span> (req: Request, res: Response) =&gt; {
-  <span class="kwd">try</span> {
-    <span class="kwd">const</span> items = <span class="kwd">await</span> ProductModel.<span class="fn">findAll</span>();
-    res.<span class="fn">json</span>(items);
-  } <span class="kwd">catch</span> (err) {
-    res.<span class="fn">status</span>(<span class="typ">500</span>).<span class="fn">json</span>({ error: <span class="str">"Failed to retrieve products"</span> });
-  }
-};
-
-<span class="kwd">export const</span> getProductById = <span class="kwd">async</span> (req: Request, res: Response) =&gt; {
-  <span class="kwd">const</span> item = <span class="kwd">await</span> ProductModel.<span class="fn">findById</span>(req.params.id);
-  <span class="kwd">if</span> (!item) <span class="kwd">return</span> res.<span class="fn">status</span>(<span class="typ">404</span>).<span class="fn">json</span>({ error: <span class="str">"Product not found"</span> });
-  res.<span class="fn">json</span>(item);
-};
-
-<span class="kwd">export const</span> createProduct = <span class="kwd">async</span> (req: Request, res: Response) =&gt; {
-  <span class="kwd">const</span> created = <span class="kwd">await</span> ProductModel.<span class="fn">create</span>(req.body);
-  res.<span class="fn">status</span>(<span class="typ">201</span>).<span class="fn">json</span>(created);
-};`,
-      model: `<span class="cmt">// src/models/product.model.ts — Type-Safe Data Access Layer</span>
-<span class="kwd">export interface</span> <span class="typ">Product</span> {
-  id: <span class="typ">string</span>;
-  name: <span class="typ">string</span>;
-  price: <span class="typ">number</span>;
-  createdAt: <span class="typ">Date</span>;
-}
-
-<span class="cmt">// Database query bindings</span>
-<span class="kwd">export const</span> findAll = <span class="kwd">async</span> (): <span class="typ">Promise</span>&lt;<span class="typ">Product</span>[]&gt; =&gt; {
-  <span class="cmt">// Integrated query using active ORM (Drizzle, Prisma, or native driver)</span>
-  <span class="kwd">return</span> [];
-};
-
-<span class="kwd">export const</span> findById = <span class="kwd">async</span> (id: <span class="typ">string</span>): <span class="typ">Promise</span>&lt;<span class="typ">Product</span> | <span class="kwd">null</span>&gt; =&gt; {
-  <span class="kwd">return null</span>;
-};
-
-<span class="kwd">export const</span> create = <span class="kwd">async</span> (data: <span class="typ">Partial</span>&lt;<span class="typ">Product</span>&gt;): <span class="typ">Promise</span>&lt;<span class="typ">Product</span>&gt; =&gt; {
-  <span class="kwd">return</span> { id: <span class="str">"p_1"</span>, name: data.name || <span class="str">""</span>, price: data.price || <span class="typ">0</span>, createdAt: <span class="kwd">new</span> <span class="typ">Date</span>() };
-};`
-    };
-
-    function switchCrudTab(tabKey, btnEl) {
-      document.querySelectorAll('.crud-tab').forEach(el => el.classList.remove('active'));
-      btnEl.classList.add('active');
-      document.getElementById('crud-code-display').innerHTML = crudSnippets[tabKey];
+    function toggleTheme() {
+      var current = document.documentElement.getAttribute('data-theme') || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
+      var next = current === 'light' ? 'dark' : 'light';
+      applyTheme(next);
     }
 
-    // Initialize all views
+    // Cross-tab / cross-navigation synchronization
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'fogoe-theme' && e.newValue) {
+        applyTheme(e.newValue);
+      }
+    });
+
+    window.addEventListener('pageshow', function () {
+      var theme = 'dark';
+      try {
+        var params = new URLSearchParams(window.location.search);
+        theme = params.get('theme') || localStorage.getItem('fogoe-theme') || sessionStorage.getItem('fogoe-theme') || 'dark';
+      } catch (e) {}
+      applyTheme(theme);
+    });
+
+    // Run on initial load to ensure all link hrefs are updated
+    document.addEventListener('DOMContentLoaded', function () {
+      var activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      applyTheme(activeTheme);
+    });
+
+    // Initialize workbench view
     renderWorkbench();
-    renderAiShowcase();
-    document.getElementById('crud-code-display').innerHTML = crudSnippets.route;
   </script>
 </body>
 </html>

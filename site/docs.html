@@ -1,0 +1,2271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation — Fogoe Backend Scaffolding Engine</title>
+  <meta name="description"
+    content="Comprehensive documentation for Fogoe CLI: getting started, CLI flags reference, AI-assisted scaffolding, coding agents automation, CRUD vertical slice generation, database ORMs, and plugins." />
+  <meta name="keywords"
+    content="Fogoe docs, Node.js CLI docs, backend scaffolding documentation, Express, Fastify, Hono, Koa, Drizzle ORM, Prisma, TypeScript" />
+  <meta name="author" content="Sooriya" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Documentation — Fogoe Backend Scaffolding Engine" />
+  <meta property="og:description"
+    content="Comprehensive documentation for Fogoe CLI: getting started, CLI flags reference, AI-assisted scaffolding, agent mode, CRUD generator, and plugins." />
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://sooriya04.github.io/fogoe/docs.html" />
+
+  <!-- Fonts: Geist & Geist Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+
+  <!-- Instant Theme Initializer (Multi-layer storage & URL sync) -->
+  <script>
+    (function () {
+      var theme = 'dark';
+      try {
+        var params = new URLSearchParams(window.location.search);
+        var urlTheme = params.get('theme');
+        var localTheme = window.localStorage && localStorage.getItem('fogoe-theme');
+        var sessionTheme = window.sessionStorage && sessionStorage.getItem('fogoe-theme');
+        var cookieMatch = document.cookie.match(/(?:^|;\s*)fogoe-theme=([^;]+)/);
+        var cookieTheme = cookieMatch ? cookieMatch[1] : null;
+
+        if (urlTheme === 'light' || urlTheme === 'dark') {
+          theme = urlTheme;
+        } else if (localTheme === 'light' || localTheme === 'dark') {
+          theme = localTheme;
+        } else if (sessionTheme === 'light' || sessionTheme === 'dark') {
+          theme = sessionTheme;
+        } else if (cookieTheme === 'light' || cookieTheme === 'dark') {
+          theme = cookieTheme;
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          theme = 'light';
+        }
+      } catch (e) {}
+
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
+    })();
+  </script>
+
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM & TOKENS
+       ========================================================================== */
+    :root,
+    html.dark,
+    [data-theme="dark"] {
+      --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+      /* Surfaces */
+      --bg-canvas: #09090b;
+      --bg-surface: #111114;
+      --bg-card: #16161a;
+      --bg-elevated: #1e1e24;
+      --bg-overlay: rgba(9, 9, 11, 0.92);
+      --bg-code: #0d0d10;
+      --bg-code-header: #141418;
+      --bg-table-th: #15151a;
+
+      /* Borders - Thick & High Contrast */
+      --border-subtle: rgba(255, 255, 255, 0.18);
+      --border-default: rgba(255, 255, 255, 0.32);
+      --border-hover: rgba(255, 255, 255, 0.60);
+
+      /* Typography */
+      --text-primary: #f4f4f6;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --text-faint: #52525b;
+
+      /* Accents */
+      --accent-cyan: #38bdf8;
+      --accent-green: #34d399;
+      --accent-purple: #c084fc;
+      --accent-amber: #fbbf24;
+      --accent-red: #f87171;
+
+      /* Button & Highlights */
+      --btn-primary-bg: #ffffff;
+      --btn-primary-text: #09090b;
+      --brand-mark-bg: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+      --brand-mark-text: #09090b;
+
+      /* Syntax colors */
+      --syn-keyword: #f472b6;
+      --syn-fn: #60a5fa;
+      --syn-str: #a7f3d0;
+      --syn-comment: #71717a;
+      --syn-type: #fbbf24;
+
+      /* Radius */
+      --r-xs: 4px;
+      --r-sm: 6px;
+      --r-md: 10px;
+      --r-lg: 16px;
+      --r-full: 9999px;
+
+      /* Layout */
+      --header-height: 60px;
+      --sidebar-width: 270px;
+      --toc-width: 230px;
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Light Theme Tokens (High-Contrast, Thick Dark Borders) */
+    html.light,
+    [data-theme="light"] {
+      --bg-canvas: #ffffff;
+      --bg-surface: #fbfbfd;
+      --bg-card: #ffffff;
+      --bg-elevated: #f4f4f7;
+      --bg-overlay: rgba(255, 255, 255, 0.92);
+      --bg-code: #f6f8fa;
+      --bg-code-header: #ebeef2;
+      --bg-table-th: #f1f3f7;
+
+      /* Bold, thick, clearly visible dark borders */
+      --border-subtle: #94a3b8;
+      --border-default: #475569;
+      --border-hover: #0f172a;
+
+      --text-primary: #09090b;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-faint: #94a3b8;
+
+      --accent-cyan: #0284c7;
+      --accent-green: #059669;
+      --accent-purple: #7c3aed;
+      --accent-amber: #d97706;
+      --accent-red: #dc2626;
+
+      --btn-primary-bg: #09090b;
+      --btn-primary-text: #ffffff;
+      --brand-mark-bg: linear-gradient(135deg, #09090b 0%, #27272a 100%);
+      --brand-mark-text: #ffffff;
+
+      --syn-keyword: #c026d3;
+      --syn-fn: #1d4ed8;
+      --syn-str: #047857;
+      --syn-comment: #64748b;
+      --syn-type: #b45309;
+
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background-color: var(--bg-canvas);
+      color: var(--text-secondary);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ==========================================================================
+       HEADER & NAVIGATION
+       ========================================================================== */
+    header.site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: var(--header-height);
+      background-color: var(--bg-overlay);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .nav-container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-sm);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.03em;
+    }
+
+    .nav-brand-mark {
+      width: 26px;
+      height: 26px;
+      border-radius: var(--r-sm);
+      background: var(--brand-mark-bg);
+      display: grid;
+      place-items: center;
+      color: var(--brand-mark-text);
+      font-size: 13px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .docs-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: var(--r-full);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .version-tag {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      padding: 2px 7px;
+      border-radius: var(--r-xs);
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-md);
+      padding: 6px 12px;
+      width: 260px;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      transition: all 0.15s;
+    }
+
+    .nav-search-bar:focus-within {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 1px var(--accent-cyan);
+    }
+
+    .nav-search-bar input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: var(--font-sans);
+      font-size: 0.82rem;
+      width: 100%;
+    }
+
+    .nav-search-bar input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .nav-search-key {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 2px 5px;
+      border-radius: var(--r-xs);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .theme-toggle-btn {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      width: 32px;
+      height: 32px;
+      border-radius: var(--r-sm);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .theme-toggle-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+      background: var(--bg-card);
+    }
+
+    .theme-toggle-btn .sun-icon { display: block; }
+    .theme-toggle-btn .moon-icon { display: none; }
+
+    [data-theme="light"] .theme-toggle-btn .sun-icon { display: none; }
+    [data-theme="light"] .theme-toggle-btn .moon-icon { display: block; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      border-radius: var(--r-sm);
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      border-color: var(--border-default);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card);
+    }
+
+    .btn-primary {
+      background: var(--btn-primary-bg);
+      color: var(--btn-primary-text);
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+
+    /* ==========================================================================
+       DOCS LAYOUT (SIDEBAR + MAIN + TOC)
+       ========================================================================== */
+    .docs-layout {
+      max-width: 1440px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-grow: 1;
+      position: relative;
+    }
+
+    /* LEFT SIDEBAR */
+    aside.docs-sidebar {
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--header-height);
+      height: calc(100vh - var(--header-height));
+      overflow-y: auto;
+      border-right: 1px solid var(--border-subtle);
+      padding: 24px 16px 40px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-default) transparent;
+      background: var(--bg-canvas);
+      z-index: 40;
+    }
+
+    aside.docs-sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+    aside.docs-sidebar::-webkit-scrollbar-thumb {
+      background: var(--border-default);
+      border-radius: 4px;
+    }
+
+    .sidebar-group {
+      margin-bottom: 24px;
+    }
+
+    .sidebar-group-title {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      padding: 4px 8px;
+    }
+
+    .sidebar-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: var(--r-xs);
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.84rem;
+      font-weight: 400;
+      transition: all 0.1s ease;
+      line-height: 1.4;
+    }
+
+    .sidebar-link:hover {
+      background: var(--bg-surface);
+      color: var(--text-primary);
+    }
+
+    .sidebar-link.active {
+      background: rgba(56, 189, 248, 0.1);
+      color: var(--accent-cyan);
+      font-weight: 500;
+      border-left: 2px solid var(--accent-cyan);
+      border-radius: 0 var(--r-xs) var(--r-xs) 0;
+    }
+
+    .sidebar-pill {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 1px 5px;
+      border-radius: var(--r-xs);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text-muted);
+    }
+
+    /* MAIN CONTENT */
+    main.docs-content {
+      flex-grow: 1;
+      max-width: 960px;
+      padding: 40px 64px 100px;
+      min-width: 0;
+      margin: 0 auto;
+    }
+
+    /* ==========================================================================
+       DOCS TYPOGRAPHY & COMPONENTS
+       ========================================================================== */
+    .doc-section {
+      margin-bottom: 56px;
+      padding-top: 16px;
+    }
+
+    .doc-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .doc-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 3px 8px;
+      border-radius: var(--r-xs);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+    }
+
+    h1.doc-title {
+      font-size: 2.3rem;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      color: var(--text-primary);
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    h2.doc-h2 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text-primary);
+      margin: 36px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h2.doc-h2 a.anchor-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    h2.doc-h2:hover a.anchor-link {
+      opacity: 1;
+    }
+
+    h3.doc-h3 {
+      font-size: 1.18rem;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--text-primary);
+      margin: 24px 0 10px;
+    }
+
+    p.doc-p {
+      font-size: 0.94rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+
+    .doc-lead {
+      font-size: 1.08rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    ul.doc-ul, ol.doc-ol {
+      margin: 0 0 18px 20px;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+
+    ul.doc-ul li, ol.doc-ol li {
+      margin-bottom: 6px;
+    }
+
+    code:not(pre code) {
+      font-family: var(--font-mono);
+      font-size: 0.82em;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      color: var(--accent-cyan);
+      padding: 2px 6px;
+      border-radius: var(--r-xs);
+    }
+
+    /* CODE BLOCKS */
+    .code-block {
+      background: var(--bg-code);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-md);
+      margin: 18px 0 24px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+    }
+
+    .code-block-header {
+      background: var(--bg-code-header);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .code-lang-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .code-content {
+      padding: 16px 18px;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.83rem;
+      line-height: 1.65;
+      color: var(--text-primary);
+      white-space: pre;
+    }
+
+    .copy-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      border-radius: var(--r-xs);
+      padding: 4px 8px;
+      font-size: 0.72rem;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .copy-btn:hover {
+      color: var(--text-primary);
+      background: var(--bg-elevated);
+      border-color: var(--border-hover);
+    }
+
+    /* CALLOUT BOXES */
+    .callout {
+      border-radius: var(--r-md);
+      padding: 16px 18px;
+      margin: 20px 0;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      border-left: 4px solid;
+    }
+
+    .callout-info {
+      background: rgba(56, 189, 248, 0.06);
+      border-color: var(--accent-cyan);
+      color: var(--text-secondary);
+    }
+
+    .callout-tip {
+      background: rgba(52, 211, 153, 0.06);
+      border-color: var(--accent-green);
+      color: var(--text-secondary);
+    }
+
+    .callout-warning {
+      background: rgba(251, 191, 36, 0.06);
+      border-color: var(--accent-amber);
+      color: var(--text-secondary);
+    }
+
+    .callout-title {
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.88rem;
+    }
+
+    /* TABLES */
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin: 20px 0 26px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-md);
+      background: var(--bg-surface);
+    }
+
+    table.doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.86rem;
+      text-align: left;
+    }
+
+    table.doc-table th {
+      background: var(--bg-table-th);
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--border-default);
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    table.doc-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    table.doc-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    table.doc-table tr:hover td {
+      background: var(--bg-elevated);
+    }
+
+    /* GRID CARDS FOR DOCS */
+    .doc-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    .doc-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-md);
+      padding: 20px;
+      transition: border-color 0.15s;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .doc-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .doc-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .doc-card-title,
+    .doc-card h4 {
+      color: var(--text-primary);
+      font-size: 0.98rem;
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    .doc-card-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 500;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-cyan);
+      padding: 2px 7px;
+      border-radius: var(--r-xs);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .doc-card p {
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    /* INTERACTIVE DOC DEMO TABS */
+    .doc-tab-header {
+      display: flex;
+      gap: 4px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--r-md) var(--r-md) 0 0;
+      padding: 6px 8px;
+      border-bottom: none;
+      overflow-x: auto;
+    }
+
+    .doc-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+      border-radius: var(--r-xs);
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .doc-tab-btn:hover {
+      color: var(--text-primary);
+    }
+
+    .doc-tab-btn.active {
+      background: var(--bg-card);
+      color: var(--accent-cyan);
+      font-weight: 600;
+    }
+
+    .doc-tab-pane {
+      display: none;
+      margin-top: 0 !important;
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
+
+    .doc-tab-pane.active {
+      display: block;
+    }
+
+    /* PAGINATION BUTTONS */
+    .docs-footer-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .docs-nav-card {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 16px 20px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--r-md);
+      text-decoration: none;
+      transition: all 0.15s;
+      width: 48%;
+    }
+
+    .docs-nav-card:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-card);
+    }
+
+    .docs-nav-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .docs-nav-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Syntax Tokens */
+    .kwd { color: var(--syn-keyword); font-weight: 500; }
+    .fn { color: var(--syn-fn); }
+    .str { color: var(--syn-str); }
+    .cmt { color: var(--syn-comment); font-style: italic; }
+    .typ { color: var(--syn-type); }
+
+    /* ==========================================================================
+       RESPONSIVE DESIGN
+       ========================================================================== */
+    @media (max-width: 900px) {
+      .mobile-menu-btn { display: flex; }
+      .nav-search-bar { display: none; }
+      aside.docs-sidebar {
+        position: fixed;
+        left: -100%;
+        top: var(--header-height);
+        width: 300px;
+        background: var(--bg-surface);
+        box-shadow: 20px 0 50px rgba(0, 0, 0, 0.8);
+        transition: left 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      aside.docs-sidebar.open {
+        left: 0;
+      }
+      main.docs-content {
+        max-width: 100%;
+        padding: 24px 20px 60px;
+      }
+      .doc-grid-2 { grid-template-columns: 1fr; }
+      .docs-footer-nav { flex-direction: column; }
+      .docs-nav-card { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="site-nav">
+    <div class="nav-container">
+      <div class="nav-left">
+        <button class="mobile-menu-btn" onclick="toggleSidebar()" aria-label="Toggle navigation menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+        <a href="./index.html" class="nav-brand">
+          <div class="nav-brand-mark">F</div>
+          <span>fogoe</span>
+        </a>
+        <span class="docs-badge">Docs</span>
+        <span class="version-tag">v1.1.1</span>
+      </div>
+
+      <div class="nav-center">
+        <div class="nav-search-bar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="doc-search-input" placeholder="Search documentation..." onkeyup="filterDocsSearch(this.value)" />
+          <span class="nav-search-key">/</span>
+        </div>
+      </div>
+
+      <div class="nav-right">
+        <button class="theme-toggle-btn" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle light/dark theme" title="Toggle theme">
+          <svg class="sun-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg class="moon-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        <a href="./index.html" class="btn btn-secondary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+          <span>Overview</span>
+        </a>
+        <a href="https://github.com/Sooriya04/fogoe" target="_blank" rel="noreferrer" class="btn btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+          </svg>
+          <span>GitHub</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Docs Layout Container -->
+  <div class="docs-layout">
+    <!-- LEFT SIDEBAR -->
+    <aside class="docs-sidebar" id="docs-sidebar">
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Getting Started</div>
+        <ul class="sidebar-links">
+          <li><a href="#overview" class="sidebar-link active">Overview &amp; Philosophy</a></li>
+          <li><a href="#installation" class="sidebar-link">Installation</a></li>
+          <li><a href="#quick-start" class="sidebar-link">Quick Start Guide</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">CLI Suite &amp; Commands</div>
+        <ul class="sidebar-links">
+          <li><a href="#cmd-fogoe" class="sidebar-link"><code>fogoe</code> (Interactive TUI)</a></li>
+          <li><a href="#cmd-create" class="sidebar-link"><code>fogoe create &lt;name&gt;</code></a></li>
+          <li><a href="#cmd-generate" class="sidebar-link"><code>fogoe generate</code> / <code>g crud</code></a></li>
+          <li><a href="#cmd-add" class="sidebar-link"><code>fogoe add [plugin]</code></a></li>
+          <li><a href="#cmd-diagnostics" class="sidebar-link">Diagnostics &amp; Git Suite</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Automation &amp; Flags</div>
+        <ul class="sidebar-links">
+          <li><a href="#cli-flags-matrix" class="sidebar-link">CLI Flags Reference Matrix <span class="sidebar-pill">All</span></a></li>
+          <li><a href="#ai-engine" class="sidebar-link">AI Scaffolding (<code>--ai</code>) <span class="sidebar-pill">v1.1</span></a></li>
+          <li><a href="#agent-automation" class="sidebar-link">Coding Agents &amp; CI (<code>--json</code>)</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Code Generation</div>
+        <ul class="sidebar-links">
+          <li><a href="#crud-slice" class="sidebar-link">Full CRUD Vertical Slice</a></li>
+          <li><a href="#component-generators" class="sidebar-link">Individual Generators</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Architecture &amp; Core</div>
+        <ul class="sidebar-links">
+          <li><a href="#frameworks" class="sidebar-link">Supported Frameworks</a></li>
+          <li><a href="#languages" class="sidebar-link">TypeScript &amp; JavaScript ESM</a></li>
+          <li><a href="#patterns" class="sidebar-link">MVC vs Minimal Layouts</a></li>
+          <li><a href="#databases" class="sidebar-link">Databases &amp; ORMs (Drizzle/Prisma)</a></li>
+          <li><a href="#auth-security" class="sidebar-link">Authentication &amp; Security</a></li>
+          <li><a href="#git-github" class="sidebar-link">Git &amp; GitHub Automation</a></li>
+          <li><a href="#testing-quality" class="sidebar-link">Testing &amp; Code Quality</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Plugins Ecosystem</div>
+        <ul class="sidebar-links">
+          <li><a href="#plugins-overview" class="sidebar-link">Modular Plugin Engine</a></li>
+          <li><a href="#plugin-redis" class="sidebar-link">Redis Cache</a></li>
+          <li><a href="#plugin-zod" class="sidebar-link">Zod Validation</a></li>
+          <li><a href="#plugin-mailer" class="sidebar-link">Nodemailer</a></li>
+          <li><a href="#plugin-stripe" class="sidebar-link">Stripe Payments</a></li>
+          <li><a href="#plugin-swagger" class="sidebar-link">OpenAPI / Swagger</a></li>
+          <li><a href="#plugin-socket" class="sidebar-link">Socket.io</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Roadmap &amp; Evolution</div>
+        <ul class="sidebar-links">
+          <li><a href="#upcoming-features" class="sidebar-link">Upcoming Features <span class="sidebar-pill" style="color: var(--accent-purple); background: rgba(192, 132, 252, 0.12); font-weight: 600;">Soon</span></a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">Help &amp; FAQ</div>
+        <ul class="sidebar-links">
+          <li><a href="#troubleshooting" class="sidebar-link">Troubleshooting &amp; FAQ</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="docs-content">
+      <!-- 1. OVERVIEW & PHILOSOPHY -->
+      <section id="overview" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">Getting Started</span>
+        </div>
+        <h1 class="doc-title">Fogoe Documentation</h1>
+        <p class="doc-lead">
+          Fogoe is a high-performance backend scaffolding engine for Node.js and TypeScript. It generates clean, production-grade backends in seconds across Express, Fastify, Hono, and Koa without runtime bloat or restrictive abstractions.
+        </p>
+
+        <div class="callout callout-info">
+          <div class="callout-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Pure Disk-Based Template Architecture
+          </div>
+          Fogoe does not embed massive template strings into generator source files. Every template is maintained as real, valid on-disk code files, preventing escaping bugs and guaranteeing syntax accuracy.
+        </div>
+
+        <h2 class="doc-h2" id="philosophy">
+          <span>Core Engineering Philosophy</span>
+          <a href="#philosophy" class="anchor-link">#</a>
+        </h2>
+        <ul class="doc-ul">
+          <li><strong>Zero Friction:</strong> Go from an idea to a fully wired, compiling, and running HTTP API in under 30 seconds.</li>
+          <li><strong>Zero Lock-in:</strong> You own 100% of the generated codebase. No custom runtime wrappers, meta-framework dependencies, or proprietary CLIs are required in production.</li>
+          <li><strong>Modern Standards:</strong> Built natively around strict TypeScript 5.x, NodeNext module resolution, ES Modules (<code>"type": "module"</code>), and industry-standard ORMs like Drizzle and Prisma.</li>
+          <li><strong>Agent &amp; CI Native:</strong> Built from the ground up to support autonomous coding agents (Claude Code, Cursor, Copilot, Antigravity) with non-interactive flags and machine-readable <code>--json</code> output.</li>
+        </ul>
+      </section>
+
+      <!-- 2. INSTALLATION -->
+      <section id="installation" class="doc-section">
+        <h2 class="doc-h2" id="install-guide">
+          <span>Installation &amp; Execution</span>
+          <a href="#install-guide" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          Fogoe requires <strong>Node.js &gt;= 18.0.0</strong>. You can run Fogoe on-demand using any major package manager without global installation:
+        </p>
+
+        <div class="doc-tab-header">
+          <button class="doc-tab-btn active" onclick="switchDocTab('inst-npx', this)">npx</button>
+          <button class="doc-tab-btn" onclick="switchDocTab('inst-pnpm', this)">pnpm</button>
+          <button class="doc-tab-btn" onclick="switchDocTab('inst-bun', this)">bun</button>
+          <button class="doc-tab-btn" onclick="switchDocTab('inst-yarn', this)">yarn</button>
+          <button class="doc-tab-btn" onclick="switchDocTab('inst-global', this)">global</button>
+        </div>
+
+        <div id="inst-npx" class="code-block doc-tab-pane active">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> npx fogoe</div>
+        </div>
+
+        <div id="inst-pnpm" class="code-block doc-tab-pane">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> pnpm dlx fogoe</div>
+        </div>
+
+        <div id="inst-bun" class="code-block doc-tab-pane">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> bunx fogoe</div>
+        </div>
+
+        <div id="inst-yarn" class="code-block doc-tab-pane">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> yarn dlx fogoe</div>
+        </div>
+
+        <div id="inst-global" class="code-block doc-tab-pane">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> npm install -g fogoe
+<span class="prompt-char">$</span> fogoe --version</div>
+        </div>
+      </section>
+
+      <!-- 3. QUICK START -->
+      <section id="quick-start" class="doc-section">
+        <h2 class="doc-h2" id="quickstart">
+          <span>Quick Start Guide</span>
+          <a href="#quickstart" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          Fogoe offers two primary workflows: interactive terminal wizard for humans, and headless CLI flags for automation and coding agents.
+        </p>
+
+        <h3 class="doc-h3">1. Interactive Terminal Wizard (Clack TUI)</h3>
+        <p class="doc-p">
+          Running <code>npx fogoe create &lt;name&gt;</code> launches an interactive step-by-step wizard powered by <code>@clack/prompts</code>:
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">Terminal Wizard Flow</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> npx fogoe create payment-api
+
+<span style="color:#38bdf8;">◇</span>  <span style="font-weight:700;">Welcome to Fogoe v1.1.1</span>
+<span style="color:#71717a;">│</span>
+<span style="color:#38bdf8;">◇</span>  Select web framework › <span style="color:#34d399;">Fastify</span> (High-performance API)
+<span style="color:#38bdf8;">◇</span>  Select language      › <span style="color:#34d399;">TypeScript</span> (Strict NodeNext ESM)
+<span style="color:#38bdf8;">◇</span>  Architecture pattern › <span style="color:#34d399;">MVC</span> (Layered routes/controllers/models)
+<span style="color:#38bdf8;">◇</span>  Database / ORM       › <span style="color:#34d399;">Drizzle ORM</span> (PostgreSQL)
+<span style="color:#38bdf8;">◇</span>  Authentication       › <span style="color:#34d399;">JWT Bearer</span> (authMiddleware)
+<span style="color:#38bdf8;">◇</span>  Initialize Git repo? › <span style="color:#34d399;">Yes</span> (with stack-tailored .gitignore)
+<span style="color:#38bdf8;">◇</span>  Install dependencies?› <span style="color:#34d399;">Yes</span> (using detected npm/pnpm)
+<span style="color:#71717a;">│</span>
+<span style="color:#38bdf8;">└</span>  <span style="color:#34d399; font-weight:700;">✔ Project scaffolded successfully in 38ms!</span></div>
+        </div>
+
+        <h3 class="doc-h3">2. Single-Command Headless Flag Mode</h3>
+        <p class="doc-p">
+          Pass explicit flags to bypass interactive prompts entirely—ideal for CI/CD pipelines, Dockerfiles, and custom scripts:
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> fogoe create store-api \
+  --framework fastify \
+  --lang ts \
+  --db drizzle \
+  --auth jwt \
+  --git \
+  --install \
+  -y</div>
+        </div>
+      </section>
+
+      <!-- 4. CLI SUITE & COMMANDS -->
+      <section id="cmd-fogoe" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">CLI Suite</span>
+        </div>
+        <h1 class="doc-title">CLI Commands Reference</h1>
+        <p class="doc-lead">
+          Fogoe includes a complete toolchain for project initialization, component generation, plugin configuration, and Git repository synchronization.
+        </p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Command</th>
+                <th>Arguments / Flags</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>fogoe [name]</code></td>
+                <td>Optional target directory name</td>
+                <td>Launches the interactive TUI wizard to initialize a project.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe create &lt;name&gt;</code></td>
+                <td><code>[--framework] [--lang] [--db] [--auth] [--git] [--install] [-y]</code></td>
+                <td>Scaffolds a new project with optional headless CLI flags.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe create &lt;name&gt; --ai "..."</code></td>
+                <td>Natural language description</td>
+                <td>AI-assisted scaffolding: compiles plain English prompts into stack parameters.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe create &lt;name&gt; --json</code></td>
+                <td><code>--non-interactive</code></td>
+                <td>Emits machine-readable JSON output to stdout for coding agents and CI runners.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe g crud &lt;name&gt;</code></td>
+                <td>Entity name (e.g. <code>product</code>, <code>user</code>)</td>
+                <td>Generates a complete vertical slice: Model, Controller, and REST Route endpoints.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe g route &lt;name&gt;</code></td>
+                <td>Route name</td>
+                <td>Generates a typed API route in <code>src/routes/</code>.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe g controller &lt;name&gt;</code></td>
+                <td>Controller name</td>
+                <td>Generates a request handler controller in <code>src/controllers/</code>.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe g model &lt;name&gt;</code></td>
+                <td>Model name</td>
+                <td>Generates a database schema model matching the active ORM / database driver.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe add [plugin]</code></td>
+                <td><code>redis</code>, <code>zod</code>, <code>mailer</code>, <code>stripe</code>, <code>ratelimit</code>, <code>swagger</code>, <code>socket</code></td>
+                <td>Installs and integrates modular backend capabilities into an existing project.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe status</code></td>
+                <td>—</td>
+                <td>Displays current project runtime, module system, ORM, and Git sync status.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe update</code></td>
+                <td>—</td>
+                <td>Upgrades all project dependencies to their latest compatible versions.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe init</code></td>
+                <td>—</td>
+                <td>Initializes Git repository, sets branch to main, and connects remote origin.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe push "&lt;msg&gt;"</code></td>
+                <td>Commit message</td>
+                <td>Stages all files, commits with provided message, and pushes to remote repository.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 5. CLI FLAGS REFERENCE MATRIX -->
+      <section id="cli-flags-matrix" class="doc-section">
+        <h2 class="doc-h2" id="flags-table">
+          <span>Complete CLI Flags Matrix</span>
+          <a href="#flags-table" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          All options supported by <code>fogoe create</code>:
+        </p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Flag</th>
+                <th>Short</th>
+                <th>Accepted Values</th>
+                <th>Default</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--framework</code></td>
+                <td><code>-f</code></td>
+                <td><code>fastify</code>, <code>express</code>, <code>hono</code>, <code>koa</code></td>
+                <td><code>express</code></td>
+                <td>Target HTTP web framework.</td>
+              </tr>
+              <tr>
+                <td><code>--lang</code></td>
+                <td><code>-l</code></td>
+                <td><code>ts</code>, <code>typescript</code>, <code>js</code>, <code>javascript</code></td>
+                <td><code>javascript</code></td>
+                <td>Language environment. TypeScript generates <code>NodeNext</code> ESM.</td>
+              </tr>
+              <tr>
+                <td><code>--type</code></td>
+                <td><code>-t</code></td>
+                <td><code>esm</code>, <code>module</code>, <code>cjs</code>, <code>commonjs</code></td>
+                <td><code>module</code> (TS) / <code>commonjs</code> (JS)</td>
+                <td>Module system used in <code>package.json</code>.</td>
+              </tr>
+              <tr>
+                <td><code>--arch</code></td>
+                <td><code>-a</code></td>
+                <td><code>mvc</code>, <code>minimal</code></td>
+                <td><code>minimal</code></td>
+                <td>Architecture pattern: Layered MVC or Single-File Minimal.</td>
+              </tr>
+              <tr>
+                <td><code>--db</code></td>
+                <td><code>-d</code></td>
+                <td><code>drizzle</code>, <code>prisma</code>, <code>postgresql</code>, <code>mongodb</code>, <code>sqlite</code>, <code>mysql</code>, <code>none</code></td>
+                <td><code>none</code></td>
+                <td>Database driver or ORM integration.</td>
+              </tr>
+              <tr>
+                <td><code>--auth</code></td>
+                <td>—</td>
+                <td><code>jwt</code>, <code>none</code></td>
+                <td><code>none</code></td>
+                <td>JWT Bearer authentication middleware with header inspection.</td>
+              </tr>
+              <tr>
+                <td><code>--hashing</code></td>
+                <td>—</td>
+                <td><code>bcrypt</code>, <code>argon2</code>, <code>crypto</code></td>
+                <td><code>bcrypt</code></td>
+                <td>Password hashing algorithm helper placed in <code>src/utils/hashing</code>.</td>
+              </tr>
+              <tr>
+                <td><code>--test</code> / <code>--no-test</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Configures Vitest testing suite and creates sample health tests.</td>
+              </tr>
+              <tr>
+                <td><code>--lint</code> / <code>--no-lint</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Configures ESLint and Prettier with strict styling rules.</td>
+              </tr>
+              <tr>
+                <td><code>--install</code> / <code>--no-install</code></td>
+                <td><code>-i</code></td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Automatically runs package manager installation after writing files.</td>
+              </tr>
+              <tr>
+                <td><code>--pm</code></td>
+                <td>—</td>
+                <td><code>npm</code>, <code>pnpm</code>, <code>bun</code>, <code>yarn</code></td>
+                <td><code>npm</code></td>
+                <td>Preferred package manager for installation and lockfiles.</td>
+              </tr>
+              <tr>
+                <td><code>--git</code> / <code>--no-git</code></td>
+                <td><code>-g</code></td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Initializes local Git repository and writes tailored <code>.gitignore</code>.</td>
+              </tr>
+              <tr>
+                <td><code>--commit</code> / <code>--no-commit</code></td>
+                <td>—</td>
+                <td>Boolean or commit message string</td>
+                <td><code>false</code></td>
+                <td>Creates initial Git commit immediately after scaffolding.</td>
+              </tr>
+              <tr>
+                <td><code>--github</code></td>
+                <td>—</td>
+                <td>Boolean, GitHub URL, or <code>owner/repo</code></td>
+                <td><code>false</code></td>
+                <td>Connects to GitHub remote or uses <code>gh repo create</code>.</td>
+              </tr>
+              <tr>
+                <td><code>--private</code> / <code>--public</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Sets GitHub repository visibility (public by default).</td>
+              </tr>
+              <tr>
+                <td><code>--ai</code></td>
+                <td>—</td>
+                <td>String prompt</td>
+                <td>—</td>
+                <td>Natural-language requirement compilation.</td>
+              </tr>
+              <tr>
+                <td><code>--json</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Outputs machine-readable JSON structure on stdout.</td>
+              </tr>
+              <tr>
+                <td><code>--non-interactive</code> / <code>--yes</code></td>
+                <td><code>-y</code></td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Bypasses all stdin prompts using flags or defaults.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 6. AI-ASSISTED SCAFFOLDING -->
+      <section id="ai-engine" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">AI Intelligence</span>
+        </div>
+        <h1 class="doc-title">AI-Assisted Scaffolding Engine</h1>
+        <p class="doc-lead">
+          Fogoe includes a deterministic requirement compiler that translates natural language prompts into verified CLI parameters—bypassing fuzzy code generation and hallucinations with 100% template precision.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">AI Prompt Command</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> fogoe create store-api \
+  --ai "Fastify e-commerce API with PostgreSQL, Drizzle ORM, and JWT authentication"</div>
+        </div>
+
+        <h3 class="doc-h3">How Fogoe's AI Compiler Operates</h3>
+        <p class="doc-p">
+          Unlike generic LLM generators that attempt to write JavaScript code from scratch (frequently introducing broken imports and syntax bugs), Fogoe parses your natural language prompt against verified internal vocabulary models:
+        </p>
+        <ul class="doc-ul">
+          <li><strong>Framework Extraction:</strong> Detects mentions of Fastify, Express, Hono, Koa, or synonyms (e.g., <em>"ultra-high performance"</em> &rarr; Fastify, <em>"edge service"</em> &rarr; Hono).</li>
+          <li><strong>Database &amp; ORM Mapping:</strong> Maps terms like <em>"drizzle"</em>, <em>"prisma"</em>, <em>"postgres"</em>, <em>"mongo"</em>, or <em>"sqlite"</em> to exact driver combinations and schemas.</li>
+          <li><strong>Auth &amp; Security:</strong> Automatically activates JWT Bearer middleware when keywords like <em>"jwt"</em>, <em>"auth"</em>, <em>"tokens"</em>, or <em>"secure login"</em> appear.</li>
+          <li><strong>Architecture Selection:</strong> Chooses <strong>MVC</strong> when databases or routes are specified, or <strong>Minimal</strong> for microservices and single-endpoint servers.</li>
+        </ul>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            Explicit Flag Overrides
+          </div>
+          You can combine <code>--ai</code> with explicit CLI flags. Explicit flags take priority:
+          <br /><br />
+          <code>fogoe create billing-svc --ai "TypeScript API with Drizzle and JWT" --framework express</code>
+        </div>
+      </section>
+
+      <!-- 7. CODING AGENTS & CI AUTOMATION -->
+      <section id="agent-automation" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">Automation</span>
+        </div>
+        <h1 class="doc-title">Coding Agents &amp; CI Automation</h1>
+        <p class="doc-lead">
+          Zero prompt blocking. Pass <code>--json</code> and <code>--non-interactive</code> to pipe clean, machine-readable JSON directly into Claude Code, Cursor, Copilot, Antigravity, and CI/CD runners.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> fogoe create auth-service \
+  --framework fastify \
+  --lang ts \
+  --db postgresql \
+  --auth jwt \
+  --non-interactive \
+  --json</div>
+        </div>
+
+        <h3 class="doc-h3">Structured JSON Output Schema</h3>
+        <p class="doc-p">
+          When <code>--json</code> is passed, Fogoe guarantees that only valid JSON is written to stdout. Informational logs and ASCII art are suppressed:
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">stdout (JSON)</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content">{
+  <span class="str">"success"</span>: <span class="kwd">true</span>,
+  <span class="str">"projectName"</span>: <span class="str">"auth-service"</span>,
+  <span class="str">"targetDir"</span>: <span class="str">"/workspace/auth-service"</span>,
+  <span class="str">"config"</span>: {
+    <span class="str">"framework"</span>: <span class="str">"fastify"</span>,
+    <span class="str">"language"</span>: <span class="str">"ts"</span>,
+    <span class="str">"architecture"</span>: <span class="str">"mvc"</span>,
+    <span class="str">"database"</span>: <span class="str">"postgresql"</span>,
+    <span class="str">"auth"</span>: <span class="str">"jwt"</span>,
+    <span class="str">"git"</span>: <span class="kwd">true</span>,
+    <span class="str">"install"</span>: <span class="kwd">true</span>
+  },
+  <span class="str">"stats"</span>: {
+    <span class="str">"filesWritten"</span>: <span class="typ">16</span>,
+    <span class="str">"durationMs"</span>: <span class="typ">38</span>
+  }
+}</div>
+        </div>
+
+        <h3 class="doc-h3">CI/CD &amp; Docker Integration Recipe</h3>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">GitHub Actions Workflow Step</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content">- <span class="str">name</span>: Scaffold microservice backend
+  <span class="str">run</span>: |
+    npx fogoe create test-api \
+      --framework fastify \
+      --lang ts \
+      --db sqlite \
+      --auth jwt \
+      --install \
+      --non-interactive</div>
+        </div>
+      </section>
+
+      <!-- 8. FULL CRUD VERTICAL SLICE GENERATOR -->
+      <section id="crud-slice" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">Code Generation</span>
+        </div>
+        <h1 class="doc-title">Full CRUD Vertical Slice Generator</h1>
+        <p class="doc-lead">
+          <code>fogoe g crud &lt;name&gt;</code> writes production-ready Models, Controllers, and REST Routes in a single atomic step. Pre-wired with standard HTTP verbs, status codes, and type safety.
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> fogoe g crud product</div>
+        </div>
+
+        <h3 class="doc-h3">Generated Artifacts Breakdown</h3>
+        <p class="doc-p">
+          Running the command creates 3 synchronized files tailored to your project's active framework and database:
+        </p>
+
+        <div class="doc-tab-header">
+          <button class="doc-tab-btn active" onclick="switchDocTab('crud-route-view', this)">1. Route (product.routes.ts)</button>
+          <button class="doc-tab-btn" onclick="switchDocTab('crud-ctrl-view', this)">2. Controller (product.controller.ts)</button>
+          <button class="doc-tab-btn" onclick="switchDocTab('crud-model-view', this)">3. Model (product.model.ts)</button>
+        </div>
+
+        <div id="crud-route-view" class="code-block doc-tab-pane active">
+          <div class="code-block-header">
+            <span class="code-lang-tag">src/routes/product.routes.ts</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="kwd">import</span> { Router } <span class="kwd">from</span> <span class="str">"express"</span>;
+<span class="kwd">import</span> * <span class="kwd">as</span> productController <span class="kwd">from</span> <span class="str">"../controllers/product.controller.js"</span>;
+
+<span class="kwd">const</span> router = <span class="fn">Router</span>();
+
+router.<span class="fn">get</span>(<span class="str">"/"</span>, productController.listProducts);
+router.<span class="fn">get</span>(<span class="str">"/:id"</span>, productController.getProductById);
+router.<span class="fn">post</span>(<span class="str">"/"</span>, productController.createProduct);
+router.<span class="fn">put</span>(<span class="str">"/:id"</span>, productController.updateProduct);
+router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productController.deleteProduct);
+
+<span class="kwd">export default</span> router;</div>
+        </div>
+
+        <div id="crud-ctrl-view" class="code-block doc-tab-pane">
+          <div class="code-block-header">
+            <span class="code-lang-tag">src/controllers/product.controller.ts</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="kwd">import</span> { Request, Response } <span class="kwd">from</span> <span class="str">"express"</span>;
+<span class="kwd">import</span> * <span class="kwd">as</span> ProductModel <span class="kwd">from</span> <span class="str">"../models/product.model.js"</span>;
+
+<span class="kwd">export const</span> listProducts = <span class="kwd">async</span> (req: Request, res: Response) =&gt; {
+  <span class="kwd">try</span> {
+    <span class="kwd">const</span> items = <span class="kwd">await</span> ProductModel.<span class="fn">findAll</span>();
+    res.<span class="fn">json</span>(items);
+  } <span class="kwd">catch</span> (err) {
+    res.<span class="fn">status</span>(<span class="typ">500</span>).<span class="fn">json</span>({ error: <span class="str">"Failed to retrieve products"</span> });
+  }
+};
+
+<span class="kwd">export const</span> getProductById = <span class="kwd">async</span> (req: Request, res: Response) =&gt; {
+  <span class="kwd">const</span> item = <span class="kwd">await</span> ProductModel.<span class="fn">findById</span>(req.params.id);
+  <span class="kwd">if</span> (!item) <span class="kwd">return</span> res.<span class="fn">status</span>(<span class="typ">404</span>).<span class="fn">json</span>({ error: <span class="str">"Product not found"</span> });
+  res.<span class="fn">json</span>(item);
+};
+
+<span class="kwd">export const</span> createProduct = <span class="kwd">async</span> (req: Request, res: Response) =&gt; {
+  <span class="kwd">const</span> created = <span class="kwd">await</span> ProductModel.<span class="fn">create</span>(req.body);
+  res.<span class="fn">status</span>(<span class="typ">201</span>).<span class="fn">json</span>(created);
+};</div>
+        </div>
+
+        <div id="crud-model-view" class="code-block doc-tab-pane">
+          <div class="code-block-header">
+            <span class="code-lang-tag">src/models/product.model.ts</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="kwd">export interface</span> <span class="typ">Product</span> {
+  id: <span class="typ">string</span>;
+  name: <span class="typ">string</span>;
+  price: <span class="typ">number</span>;
+  createdAt: <span class="typ">Date</span>;
+}
+
+<span class="kwd">export const</span> findAll = <span class="kwd">async</span> (): <span class="typ">Promise</span>&lt;<span class="typ">Product</span>[]&gt; =&gt; {
+  <span class="cmt">// Integrated query using active ORM (Drizzle, Prisma, or native driver)</span>
+  <span class="kwd">return</span> [];
+};
+
+<span class="kwd">export const</span> findById = <span class="kwd">async</span> (id: <span class="typ">string</span>): <span class="typ">Promise</span>&lt;<span class="typ">Product</span> | <span class="kwd">null</span>&gt; =&gt; {
+  <span class="kwd">return null</span>;
+};
+
+<span class="kwd">export const</span> create = <span class="kwd">async</span> (data: <span class="typ">Partial</span>&lt;<span class="typ">Product</span>&gt;): <span class="typ">Promise</span>&lt;<span class="typ">Product</span>&gt; =&gt; {
+  <span class="kwd">return</span> { id: <span class="str">"p_1"</span>, name: data.name || <span class="str">""</span>, price: data.price || <span class="typ">0</span>, createdAt: <span class="kwd">new</span> <span class="typ">Date</span>() };
+};</div>
+        </div>
+      </section>
+
+      <!-- 9. INDIVIDUAL COMPONENT GENERATORS -->
+      <section id="component-generators" class="doc-section">
+        <h2 class="doc-h2" id="generators">
+          <span>Individual Component Generators</span>
+          <a href="#generators" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          When you don't need a full CRUD slice, scaffold standalone MVC parts instantly:
+        </p>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="cmt"># Generate a typed route</span>
+<span class="prompt-char">$</span> fogoe generate route auth
+<span class="cmt"># -> src/routes/auth.routes.ts</span>
+
+<span class="cmt"># Generate a controller handler</span>
+<span class="prompt-char">$</span> fogoe generate controller auth
+<span class="cmt"># -> src/controllers/auth.controller.ts</span>
+
+<span class="cmt"># Generate a database model</span>
+<span class="prompt-char">$</span> fogoe generate model user
+<span class="cmt"># -> src/models/user.model.ts</span></div>
+        </div>
+      </section>
+
+      <!-- 10. SUPPORTED FRAMEWORKS -->
+      <section id="frameworks" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">Runtimes</span>
+        </div>
+        <h1 class="doc-title">Supported Web Frameworks</h1>
+        <p class="doc-lead">
+          Fogoe provides feature parity across four modern HTTP frameworks.
+        </p>
+
+        <div class="doc-grid-2">
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Fastify</h4>
+              <span class="doc-card-badge">High Perf</span>
+            </div>
+            <p>Schema-based validation, lightning-fast JSON serialization, and full async lifecycle hooks. Includes <code>@fastify/cors</code>.</p>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Express</h4>
+              <span class="doc-card-badge">Battle-Tested</span>
+            </div>
+            <p>The industry standard with immense middleware ecosystem, typed routes, and robust error handlers.</p>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Hono</h4>
+              <span class="doc-card-badge">Edge &amp; Node</span>
+            </div>
+            <p>Ultra-fast web framework optimized for Node.js, Bun, Cloudflare Workers, and serverless environments via <code>@hono/node-server</code>.</p>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Koa</h4>
+              <span class="doc-card-badge">Expressive</span>
+            </div>
+            <p>Modern async middleware cascading powered by native promises with zero built-in middleware bloat.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 11. LANGUAGES & MODULE SYSTEMS -->
+      <section id="languages" class="doc-section">
+        <h2 class="doc-h2" id="lang-details">
+          <span>Language &amp; Module System Support</span>
+          <a href="#lang-details" class="anchor-link">#</a>
+        </h2>
+        <h3 class="doc-h3">TypeScript 5.x First</h3>
+        <p class="doc-p">
+          Fogoe configures TypeScript with optimal defaults targeting <code>ES2022</code>:
+        </p>
+        <ul class="doc-ul">
+          <li><code>"module": "NodeNext"</code> and <code>"moduleResolution": "NodeNext"</code> for native Node.js ES Modules.</li>
+          <li>Strict type-checking enabled (<code>"strict": true</code>).</li>
+          <li>Development powered by <code>tsx watch</code> for instant reload without build steps.</li>
+          <li>Clean path aliases configured for MVC architectures:
+            <ul>
+              <li><code>@routes/*</code> &rarr; <code>src/routes/*</code></li>
+              <li><code>@controllers/*</code> &rarr; <code>src/controllers/*</code></li>
+              <li><code>@models/*</code> &rarr; <code>src/models/*</code></li>
+              <li><code>@middlewares/*</code> &rarr; <code>src/middlewares/*</code></li>
+              <li><code>@config/*</code> &rarr; <code>src/config/*</code></li>
+            </ul>
+          </li>
+        </ul>
+
+        <h3 class="doc-h3">JavaScript (ESM &amp; CommonJS)</h3>
+        <p class="doc-p">
+          Full support for modern ES Modules (<code>import</code> / <code>export</code>) with <code>"type": "module"</code> in <code>package.json</code>, or classic CommonJS (<code>require</code> / <code>module.exports</code>).
+        </p>
+      </section>
+
+      <!-- 12. ARCHITECTURE PATTERNS -->
+      <section id="patterns" class="doc-section">
+        <h2 class="doc-h2" id="pattern-guide">
+          <span>Architecture Blueprints</span>
+          <a href="#pattern-guide" class="anchor-link">#</a>
+        </h2>
+
+        <h3 class="doc-h3">1. Minimal Architecture Pattern</h3>
+        <p class="doc-p">
+          Single entry point with health check route. Best for microservices, lambdas, and single-file prototypes:
+        </p>
+        <div class="code-block">
+          <div class="code-block-header"><span class="code-lang-tag">Directory Tree</span></div>
+          <div class="code-content">my-api/
+├── src/
+│   └── server.ts
+├── .env
+├── .gitignore
+├── package.json
+└── tsconfig.json</div>
+        </div>
+
+        <h3 class="doc-h3">2. Layered MVC Architecture Pattern</h3>
+        <p class="doc-p">
+          Enterprise-ready separation of concerns with dedicated lifecycle boundaries:
+        </p>
+        <div class="code-block">
+          <div class="code-block-header"><span class="code-lang-tag">Directory Tree</span></div>
+          <div class="code-content">my-api/
+├── src/
+│   ├── server.ts             <span class="cmt"># Server bootstrap &amp; port listening</span>
+│   ├── app.ts                <span class="cmt"># Middleware registration &amp; route mounting</span>
+│   ├── config/
+│   │   ├── env.ts            <span class="cmt"># Validated environment variables</span>
+│   │   └── db.ts             <span class="cmt"># Database pool &amp; connection lifecycle</span>
+│   ├── controllers/
+│   │   └── home.controller.ts
+│   ├── routes/
+│   │   └── home.routes.ts
+│   ├── models/
+│   │   └── home.model.ts
+│   ├── middlewares/
+│   │   └── authMiddleware.ts <span class="cmt"># JWT Bearer token inspection</span>
+│   └── utils/
+│       └── hashing.ts        <span class="cmt"># Password hashing helpers</span>
+├── drizzle.config.ts         <span class="cmt"># (If Drizzle ORM selected)</span>
+├── prisma/schema.prisma      <span class="cmt"># (If Prisma ORM selected)</span>
+├── .env
+├── .gitignore
+├── package.json
+└── tsconfig.json</div>
+        </div>
+      </section>
+
+      <!-- 13. DATABASES & ORMS -->
+      <section id="databases" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">Data Layer</span>
+        </div>
+        <h1 class="doc-title">Databases &amp; ORM Drivers</h1>
+        <p class="doc-lead">
+          Fogoe establishes connection pooling, client singletons, and schemas ready for immediate querying.
+        </p>
+
+        <div class="table-wrap">
+          <table class="doc-table">
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>Driver / Package</th>
+                <th>Scaffolded Client Setup</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Drizzle ORM</strong></td>
+                <td><code>drizzle-orm</code> + <code>pg</code></td>
+                <td>Includes <code>drizzle.config.ts</code>, PostgreSQL client pool, and schema migrations script.</td>
+              </tr>
+              <tr>
+                <td><strong>Prisma ORM</strong></td>
+                <td><code>@prisma/client</code> + <code>prisma</code></td>
+                <td>Generates <code>prisma/schema.prisma</code>, <code>PrismaClient</code> singleton, and DB connection checks.</td>
+              </tr>
+              <tr>
+                <td><strong>PostgreSQL</strong></td>
+                <td><code>pg</code></td>
+                <td>High-performance <code>new Pool()</code> connection pool with graceful error handling.</td>
+              </tr>
+              <tr>
+                <td><strong>MongoDB</strong></td>
+                <td><code>mongoose</code></td>
+                <td>Mongoose client with connection events and auto-reconnect logic.</td>
+              </tr>
+              <tr>
+                <td><strong>SQLite</strong></td>
+                <td><code>better-sqlite3</code></td>
+                <td>Synchronous, zero-config embedded SQLite database file.</td>
+              </tr>
+              <tr>
+                <td><strong>MySQL</strong></td>
+                <td><code>mysql2/promise</code></td>
+                <td>Promise-based connection pool with parameterized query helpers.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 14. AUTHENTICATION & SECURITY -->
+      <section id="auth-security" class="doc-section">
+        <h2 class="doc-h2" id="security-guide">
+          <span>Authentication &amp; Security</span>
+          <a href="#security-guide" class="anchor-link">#</a>
+        </h2>
+        <h3 class="doc-h3">Production JWT Bearer Middleware</h3>
+        <p class="doc-p">
+          When <code>--auth jwt</code> is enabled, Fogoe generates an <code>authMiddleware</code> that inspects incoming <code>Authorization: Bearer &lt;token&gt;</code> headers, verifies signatures with <code>process.env.JWT_SECRET</code>, attaches the decoded payload to the request context, and returns standard HTTP 401 / 403 responses on failure.
+        </p>
+
+        <h3 class="doc-h3">Password Hashing</h3>
+        <p class="doc-p">
+          Includes a pre-configured hashing utility in <code>src/utils/hashing</code>:
+        </p>
+        <ul class="doc-ul">
+          <li><code>--hashing bcrypt</code>: Industry standard using <code>bcrypt</code>.</li>
+          <li><code>--hashing argon2</code>: Winner of the Password Hashing Competition (memory-hard).</li>
+          <li><code>--hashing crypto</code>: Zero-dependency hashing powered by Node's native <code>crypto.scrypt</code>.</li>
+        </ul>
+      </section>
+
+      <!-- 15. GIT & GITHUB AUTOMATION -->
+      <section id="git-github" class="doc-section">
+        <h2 class="doc-h2" id="git-guide">
+          <span>Git &amp; GitHub Automation</span>
+          <a href="#git-guide" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          Fogoe automates the entire repository lifecycle:
+        </p>
+        <ul class="doc-ul">
+          <li><strong>Stack-Tailored <code>.gitignore</code>:</strong> Automatically excludes <code>.env</code>, <code>node_modules/</code>, <code>dist/</code>, SQLite database files (<code>*.db</code>, <code>*.sqlite</code>), and OS artifacts.</li>
+          <li><strong>Automated Initial Commit (<code>--commit</code>):</strong> Stages all scaffolded files and writes an initial git commit.</li>
+          <li><strong>Remote GitHub Setup (<code>--github</code>, <code>--private</code>):</strong> Connects to existing remote repositories or provisions new ones via GitHub CLI (<code>gh repo create</code>).</li>
+        </ul>
+      </section>
+
+      <!-- 16. TESTING & CODE QUALITY -->
+      <section id="testing-quality" class="doc-section">
+        <h2 class="doc-h2" id="testing-guide">
+          <span>Testing &amp; Code Quality</span>
+          <a href="#testing-guide" class="anchor-link">#</a>
+        </h2>
+        <div class="doc-grid-2">
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Vitest</h4>
+              <span class="doc-card-badge">--test</span>
+            </div>
+            <p>Blazing fast unit &amp; integration testing suite. Scaffolds sample health check tests and adds <code>npm test</code> to <code>package.json</code>.</p>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">ESLint + Prettier</h4>
+              <span class="doc-card-badge">--lint</span>
+            </div>
+            <p>Preconfigured linting rules with TypeScript parser and Prettier configuration files. Adds <code>npm run lint</code> and <code>npm run format</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 17. PLUGINS ECOSYSTEM -->
+      <section id="plugins-overview" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">Extensions</span>
+        </div>
+        <h1 class="doc-title">Modular Plugin Ecosystem</h1>
+        <p class="doc-lead">
+          Extend any existing Fogoe application on demand using <code>fogoe add &lt;plugin&gt;</code>.
+        </p>
+
+        <div class="doc-grid-2">
+          <div class="doc-card" id="plugin-redis">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Redis</h4>
+              <span class="doc-card-badge">fogoe add redis</span>
+            </div>
+            <p>Configures <code>ioredis</code> with connection pooling, reconnect retry logic, and environment variable configuration.</p>
+          </div>
+          <div class="doc-card" id="plugin-zod">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Zod Validation</h4>
+              <span class="doc-card-badge">fogoe add zod</span>
+            </div>
+            <p>Injects TypeScript-first request validation middleware for body payloads and query parameters.</p>
+          </div>
+          <div class="doc-card" id="plugin-mailer">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Nodemailer</h4>
+              <span class="doc-card-badge">fogoe add mailer</span>
+            </div>
+            <p>Configures SMTP transactional email sending helpers with environment credentials.</p>
+          </div>
+          <div class="doc-card" id="plugin-stripe">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Stripe SDK</h4>
+              <span class="doc-card-badge">fogoe add stripe</span>
+            </div>
+            <p>Initializes Stripe payment processing SDK with webhook signature verification.</p>
+          </div>
+          <div class="doc-card" id="plugin-swagger">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">OpenAPI / Swagger</h4>
+              <span class="doc-card-badge">fogoe add swagger</span>
+            </div>
+            <p>Mounts an interactive API documentation explorer at <code>/api-docs</code> using <code>swagger-ui-express</code>.</p>
+          </div>
+          <div class="doc-card" id="plugin-socket">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Socket.io</h4>
+              <span class="doc-card-badge">fogoe add socket</span>
+            </div>
+            <p>Sets up real-time bi-directional WebSocket event communication server.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 18. UPCOMING FEATURES & ROADMAP -->
+      <section id="upcoming-features" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge" style="color: var(--accent-purple); background: rgba(192, 132, 252, 0.12); border-color: rgba(192, 132, 252, 0.3);">Roadmap</span>
+        </div>
+        <h1 class="doc-title">Upcoming Features &amp; Roadmap</h1>
+        <p class="doc-lead">
+          Fogoe is continuously evolving. Here is a look at what is actively planned for upcoming releases to further streamline backend development, containerization, and deployment.
+        </p>
+
+        <div class="doc-grid-2">
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">1. Docker &amp; Docker Compose</h4>
+              <span class="doc-card-badge">fogoe g docker</span>
+            </div>
+            <p style="margin-bottom: 10px;">
+              Automatically generate production-ready, multi-stage optimized <code>Dockerfile</code>s and full <code>docker-compose.yml</code> configurations tailored to your chosen stack.
+            </p>
+            <ul class="doc-ul" style="margin-left: 16px; margin-bottom: 0; font-size: 0.84rem;">
+              <li>Pre-configured database containers (PostgreSQL, MongoDB, Redis, MySQL) with persistent storage volumes.</li>
+              <li>Multi-stage builds separating dev dependencies from production Node.js runtimes.</li>
+              <li>Integrated health check directives and network isolation.</li>
+            </ul>
+          </div>
+
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">2. API Documentation Generator</h4>
+              <span class="doc-card-badge">fogoe g docs</span>
+            </div>
+            <p style="margin-bottom: 10px;">
+              Automated compilation of OpenAPI / Swagger schemas directly from your route definitions and validation layers.
+            </p>
+            <ul class="doc-ul" style="margin-left: 16px; margin-bottom: 0; font-size: 0.84rem;">
+              <li>Automatic schema derivation from Zod schemas, TypeBox types, and controllers.</li>
+              <li>Generates interactive Swagger UI explorer mounted at <code>/api-docs</code>.</li>
+              <li>Exports static <code>openapi.json</code> and <code>openapi.yaml</code> for external developer portals.</li>
+            </ul>
+          </div>
+
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">3. CI/CD Pipeline Generator</h4>
+              <span class="doc-card-badge">fogoe g ci</span>
+            </div>
+            <p style="margin-bottom: 10px;">
+              Instant scaffolding of continuous integration and continuous deployment pipelines for GitHub Actions and GitLab CI.
+            </p>
+            <ul class="doc-ul" style="margin-left: 16px; margin-bottom: 0; font-size: 0.84rem;">
+              <li>Automated workflows for linting (ESLint), type-checking (tsc), and testing (Vitest).</li>
+              <li>Automated Docker image build and push to container registries (GHCR, Docker Hub).</li>
+              <li>Deployment templates for popular cloud hosts (AWS ECS, Render, Fly.io, Railway).</li>
+            </ul>
+          </div>
+
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">4. Project Doctor</h4>
+              <span class="doc-card-badge">fogoe doctor [--fix]</span>
+            </div>
+            <p style="margin-bottom: 10px;">
+              Intelligent diagnostics suite to verify environment health, dependency consistency, and configuration integrity.
+            </p>
+            <ul class="doc-ul" style="margin-left: 16px; margin-bottom: 0; font-size: 0.84rem;">
+              <li>Audits Node.js version compatibility, missing lockfiles, and broken path aliases.</li>
+              <li>Validates <code>.env</code> presence against schema requirements.</li>
+              <li><code>fogoe doctor --fix</code>: Automatically repairs detected discrepancies and missing scripts.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 19. TROUBLESHOOTING & FAQ -->
+      <section id="troubleshooting" class="doc-section">
+        <h2 class="doc-h2" id="faq-section">
+          <span>Troubleshooting &amp; FAQ</span>
+          <a href="#faq-section" class="anchor-link">#</a>
+        </h2>
+        
+        <h3 class="doc-h3">Q: Do I need to install Fogoe globally?</h3>
+        <p class="doc-p">
+          No. You can run Fogoe directly on demand with <code>npx fogoe</code>, <code>pnpm dlx fogoe</code>, <code>bunx fogoe</code>, or <code>yarn dlx fogoe</code>.
+        </p>
+
+        <h3 class="doc-h3">Q: Why does Fogoe use on-disk templates instead of embedded template strings?</h3>
+        <p class="doc-p">
+          Embedded string templates often suffer from syntax errors, difficult formatting, and escaping issues. Fogoe keeps pure, syntax-checked template files on disk, ensuring atomic and deterministic file generation every time.
+        </p>
+
+        <h3 class="doc-h3">Q: How do I run my generated project?</h3>
+        <p class="doc-p">
+          Navigate to your project directory and run <code>npm run dev</code> for hot-reloading development or <code>npm run build &amp;&amp; npm start</code> for production builds.
+        </p>
+      </section>
+
+      <!-- FOOTER PAGINATION -->
+      <div class="docs-footer-nav">
+        <a href="./index.html" class="docs-nav-card">
+          <span class="docs-nav-label">&larr; Back to</span>
+          <span class="docs-nav-title">Fogoe Homepage &amp; Configurator</span>
+        </a>
+        <a href="https://github.com/Sooriya04/fogoe" target="_blank" rel="noreferrer" class="docs-nav-card" style="text-align: right;">
+          <span class="docs-nav-label">Source Code &rarr;</span>
+          <span class="docs-nav-title">GitHub Repository</span>
+        </a>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- SCRIPT FOR INTERACTIVE DOCS -->
+  <script>
+    function toggleSidebar() {
+      const sidebar = document.getElementById('docs-sidebar');
+      sidebar.classList.toggle('open');
+    }
+
+    function switchDocTab(paneId, btnEl) {
+      const parentHeader = btnEl.parentElement;
+      parentHeader.querySelectorAll('.doc-tab-btn').forEach(btn => btn.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      const container = parentHeader.parentElement;
+      container.querySelectorAll('.doc-tab-pane').forEach(pane => pane.classList.remove('active'));
+      const targetPane = document.getElementById(paneId);
+      if (targetPane) targetPane.classList.add('active');
+    }
+
+    function copySnippet(btnEl) {
+      const block = btnEl.closest('.code-block');
+      const codeEl = block ? block.querySelector('.code-content') : null;
+      let text = codeEl ? codeEl.innerText : '';
+      text = text.replace(/^\$\s+/gm, '');
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btnEl.innerText;
+        btnEl.innerText = 'Copied!';
+        setTimeout(() => { btnEl.innerText = originalText; }, 1800);
+      });
+    }
+
+    function filterDocsSearch(query) {
+      const q = query.toLowerCase().trim();
+      const links = document.querySelectorAll('.docs-sidebar .sidebar-link');
+      
+      links.forEach(link => {
+        const text = link.innerText.toLowerCase();
+        const parentLi = link.parentElement;
+        if (!q || text.includes(q)) {
+          parentLi.style.display = 'block';
+        } else {
+          parentLi.style.display = 'none';
+        }
+      });
+    }
+
+    // Reliable, flicker-free active section tracking on scroll
+    const sidebarLinks = document.querySelectorAll('.docs-sidebar .sidebar-link');
+    const sections = document.querySelectorAll('.doc-section');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const id = entry.target.getAttribute('id');
+          if (id) {
+            sidebarLinks.forEach(link => {
+              const href = link.getAttribute('href');
+              if (href === `#${id}`) {
+                link.classList.add('active');
+              } else {
+                link.classList.remove('active');
+              }
+            });
+          }
+        }
+      });
+    }, {
+      rootMargin: '-80px 0px -65% 0px',
+      threshold: 0
+    });
+
+    sections.forEach(sec => observer.observe(sec));
+
+    // Handle clean clicking on sidebar links
+    sidebarLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        sidebarLinks.forEach(l => l.classList.remove('active'));
+        link.classList.add('active');
+        if (window.innerWidth <= 900) {
+          document.getElementById('docs-sidebar')?.classList.remove('open');
+        }
+      });
+    });
+
+    // Unified Theme Manager (Multi-layer sync across pages, tabs & URL state)
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(theme);
+
+      try { localStorage.setItem('fogoe-theme', theme); } catch (e) {}
+      try { sessionStorage.setItem('fogoe-theme', theme); } catch (e) {}
+      try { document.cookie = 'fogoe-theme=' + encodeURIComponent(theme) + '; path=/; max-age=31536000; SameSite=Lax'; } catch (e) {}
+
+      // Keep internal links synchronized with active theme query param
+      document.querySelectorAll('a[href*="docs.html"], a[href*="index.html"]').forEach(function (a) {
+        var href = a.getAttribute('href');
+        if (!href) return;
+        var parts = href.split('?');
+        var base = parts[0];
+        var hashParts = (parts[1] || '').split('#');
+        var hash = hashParts[1] ? '#' + hashParts[1] : (base.includes('#') ? '#' + base.split('#')[1] : '');
+        base = base.split('#')[0];
+        a.setAttribute('href', base + '?theme=' + theme + hash);
+      });
+    }
+
+    function toggleTheme() {
+      var current = document.documentElement.getAttribute('data-theme') || (document.documentElement.classList.contains('light') ? 'light' : 'dark');
+      var next = current === 'light' ? 'dark' : 'light';
+      applyTheme(next);
+    }
+
+    // Cross-tab / cross-navigation synchronization
+    window.addEventListener('storage', function (e) {
+      if (e.key === 'fogoe-theme' && e.newValue) {
+        applyTheme(e.newValue);
+      }
+    });
+
+    window.addEventListener('pageshow', function () {
+      var theme = 'dark';
+      try {
+        var params = new URLSearchParams(window.location.search);
+        theme = params.get('theme') || localStorage.getItem('fogoe-theme') || sessionStorage.getItem('fogoe-theme') || 'dark';
+      } catch (e) {}
+      applyTheme(theme);
+    });
+
+    // Run on initial load to ensure all link hrefs are updated
+    document.addEventListener('DOMContentLoaded', function () {
+      var activeTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+      applyTheme(activeTheme);
+    });
+
+    // Keyboard shortcut '/' to focus search
+    window.addEventListener('keydown', (e) => {
+      if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+        e.preventDefault();
+        const searchInput = document.getElementById('doc-search-input');
+        if (searchInput) searchInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>
