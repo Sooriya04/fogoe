@@ -140,9 +140,31 @@ function parseAiPrompt(promptText = '') {
   }
 
   let git = false;
-  if (/\b(git|github|git init|repo|repository|version control)\b/.test(text)) {
+  let github = false;
+  let isPrivate = false;
+  let commit = false;
+
+  if (/\b(github|gh repo|push to github|remote repo|connect github)\b/.test(text)) {
+    git = true;
+    github = true;
+    commit = true;
+    if (/\b(private|private repo|private repository)\b/.test(text)) {
+      isPrivate = true;
+      summary.push('GitHub: Create private repository & push initial commit');
+    } else {
+      summary.push('GitHub: Create repository & push initial commit');
+    }
+  } else if (/\b(git|git init|version control|vcs|local repo|local git)\b/.test(text)) {
     git = true;
     summary.push('Git: Initialize repository');
+  }
+
+  if (/\b(commit|initial commit|first commit)\b/.test(text)) {
+    git = true;
+    commit = true;
+    if (!github) {
+      summary.push('Git: Create initial project commit');
+    }
   }
 
   return {
@@ -158,6 +180,9 @@ function parseAiPrompt(promptText = '') {
     linting,
     install,
     git,
+    github,
+    isPrivate,
+    commit,
     summary,
   };
 }

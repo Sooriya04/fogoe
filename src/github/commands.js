@@ -1,98 +1,180 @@
 const { execSync } = require('child_process');
 const chalk = require('chalk');
+const { ensureGitUserConfig } = require('./auth');
 
 /**
- * Initializes a new Git repository
+ * Initializes a new Git repository and sets the initial branch
+ * @param {string} targetDir
+ * @param {string} branchName
+ * @returns {{ success: boolean, branch: string, error?: string }}
  */
-function gitInit() {
+function gitInit(targetDir = process.cwd(), branchName = 'main') {
   try {
-    execSync('git init', { stdio: 'ignore' });
-    console.log(chalk.green('✓ Git repository initialized'));
+    try {
+      execSync(`git init -b ${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+    } catch {
+      execSync('git init', { cwd: targetDir, stdio: 'ignore' });
+      try {
+        execSync(`git symbolic-ref HEAD refs/heads/${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+      } catch {}
+    }
+    return { success: true, branch: branchName };
   } catch (err) {
-    console.error('Failed to initialize Git repository.');
-    process.exit(1);
+    return { success: false, error: err.message };
   }
 }
 
 /**
  * Stages all files for commit
+ * @param {string} targetDir
+ * @returns {{ success: boolean, error?: string }}
  */
-function gitAdd() {
+function gitAdd(targetDir = process.cwd()) {
   try {
-    execSync('git add .', { stdio: 'ignore' });
-    console.log(chalk.green('✓ Files staged'));
+    execSync('git add -A', { cwd: targetDir, stdio: 'ignore' });
+    return { success: true };
   } catch (err) {
-    console.error('Failed to stage files.');
-    process.exit(1);
+    return { success: false, error: err.message };
   }
 }
 
 /**
- * Creates initial commit
+ * Creates initial or standard commit
+ * @param {string} message
+ * @param {string} targetDir
+ * @returns {{ success: boolean, message: string, error?: string }}
  */
-function gitCommit(message = 'Initial commit') {
+function gitCommit(message = 'chore: initial project commit from Fogoe', targetDir = process.cwd()) {
   try {
-    execSync(`git commit -m "${message}"`, { stdio: 'ignore' });
-    console.log(chalk.green('✓ Initial commit created'));
+    ensureGitUserConfig(targetDir);
+    const safeMsg = message.replace(/"/g, '\\"');
+    execSync(`git commit -m "${safeMsg}"`, { cwd: targetDir, stdio: 'ignore' });
+    return { success: true, message };
   } catch (err) {
-    console.error('Commit failed. Ensure there are files to commit.');
-    process.exit(1);
+    return { success: false, error: err.message };
   }
 }
 
 /**
- * Sets the main branch name
+ * Sets the active branch name
+ * @param {string} branchName
+ * @param {string} targetDir
+ * @returns {{ success: boolean, branch: string, error?: string }}
  */
-function gitSetBranch(branchName) {
+function gitSetBranch(branchName = 'main', targetDir = process.cwd()) {
   try {
-    execSync(`git branch -M ${branchName}`, { stdio: 'ignore' });
-    console.log(chalk.green(`✓ Branch set to ${branchName}`));
+    execSync(`git branch -M ${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+    return { success: true, branch: branchName };
   } catch (err) {
-    console.error('Failed to set branch.');
-    process.exit(1);
+    return { success: false, error: err.message };
   }
 }
 
 /**
- * Adds remote origin
+ * Adds or updates remote repository URL
+ * @param {string} repoUrl
+ * @param {string} targetDir
+ * @param {string} remoteName
+ * @returns {{ success: boolean, remote: string, url: string, error?: string }}
  */
-function gitAddRemote(repoUrl) {
+function gitAddRemote(repoUrl, targetDir = process.cwd(), remoteName = 'origin') {
   try {
-    execSync(`git remote add origin ${repoUrl}`, { stdio: 'ignore' });
-    console.log(chalk.green('✓ Remote origin added'));
-  } catch (err) {
-    const existingRemotes = execSync('git remote', { encoding: 'utf8' });
-    if (existingRemotes.includes('origin')) {
-      console.error('Remote origin already exists.');
+    let existingRemotes = '';
+    try {
+      existingRemotes = execSync('git remote', { cwd: targetDir, encoding: 'utf8' });
+    } catch {}
+
+    const remoteList = existingRemotes.split('\n').map((r) => r.trim()).filter(Boolean);
+    if (remoteList.includes(remoteName)) {
+      execSync(`git remote set-url ${remoteName} "${repoUrl}"`, { cwd: targetDir, stdio: 'ignore' });
     } else {
-      console.error('Failed to add remote repository.');
+      execSync(`git remote add ${remoteName} "${repoUrl}"`, { cwd: targetDir, stdio: 'ignore' });
     }
-    process.exit(1);
+    return { success: true, remote: remoteName, url: repoUrl };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 }
 
 /**
  * Verifies remote configuration
+ * @param {string} targetDir
+ * @returns {string}
  */
-function gitVerifyRemote() {
+function gitVerifyRemote(targetDir = process.cwd()) {
   try {
-    execSync('git remote -v', { stdio: 'ignore' });
-  } catch (err) {
-    console.error('Failed to verify remote repository.');
-    process.exit(1);
+    return execSync('git remote -v', { cwd: targetDir, encoding: 'utf8' }).trim();
+  } catch {
+    return '';
   }
 }
 
 /**
  * Pushes to remote repository
+ * @param {string} branchName
+ * @param {string} targetDir
+ * @param {string} remoteName
+ * @returns {{ success: boolean, branch: string, remote: string, error?: string }}
  */
-function gitPush(branchName) {
+function gitPush(branchName = 'main', targetDir = process.cwd(), remoteName = 'origin') {
   try {
-    execSync(`git push -u origin ${branchName}`, { stdio: 'ignore' });
-    console.log(chalk.green('✓ Repository pushed to GitHub'));
+    execSync(`git push -u ${remoteName} ${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+    return { success: true, branch: branchName, remote: remoteName };
   } catch (err) {
-    console.error('Failed to push repository to GitHub.');
-    process.exit(1);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * Normalizes user-provided repository string into a valid Git remote URL
+ * Handles:
+ *  - "https://github.com/user/repo" -> "https://github.com/user/repo.git"
+ *  - "user/repo" -> "https://github.com/user/repo.git"
+ *  - "git@github.com:user/repo.git" -> unchanged
+ * @param {string} input
+ * @returns {string}
+ */
+function normalizeGitHubUrl(input) {
+  if (!input) return '';
+  const trimmed = input.trim();
+  if (trimmed.startsWith('git@') || trimmed.endsWith('.git')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed.endsWith('.git') ? trimmed : `${trimmed}.git`;
+  }
+  if (/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(trimmed)) {
+    return `https://github.com/${trimmed}.git`;
+  }
+  return trimmed;
+}
+
+/**
+ * Creates a repository on GitHub using the gh CLI
+ * @param {Object} options
+ * @param {string} options.name - Repository name
+ * @param {boolean} options.isPrivate - Whether repo should be private
+ * @param {boolean} options.push - Whether to push the current branch
+ * @param {string} options.targetDir - Directory to run command in
+ * @returns {{ success: boolean, url?: string, isPrivate?: boolean, error?: string }}
+ */
+function createGitHubRepo({ name, isPrivate = false, push = true, targetDir = process.cwd() }) {
+  try {
+    const visibilityFlag = isPrivate ? '--private' : '--public';
+    const pushFlag = push ? '--push' : '';
+    const cmd = `gh repo create ${name} ${visibilityFlag} --source=. --remote=origin ${pushFlag}`;
+    const output = execSync(cmd, { cwd: targetDir, encoding: 'utf8' }).trim();
+    return {
+      success: true,
+      url: output || `https://github.com/${name}`,
+      isPrivate,
+      pushed: push,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err.message,
+    };
   }
 }
 
@@ -104,4 +186,6 @@ module.exports = {
   gitAddRemote,
   gitVerifyRemote,
   gitPush,
+  normalizeGitHubUrl,
+  createGitHubRepo,
 };

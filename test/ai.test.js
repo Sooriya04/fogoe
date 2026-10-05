@@ -44,3 +44,16 @@ test('AI Parser: Gracefully handles empty or vague prompt with sensible defaults
   assert.strictEqual(vagueResult.architecture, 'minimal');
   assert.strictEqual(vagueResult.database, 'none');
 });
+
+test('AI Parser: GitHub setup and private repository with initial commit', () => {
+  const result = parseAiPrompt('Fastify API with Prisma in TypeScript and create a private github repo with initial commit');
+
+  assert.strictEqual(result.runtime, 'fastify');
+  assert.strictEqual(result.language, 'typescript');
+  assert.strictEqual(result.database, 'prisma');
+  assert.strictEqual(result.git, true);
+  assert.strictEqual(result.github, true);
+  assert.strictEqual(result.isPrivate, true);
+  assert.strictEqual(result.commit, true);
+});
+

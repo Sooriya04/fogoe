@@ -67,7 +67,8 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
   - **SQLite** (via `better-sqlite3`)
 - **Vertical Slice CRUD Generator:** Generate a synchronized Model, Controller, and Route in a single command (`fogoe g crud <name>`).
 - **Pluggable Architecture:** Add Redis, Zod, Stripe, Nodemailer, Rate Limiting, Swagger, and Socket.io to existing projects anytime (`fogoe add <plugin>`).
-- **Built-in Git Lifecycle:** One-click GitHub repository initialization and atomic commits (`fogoe init`, `fogoe push`).
+- **🐙 Automated Git & GitHub Setup:** Initialize local Git repositories, generate stack-tailored `.gitignore` files (with SQLite, Prisma, and compilation rules), create initial commits (`--commit`), and connect or create remote repositories on GitHub (`--github`, `--private`).
+- **Built-in Git Lifecycle:** One-click repository initialization and atomic commits (`fogoe init`, `fogoe push`).
 
 ---
 
@@ -108,7 +109,10 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `--lint` / `--no-lint` | — | ESLint + Prettier configuration | `false` |
 | `--install` | `-i` | Run package manager installation | `false` |
 | `--pm` | — | `npm`, `pnpm`, `bun`, `yarn` (preferred package manager) | `npm` |
-| `--git` | `-g` | Initialize Git repository | `false` |
+| `--git` / `--no-git` | `-g` | Initialize Git repository with stack-tailored `.gitignore` | `false` |
+| `--commit` / `--no-commit` | — | Create initial project commit (`[message]` or boolean) | `false` |
+| `--github` | — | Create via `gh` CLI or connect to remote URL (`[url]` / `[owner/repo]`) | `false` |
+| `--private` / `--public` | — | Set GitHub repository visibility (default: public) | `false` |
 | `--yes` | `-y` | Accept defaults for unspecified options | `false` |
 
 ---
@@ -264,13 +268,34 @@ my-api/
 
 ---
 
+## 🐙 Automated Git & GitHub Setup
+
+Fogoe provides complete zero-friction source control automation:
+
+```bash
+# 1. Local Git repository with stack-tailored .gitignore and initial commit
+fogoe create my-api --framework fastify --lang ts --git --commit "feat: bootstrap my-api" -y
+
+# 2. Automated GitHub repository creation via gh CLI
+fogoe create blog-service --framework express --lang ts --git --github --private -y
+
+# 3. Connect to an existing remote GitHub repository
+fogoe create microservice --framework hono --lang ts --github https://github.com/my-org/microservice.git --commit
+```
+
+- **Stack-Tailored `.gitignore`**: Automatically configures ignore rules for SQLite databases (`*.db`, `*.sqlite`), Prisma, Drizzle artifacts, TypeScript compilation outputs (`dist/`, `*.tsbuildinfo`), coverage reports, and environment secrets.
+- **Safe Fallback Git Identity**: Commits succeed deterministically even on clean CI machines or containers without pre-configured global Git usernames.
+- **GitHub CLI Integration**: Creates public or private repositories and pushes the initial branch in one command.
+
+---
+
 ## 🧪 Testing & CI/CD
 
 Fogoe is rigorously tested across operating systems and Node versions:
 
 - **OS Matrix**: Ubuntu (Linux), macOS, Windows
 - **Node Matrix**: Node.js 18.x, 20.x, 22.x
-- **Test Suite**: Native `node --test` runner with 27 passing unit & integration tests
+- **Test Suite**: Native `node --test` runner with 36 passing unit & integration tests
 
 Run tests locally:
 ```bash

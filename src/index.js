@@ -24,6 +24,9 @@ function parseCliArgs(args) {
     linting: null,
     install: null,
     git: null,
+    github: null,
+    commit: null,
+    private: false,
     pm: null,
     yes: false,
     nonInteractive: false,
@@ -101,6 +104,34 @@ function parseCliArgs(args) {
       flags.git = true;
     } else if (arg === '--no-git') {
       flags.git = false;
+    } else if (arg === '--github') {
+      if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
+        flags.github = args[++i];
+      } else {
+        flags.github = true;
+      }
+      if (flags.git === null) flags.git = true;
+    } else if (arg.startsWith('--github=')) {
+      flags.github = arg.split('=').slice(1).join('=') || true;
+      if (flags.git === null) flags.git = true;
+    } else if (arg === '--no-github') {
+      flags.github = false;
+    } else if (arg === '--private') {
+      flags.private = true;
+    } else if (arg === '--public' || arg === '--no-private') {
+      flags.private = false;
+    } else if (arg === '--commit') {
+      if (i + 1 < args.length && !args[i + 1].startsWith('-')) {
+        flags.commit = args[++i];
+      } else {
+        flags.commit = true;
+      }
+      if (flags.git === null) flags.git = true;
+    } else if (arg.startsWith('--commit=')) {
+      flags.commit = arg.split('=').slice(1).join('=') || true;
+      if (flags.git === null) flags.git = true;
+    } else if (arg === '--no-commit') {
+      flags.commit = false;
     } else if (arg === '--pm' || arg === '--package-manager') {
       flags.pm = args[++i];
     } else if (arg.startsWith('--pm=')) {
@@ -160,7 +191,10 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('--lint, --no-lint')}            ESLint + Prettier`);
     console.log(`  ${chalk.green('-i, --install')}                Auto-install dependencies`);
     console.log(`  ${chalk.green('--pm <npm|pnpm|bun|yarn>')}      Package manager (default: npm)`);
-    console.log(`  ${chalk.green('-g, --git')}                    Auto-initialize git repository`);
+    console.log(`  ${chalk.green('-g, --git, --no-git')}          Initialize Git repository with stack .gitignore`);
+    console.log(`  ${chalk.green('--commit [message]')}           Create initial commit (default: "chore: initial commit")`);
+    console.log(`  ${chalk.green('--github [url|owner/repo]')}    Create or connect remote GitHub repository`);
+    console.log(`  ${chalk.green('--private, --public')}          Set GitHub repository visibility (default: public)`);
     console.log(`  ${chalk.green('-y, --yes')}                    Accept default choices without prompting\n`);
 
     console.log(chalk.yellow('Available Plugins:'));
@@ -173,9 +207,13 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)\n`);
 
     console.log(chalk.yellow('Examples:'));
+    console.log(`  ${chalk.gray('# Automated Git & GitHub repository setup')}`);
+    console.log('  fogoe create my-api --framework fastify --lang ts --git --commit "feat: init api"');
+    console.log('  fogoe create blog --framework express --lang js --git --github --private -y');
+    console.log('  fogoe create service --framework hono --lang ts --github owner/my-service --commit\n');
     console.log(`  ${chalk.gray('# AI-Assisted Scaffolding')}`);
     console.log('  fogoe create my-api --ai "High-performance Fastify backend with Drizzle ORM and JWT in TypeScript"');
-    console.log('  fogoe create blog --ai "Minimal Hono API with SQLite and Vitest tests"\n');
+    console.log('  fogoe create blog --ai "Minimal Hono API with SQLite, Vitest tests, and private GitHub repo"\n');
     console.log(`  ${chalk.gray('# Coding Agent & CI Automation (JSON output)')}`);
     console.log('  fogoe create my-api --framework fastify --lang ts --db postgres --auth jwt --json\n');
     console.log(`  ${chalk.gray('# Fully automated CLI scaffolding')}`);
@@ -292,6 +330,9 @@ function parseCliArgs(args) {
     flags.jwt !== null ||
     flags.install !== null ||
     flags.git !== null ||
+    flags.github !== null ||
+    flags.commit !== null ||
+    flags.private ||
     flags.testing !== null ||
     flags.linting !== null
   );
@@ -558,15 +599,46 @@ function parseCliArgs(args) {
     }
   }
 
-  // Git initialization
+  // Git & GitHub initialization
   let initGitRepo = false;
+  let githubOption = flags.github;
+  let isPrivateRepo = Boolean(flags.private);
+  let commitOption = flags.commit;
+
   if (flags.git !== null) {
     initGitRepo = flags.git === true;
+  } else if (flags.github !== null && flags.github !== false) {
+    initGitRepo = true;
+  } else if (flags.commit !== null && flags.commit !== false) {
+    initGitRepo = true;
   } else if (aiConfig && aiConfig.git) {
     initGitRepo = true;
+    if (aiConfig.github) githubOption = aiConfig.github;
+    if (aiConfig.isPrivate) isPrivateRepo = aiConfig.isPrivate;
+    if (aiConfig.commit) commitOption = aiConfig.commit;
   } else if (!isNonInteractive) {
     const gitChoice = await select('Initialize Git repository?', ['yes', 'no']);
     initGitRepo = gitChoice === 'yes';
+
+    if (initGitRepo) {
+      const commitChoice = await select('Create initial project commit?', ['yes', 'no']);
+      commitOption = commitChoice === 'yes';
+
+      const githubChoice = await select('Connect or create GitHub repository?', ['no', 'yes']);
+      if (githubChoice === 'yes') {
+        const { hasGitHubCLI, isGitHubAuthenticated } = require('./github');
+        if (hasGitHubCLI() && isGitHubAuthenticated()) {
+          const visChoice = await select('GitHub repository visibility:', ['public', 'private']);
+          githubOption = true;
+          isPrivateRepo = visChoice === 'private';
+        } else {
+          const ghUrl = await input('GitHub repository URL (https://github.com/owner/repo.git)');
+          if (ghUrl && ghUrl.trim()) {
+            githubOption = ghUrl.trim();
+          }
+        }
+      }
+    }
   }
 
   // Write fogoe.config.json with project defaults
@@ -583,9 +655,26 @@ function parseCliArgs(args) {
 
   fs.writeFileSync('fogoe.config.json', JSON.stringify(fogoeConfig, null, 2));
 
+  let gitResult = null;
   if (initGitRepo) {
-    const { initGit } = require('./github');
-    await initGit();
+    const { setupGitRepository } = require('./github');
+    gitResult = await setupGitRepository({
+      targetDir: process.cwd(),
+      stack: {
+        language,
+        runtime,
+        database,
+        testing,
+        linting,
+      },
+      git: initGitRepo,
+      github: githubOption,
+      isPrivate: isPrivateRepo,
+      commit: commitOption,
+      projectName: name,
+      isNonInteractive,
+      silent: flags.json,
+    });
   }
 
   // Machine-readable JSON output for Coding Agents and CI
@@ -620,8 +709,11 @@ function parseCliArgs(args) {
         testing,
         linting,
         git: initGitRepo,
+        github: githubOption ? (typeof githubOption === 'string' ? githubOption : true) : false,
+        private: isPrivateRepo,
         install: installDeps,
       },
+      git: gitResult,
       files: createdFiles.sort(),
     };
 

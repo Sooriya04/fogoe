@@ -63,3 +63,15 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 6. **Repository Architecture & GitHub Pages Cleanup:** Eliminated redundant committed `docs/` and unused `others/` directories from git. Updated `site/vite.config.js` to output to standard `site/dist/` (gitignored), and configured `.github/workflows/pages.yml` to build and upload `./site/dist` directly, eliminating thousands of lines of compiled HTML diffs.
 7. **Developer Showcase Website Overhaul:** Redesigned `site/index.html` with a high-density, developer-first aesthetic inspired by Biome, Fastify, and Vite. Added an interactive Stack Configurator with Drizzle ORM, dynamic copy-ready headless CLI command preview, clickable file tree source inspector, AI Scaffolding prompt runner, Agent JSON preview, and full CRUD architecture slice diagrams.
 8. **Expanded Test Coverage:** Added unit tests for package manager fallback and explicit overrides in `test/scaffold.test.js`, bringing the automated test suite to 27 passing tests across all execution paths.
+
+
+## Release v1.1.1 — Automated Git & GitHub Project Setup
+
+1. **Automatic Git Initialization & Branch Standardization:** Added robust `git init` support defaulting to standard `main` branch across all platforms, ensuring repositories are clean and ready out of the box without requiring manual intervention.
+2. **Stack-Aware .gitignore Generation:** Implemented dynamic `.gitignore` generation and merging in `src/github/gitignore.js` that automatically inspects project options and tailors rules for SQLite databases (`*.db`, `*.sqlite`, `*.db-journal`), Prisma artifacts (`prisma/*.db`), Drizzle cache, TypeScript build artifacts (`dist/`, `*.tsbuildinfo`), coverage reports, and environment secrets.
+3. **Automated & Custom Initial Commits:** Added `--commit [message]` CLI option and safe fallback Git identity configuration (`ensureGitUserConfig`) so that initial commits succeed deterministically even on clean CI machines and containerized environments.
+4. **GitHub CLI Repository Creation & Remote Linking:** Introduced `--github [url|owner/repo]` and `--private` / `--public` flags supporting automated repository creation via GitHub CLI (`gh repo create --source=. --remote=origin --push`) as well as direct remote linking and initial branch pushing.
+5. **Interactive & Non-Interactive Automation:** Integrated Git and GitHub setup into both interactive Clack wizards and headless automation flows (`-y`, `--non-interactive`, `--json`).
+6. **AI-Assisted Natural Language Parsing:** Enhanced `src/ai.js` to recognize repository requirements (e.g., `"with git and private github repo"`, `"with initial commit"`) from plain English prompts.
+7. **Comprehensive Automated Test Coverage:** Added dedicated unit and integration tests in `test/github.test.js` and expanded `test/ai.test.js`, bringing automated test coverage to 36 passing tests across Linux, macOS, and Windows.
+

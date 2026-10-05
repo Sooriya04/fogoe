@@ -94,6 +94,10 @@ function composeProject(options) {
   const baseDir = path.join(TEMPLATES_ROOT, 'base');
   copyTemplateDir(baseDir, targetDir, vars);
 
+  // 1a. Apply stack-aware .gitignore additions (SQLite, Prisma, TypeScript, etc.)
+  const { setupGitignore } = require('./github/gitignore');
+  setupGitignore({ language, runtime, database, testing, linting }, targetDir);
+
   // 1b. Write .env from .env.example
   const envExamplePath = path.join(targetDir, '.env.example');
   if (fs.existsSync(envExamplePath)) {

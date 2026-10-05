@@ -92,6 +92,16 @@ function checkStatus() {
 
   console.log(`${chalk.bold('  Git:')}          ${gitStatusText}`);
 
+  if (isGitRepo) {
+    try {
+      const remotes = execSync('git remote -v', { encoding: 'utf8' }).trim();
+      const match = remotes.match(/origin\s+([^\s]+)/);
+      if (match && match[1]) {
+        console.log(`${chalk.bold('  Remote:')}       ${chalk.cyan(match[1])}`);
+      }
+    } catch (err) {}
+  }
+
   // Display Addons
   if (addons && addons.length > 0) {
     console.log(`${chalk.bold('  Addons:')}       ${addons.map(a => chalk.yellow(a)).join(', ')}`);
