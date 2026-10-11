@@ -216,6 +216,8 @@ fogoe g model user
 Install and configure backend features into an existing Fogoe project on demand:
 
 ```bash
+fogoe add ci          # Stack-aware GitHub Actions pipeline (.github/workflows/ci.yml)
+fogoe add docker      # Production multi-stage Dockerfile and .dockerignore
 fogoe add redis       # ioredis client with environment configuration
 fogoe add zod         # Zod schema validation middleware
 fogoe add mailer      # Nodemailer SMTP transporter helper
@@ -223,6 +225,16 @@ fogoe add stripe      # Stripe SDK integration and webhook helpers
 fogoe add ratelimit   # Express / HTTP rate-limiting middleware
 fogoe add swagger     # OpenAPI swagger-ui-express documentation
 fogoe add socket      # Socket.io real-time websocket server setup
+```
+
+### CI/CD & Docker Generation (`v1.1.2`)
+Generate deployment-ready workflows directly during project creation or on demand:
+```bash
+# Scaffold with automated GitHub Actions CI and Dockerfile
+npx fogoe create my-api --ci --docker
+
+# Configure automated deployment pipeline (Docker Hub, Fly.io, Railway, Render)
+npx fogoe create my-api --ci --deploy fly -y
 ```
 
 ---

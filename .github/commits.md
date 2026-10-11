@@ -90,4 +90,18 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 10. **Headless & Flag Support in `fogoe update`:** Updated `src/update.js` to accept CLI options (`-y`, `--yes`, `--pm`), bypassing interactive prompt blocks in non-interactive CI runs and respecting preferred package manager flags.
 11. **Machine-Readable JSON in `fogoe status`:** Added structured JSON output to `src/status.js` when called with `--json`, enabling AI agents and CI environments to inspect project details without parsing ANSI chalk strings.
 12. **Automated Test Coverage Expanded:** Added unit test coverage for TypeScript MVC model generation in `test/generate.test.js`, bringing total passing test suite coverage to 39 automated tests.
+13. **PostgreSQL Database Alias Normalization:** Normalized `database: "postgres"` and `"pg"` to `"postgresql"` across `src/composer.js` and `src/installer.js`, preventing missing database template directories and uninstalled PostgreSQL driver packages when short alias names are supplied.
+
+
+## Automated CI/CD & Docker Workflow Generator
+
+1. **Stack-Aware GitHub Actions Workflows:** Implemented `src/ci/githubActions.js` to dynamically generate production-grade `.github/workflows/ci.yml` pipelines tailored to project choices across all supported package managers (`npm`, `pnpm`, `bun`, `yarn`), testing frameworks (`vitest`), linters (`eslint`), and TypeScript builds.
+2. **Multi-Stage Production Docker Support:** Created `src/ci/docker.js` generating lightweight, secure Alpine-based multi-stage `Dockerfile` and stack-aware `.dockerignore` for Node.js and Bun runtimes with non-root security execution.
+3. **Automated Multi-Platform Deployment Targets:** Added `src/ci/deploy.js` with zero-friction deployment pipeline presets and secret management for Docker Hub, Fly.io, Railway, and Render.
+4. **CLI Integration & Headless Automation:** Added `fogoe add ci`, `fogoe add docker`, `--ci`, `--docker`, and `--deploy <platform>` flags, fully integrated into both interactive setup wizards and headless agent/CI generation (`-y`, `--non-interactive`, `--json`).
+5. **AI Prompt Requirements Parsing:** Enhanced `src/ai.js` natural-language parser to recognize Docker, GitHub Actions, and deployment target keywords from plain English prompts.
+6. **Project Diagnostics Extension:** Enhanced `src/status.js` (`fogoe status`) to inspect and report live CI/CD and Docker containerization status in both terminal and machine-readable JSON outputs.
+7. **Comprehensive Automated Test Suite:** Added dedicated unit and integration tests in `test/ci.test.js` validating workflow YAML generation, multi-stage Dockerfiles, deployment targets, and full orchestration across runtimes, bringing test coverage to 48 passing tests.
+
+
 

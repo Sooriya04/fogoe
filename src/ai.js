@@ -167,6 +167,41 @@ function parseAiPrompt(promptText = '') {
     }
   }
 
+  // 10. CI/CD & Docker detection
+  let ci = false;
+  let docker = false;
+  let deploy = 'none';
+
+  if (/\b(docker|container|dockerfile|containerized)\b/.test(text)) {
+    docker = true;
+    summary.push('Docker: Multi-stage Dockerfile & .dockerignore');
+  }
+
+  if (/\b(ci|cd|ci\/cd|pipeline|github actions|workflows?)\b/.test(text)) {
+    ci = true;
+    summary.push('CI/CD: GitHub Actions pipeline');
+  }
+
+  if (/\b(dockerhub|docker hub)\b/.test(text)) {
+    ci = true;
+    docker = true;
+    deploy = 'dockerhub';
+    summary.push('Deploy: Docker Hub container image push');
+  } else if (/\bfly\.io\b|\bfly\b/.test(text) && !/\bfastify\b/.test(text)) {
+    ci = true;
+    docker = true;
+    deploy = 'fly';
+    summary.push('Deploy: Fly.io auto-deployment');
+  } else if (/\brailway\b/.test(text)) {
+    ci = true;
+    deploy = 'railway';
+    summary.push('Deploy: Railway auto-deployment');
+  } else if (/\brender\b/.test(text)) {
+    ci = true;
+    deploy = 'render';
+    summary.push('Deploy: Render webhook deploy hook');
+  }
+
   return {
     rawPrompt: promptText,
     runtime,
@@ -183,6 +218,9 @@ function parseAiPrompt(promptText = '') {
     github,
     isPrivate,
     commit,
+    ci,
+    docker,
+    deploy,
     summary,
   };
 }

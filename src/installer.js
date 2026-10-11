@@ -7,6 +7,8 @@ const dbPackages = {
   drizzle: "drizzle-orm pg",
   mysql: "mysql2",
   postgresql: "pg",
+  postgres: "pg",
+  pg: "pg",
   sqlite: "better-sqlite3",
   none: ""
 };
@@ -25,6 +27,8 @@ const dbTypePackages = {
   drizzle: "@types/pg",
   mysql: "@types/mysql2",
   postgresql: "@types/pg",
+  postgres: "@types/pg",
+  pg: "@types/pg",
   sqlite: "@types/better-sqlite3",
   none: ""
 };

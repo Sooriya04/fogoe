@@ -105,6 +105,10 @@ function checkStatus(options = {}) {
     } catch (err) {}
   }
 
+  // Check CI/CD and Docker status
+  const hasGithubActions = fs.existsSync(path.join(process.cwd(), '.github/workflows/ci.yml'));
+  const hasDocker = fs.existsSync(path.join(process.cwd(), 'Dockerfile'));
+
   if (options.json) {
     console.log(JSON.stringify({
       success: true,
@@ -120,6 +124,10 @@ function checkStatus(options = {}) {
         initialized: isGitRepo,
         branch: branch || null,
         remote: originRemote,
+      },
+      ci: {
+        githubActions: hasGithubActions,
+        docker: hasDocker,
       },
       addons: addons || [],
     }, null, 2));
@@ -144,6 +152,12 @@ function checkStatus(options = {}) {
   if (originRemote) {
     console.log(`${chalk.bold('  Remote:')}       ${chalk.cyan(originRemote)}`);
   }
+
+  const ciStatus = hasGithubActions ? chalk.green('Configured ✓ (.github/workflows/ci.yml)') : chalk.gray('None');
+  console.log(`${chalk.bold('  CI/CD:')}        ${ciStatus}`);
+
+  const dockerStatus = hasDocker ? chalk.green('Configured ✓ (Dockerfile)') : chalk.gray('None');
+  console.log(`${chalk.bold('  Docker:')}       ${dockerStatus}`);
 
   // Display Addons
   if (addons && addons.length > 0) {

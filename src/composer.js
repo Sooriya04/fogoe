@@ -60,6 +60,8 @@ function composeProject(options) {
     linting = false,
   } = options;
 
+  const normalizedDb = (database === 'postgres' || database === 'pg') ? 'postgresql' : database;
+
   const isTypeScript = language === 'typescript';
   const typeCode = type === 'module' ? 'esm' : 'cjs';
 
@@ -73,7 +75,7 @@ function composeProject(options) {
     drizzle: 'postgresql://postgres:password@localhost:5432/mydb',
     none: '',
   };
-  const databaseUrl = dbUrls[database] || '';
+  const databaseUrl = dbUrls[normalizedDb] || '';
 
   const vars = {
     PROJECT_NAME: name,
@@ -125,7 +127,7 @@ function composeProject(options) {
     const dbDir = path.join(
       TEMPLATES_ROOT,
       'databases',
-      database,
+      normalizedDb,
       language,
       typeCode,
     );
@@ -223,7 +225,7 @@ function composeProject(options) {
         runtime,
         arch: architecture,
         type: typeCode,
-        database,
+        database: normalizedDb,
         hashing: architecture === 'mvc' ? hashing : undefined,
         auth: useJwt ? 'jwt' : 'none',
         git: false,

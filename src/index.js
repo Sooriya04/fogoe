@@ -27,6 +27,9 @@ function parseCliArgs(args) {
     github: null,
     commit: null,
     private: false,
+    ci: null,
+    docker: null,
+    deploy: null,
     pm: null,
     yes: false,
     nonInteractive: false,
@@ -132,6 +135,18 @@ function parseCliArgs(args) {
       if (flags.git === null) flags.git = true;
     } else if (arg === '--no-commit') {
       flags.commit = false;
+    } else if (arg === '--ci') {
+      flags.ci = true;
+    } else if (arg === '--no-ci') {
+      flags.ci = false;
+    } else if (arg === '--docker') {
+      flags.docker = true;
+    } else if (arg === '--no-docker') {
+      flags.docker = false;
+    } else if (arg === '--deploy') {
+      flags.deploy = args[++i];
+    } else if (arg.startsWith('--deploy=')) {
+      flags.deploy = arg.split('=')[1];
     } else if (arg === '--pm' || arg === '--package-manager') {
       flags.pm = args[++i];
     } else if (arg.startsWith('--pm=')) {
@@ -194,7 +209,9 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('-g, --git, --no-git')}          Initialize Git repository with stack .gitignore`);
     console.log(`  ${chalk.green('--commit [message]')}           Create initial commit (default: "chore: initial commit")`);
     console.log(`  ${chalk.green('--github [url|owner/repo]')}    Create or connect remote GitHub repository`);
-    console.log(`  ${chalk.green('--private, --public')}          Set GitHub repository visibility (default: public)`);
+    console.log(`  ${chalk.green('--ci, --no-ci')}                Generate stack-aware GitHub Actions CI/CD pipeline`);
+    console.log(`  ${chalk.green('--docker, --no-docker')}        Generate multi-stage Dockerfile and .dockerignore`);
+    console.log(`  ${chalk.green('--deploy <platform>')}          Deploy target: dockerhub, fly, railway, render, none`);
     console.log(`  ${chalk.green('-y, --yes')}                    Accept default choices without prompting\n`);
 
     console.log(chalk.yellow('Available Plugins:'));
@@ -271,6 +288,16 @@ function parseCliArgs(args) {
 
   if (positionals[0] === 'add') {
     const pluginName = positionals[1] || undefined;
+    if (pluginName === 'ci' || pluginName === 'docker' || pluginName === 'cicd') {
+      const { setupCiCd } = require('./ci');
+      await setupCiCd({
+        ci: pluginName === 'ci' || pluginName === 'cicd' || flags.ci,
+        docker: pluginName === 'docker' || pluginName === 'cicd' || flags.docker,
+        deploy: flags.deploy || 'none',
+        isNonInteractive: flags.yes || flags.nonInteractive,
+      });
+      return;
+    }
     await addPlugin(pluginName);
     return;
   }
@@ -365,6 +392,9 @@ function parseCliArgs(args) {
     flags.github !== null ||
     flags.commit !== null ||
     flags.private ||
+    flags.ci !== null ||
+    flags.docker !== null ||
+    flags.deploy !== null ||
     flags.testing !== null ||
     flags.linting !== null
   );
@@ -712,6 +742,30 @@ function parseCliArgs(args) {
     });
   }
 
+  // 9. CI/CD & Docker initialization
+  let ciResult = null;
+  let initCi = flags.ci;
+  let initDocker = flags.docker;
+  let deployOption = flags.deploy || 'none';
+
+  if (aiConfig) {
+    if (initCi === null && aiConfig.ci) initCi = true;
+    if (initDocker === null && aiConfig.docker) initDocker = true;
+    if (deployOption === 'none' && aiConfig.deploy) deployOption = aiConfig.deploy;
+  }
+
+  if (initCi || initDocker || (!isNonInteractive && (initCi === null && initDocker === null))) {
+    const { setupCiCd } = require('./ci');
+    ciResult = await setupCiCd({
+      targetDir: process.cwd(),
+      ci: initCi !== null ? initCi : undefined,
+      docker: initDocker !== null ? initDocker : undefined,
+      deploy: deployOption,
+      isNonInteractive,
+      silent: flags.json,
+    });
+  }
+
   // Machine-readable JSON output for Coding Agents and CI
   if (flags.json) {
     const createdFiles = [];
@@ -746,9 +800,13 @@ function parseCliArgs(args) {
         git: initGitRepo,
         github: githubOption ? (typeof githubOption === 'string' ? githubOption : true) : false,
         private: isPrivateRepo,
+        ci: initCi === true,
+        docker: initDocker === true,
+        deploy: deployOption,
         install: installDeps,
       },
       git: gitResult,
+      ci: ciResult,
       files: createdFiles.sort(),
     };
 
