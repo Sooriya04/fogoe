@@ -137,6 +137,15 @@ async function addPlugin(pluginArg) {
     process.exit(1);
   }
 
+  if (plugin.isSpecial) {
+    const { setupCiCd } = require('../ci');
+    await setupCiCd({
+      ci: pluginName === 'ci',
+      docker: pluginName === 'docker',
+    });
+    return;
+  }
+
   console.log(chalk.cyan(`\n  Adding ${pluginName}...\n`));
 
   // ── 3. Ensure output directory exists ─────────────────────────────────────

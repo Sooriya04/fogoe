@@ -84,7 +84,7 @@ async function setupCiCd(options = {}) {
   const stack = detectProjectStack(targetDir);
   let generateCi = options.ci !== undefined ? Boolean(options.ci) : false;
   let generateDocker = options.docker !== undefined ? Boolean(options.docker) : false;
-  let deployTarget = options.deploy || 'none';
+  let deployTarget = options.deploy !== undefined ? options.deploy : undefined;
 
   // Interactive selection if invoked manually without flags
   if (!isNonInteractive && options.ci === undefined && options.docker === undefined) {
@@ -107,21 +107,24 @@ async function setupCiCd(options = {}) {
     } else if (ciChoice === 'docker_only') {
       generateDocker = true;
     }
+  }
 
-    if (generateCi) {
-      const deployChoice = await select('Select deployment target:', [
-        { value: 'none', label: 'None — CI testing & building only' },
-        { value: 'dockerhub', label: 'Docker Hub — Build & push container image' },
-        { value: 'fly', label: 'Fly.io — Auto-deploy on main push' },
-        { value: 'railway', label: 'Railway — Auto-deploy on main push' },
-        { value: 'render', label: 'Render — Webhook deploy hook trigger' },
-      ]);
-      deployTarget = deployChoice || 'none';
-      if (deployTarget === 'dockerhub' || deployTarget === 'fly') {
-        generateDocker = true;
-      }
+  // Interactive deploy target selection if CI is enabled and not explicitly specified
+  if (generateCi && deployTarget === undefined && !isNonInteractive) {
+    const deployChoice = await select('Select deployment target:', [
+      { value: 'none', label: 'None — CI testing & building only' },
+      { value: 'dockerhub', label: 'Docker Hub — Build & push container image' },
+      { value: 'fly', label: 'Fly.io — Auto-deploy on main push' },
+      { value: 'railway', label: 'Railway — Auto-deploy on main push' },
+      { value: 'render', label: 'Render — Webhook deploy hook trigger' },
+    ]);
+    deployTarget = deployChoice || 'none';
+    if (deployTarget === 'dockerhub' || deployTarget === 'fly') {
+      generateDocker = true;
     }
   }
+
+  deployTarget = deployTarget || 'none';
 
   const createdFiles = [];
 

@@ -293,7 +293,7 @@ function parseCliArgs(args) {
       await setupCiCd({
         ci: pluginName === 'ci' || pluginName === 'cicd' || flags.ci,
         docker: pluginName === 'docker' || pluginName === 'cicd' || flags.docker,
-        deploy: flags.deploy || 'none',
+        deploy: flags.deploy || undefined,
         isNonInteractive: flags.yes || flags.nonInteractive,
       });
       return;
@@ -746,12 +746,11 @@ function parseCliArgs(args) {
   let ciResult = null;
   let initCi = flags.ci;
   let initDocker = flags.docker;
-  let deployOption = flags.deploy || 'none';
+  let deployOption = flags.deploy || (aiConfig ? aiConfig.deploy : undefined);
 
   if (aiConfig) {
     if (initCi === null && aiConfig.ci) initCi = true;
     if (initDocker === null && aiConfig.docker) initDocker = true;
-    if (deployOption === 'none' && aiConfig.deploy) deployOption = aiConfig.deploy;
   }
 
   if (initCi || initDocker || (!isNonInteractive && (initCi === null && initDocker === null))) {

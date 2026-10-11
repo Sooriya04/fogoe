@@ -74,6 +74,14 @@ const PLUGINS = {
     template: 'socket',
     envVars: null,
   },
+  ci: {
+    description: 'GitHub Actions — automated CI/CD test, lint, and build pipeline',
+    isSpecial: true,
+  },
+  docker: {
+    description: 'Docker — production multi-stage Dockerfile & .dockerignore',
+    isSpecial: true,
+  },
 };
 
 module.exports = { PLUGINS };

@@ -102,6 +102,7 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 5. **AI Prompt Requirements Parsing:** Enhanced `src/ai.js` natural-language parser to recognize Docker, GitHub Actions, and deployment target keywords from plain English prompts.
 6. **Project Diagnostics Extension:** Enhanced `src/status.js` (`fogoe status`) to inspect and report live CI/CD and Docker containerization status in both terminal and machine-readable JSON outputs.
 7. **Comprehensive Automated Test Suite:** Added dedicated unit and integration tests in `test/ci.test.js` validating workflow YAML generation, multi-stage Dockerfiles, deployment targets, and full orchestration across runtimes, bringing test coverage to 48 passing tests.
+8. **Interactive Plugin & Subcommand Delegation:** Added `ci` and `docker` special plugin entries to `PLUGINS` registry in `src/plugins/registry.js` and wired clean delegation in `src/plugins/index.js`, allowing both interactive selection via `fogoe add` and direct CLI invocation via `fogoe add ci` / `fogoe add docker`. Decoupled deployment target prompting in `src/ci/index.js` to interactively prompt users when adding CI without blocking non-interactive workflows.
 
 
 
