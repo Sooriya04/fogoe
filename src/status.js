@@ -3,9 +3,13 @@ const path = require('path');
 const { execSync } = require('child_process');
 const chalk = require('chalk');
 
-function checkStatus() {
+function checkStatus(options = {}) {
   const configPath = path.join(process.cwd(), 'fogoe.config.json');
   if (!fs.existsSync(configPath)) {
+    if (options.json) {
+      console.log(JSON.stringify({ success: false, error: 'fogoe.config.json not found' }));
+      process.exit(1);
+    }
     console.error(chalk.red('\n  ✗ fogoe.config.json not found.'));
     console.error(chalk.yellow('    Are you in a Fogoe project?\n'));
     process.exit(1);
@@ -15,18 +19,16 @@ function checkStatus() {
   try {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   } catch (err) {
+    if (options.json) {
+      console.log(JSON.stringify({ success: false, error: 'Failed to parse fogoe.config.json' }));
+      process.exit(1);
+    }
     console.error(chalk.red('\n  ✗ Failed to parse fogoe.config.json.'));
     process.exit(1);
   }
 
   const { defaults = {}, addons = [] } = config;
   const { language = 'unknown', runtime = 'unknown', arch = 'unknown', type = 'unknown', git = false } = defaults;
-
-  console.log(chalk.cyan.bold('\n--- Fogoe Project Status ---'));
-  console.log(`${chalk.bold('  Language:')}     ${language === 'ts' ? 'TypeScript' : 'JavaScript'}`);
-  console.log(`${chalk.bold('  Framework:')}    ${runtime.charAt(0).toUpperCase() + runtime.slice(1)}`);
-  console.log(`${chalk.bold('  Architecture:')} ${arch.toUpperCase()}`);
-  console.log(`${chalk.bold('  Module system:')} ${type === 'esm' ? 'ES Modules' : 'CommonJS'}`);
 
   // Check database configuration
   let database = 'none';
@@ -57,17 +59,11 @@ function checkStatus() {
       else if (content.includes('pg')) database = 'PostgreSQL';
     }
   }
-  
-  if (database !== 'none') {
-    const connectionStatus = dbUrlConfigured ? chalk.green('configured ✓') : chalk.yellow('missing DATABASE_URL in .env ⚠');
-    console.log(`${chalk.bold('  Database:')}     ${database} (${connectionStatus})`);
-  } else {
-    console.log(`${chalk.bold('  Database:')}     None`);
-  }
 
   // Check Git status
   let gitStatusText = 'Not Initialized';
   let isGitRepo = false;
+  let branch = '';
   try {
     execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
     isGitRepo = true;
@@ -75,7 +71,6 @@ function checkStatus() {
 
   if (isGitRepo) {
     try {
-      let branch = '';
       try {
         branch = execSync('git symbolic-ref --short HEAD', { encoding: 'utf8' }).trim();
       } catch {
@@ -99,16 +94,55 @@ function checkStatus() {
     gitStatusText = chalk.yellow('Configured in fogoe but git repo not initialized');
   }
 
-  console.log(`${chalk.bold('  Git:')}          ${gitStatusText}`);
-
+  let originRemote = null;
   if (isGitRepo) {
     try {
       const remotes = execSync('git remote -v', { encoding: 'utf8' }).trim();
       const match = remotes.match(/origin\s+([^\s]+)/);
       if (match && match[1]) {
-        console.log(`${chalk.bold('  Remote:')}       ${chalk.cyan(match[1])}`);
+        originRemote = match[1];
       }
     } catch (err) {}
+  }
+
+  if (options.json) {
+    console.log(JSON.stringify({
+      success: true,
+      language: language === 'ts' ? 'TypeScript' : 'JavaScript',
+      framework: runtime,
+      architecture: arch,
+      moduleSystem: type === 'esm' ? 'ES Modules' : 'CommonJS',
+      database: {
+        type: database,
+        configured: dbUrlConfigured,
+      },
+      git: {
+        initialized: isGitRepo,
+        branch: branch || null,
+        remote: originRemote,
+      },
+      addons: addons || [],
+    }, null, 2));
+    return;
+  }
+
+  console.log(chalk.cyan.bold('\n--- Fogoe Project Status ---'));
+  console.log(`${chalk.bold('  Language:')}     ${language === 'ts' ? 'TypeScript' : 'JavaScript'}`);
+  console.log(`${chalk.bold('  Framework:')}    ${runtime.charAt(0).toUpperCase() + runtime.slice(1)}`);
+  console.log(`${chalk.bold('  Architecture:')} ${arch.toUpperCase()}`);
+  console.log(`${chalk.bold('  Module system:')} ${type === 'esm' ? 'ES Modules' : 'CommonJS'}`);
+
+  if (database !== 'none') {
+    const connectionStatus = dbUrlConfigured ? chalk.green('configured ✓') : chalk.yellow('missing DATABASE_URL in .env ⚠');
+    console.log(`${chalk.bold('  Database:')}     ${database} (${connectionStatus})`);
+  } else {
+    console.log(`${chalk.bold('  Database:')}     None`);
+  }
+
+  console.log(`${chalk.bold('  Git:')}          ${gitStatusText}`);
+
+  if (originRemote) {
+    console.log(`${chalk.bold('  Remote:')}       ${chalk.cyan(originRemote)}`);
   }
 
   // Display Addons

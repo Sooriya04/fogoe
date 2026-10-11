@@ -197,4 +197,55 @@ test('CLI generate: crud vertical slice with Drizzle ORM in TypeScript MVC', () 
   }
 });
 
+test('CLI generate: TypeScript MVC with MongoDB generates ES import syntax', () => {
+  if (fs.existsSync(TEST_OUTPUT_DIR)) {
+    fs.rmSync(TEST_OUTPUT_DIR, { recursive: true, force: true });
+  }
+
+  composeProject({
+    targetDir: TEST_OUTPUT_DIR,
+    name: 'test-ts-mongo-app',
+    language: 'typescript',
+    runtime: 'express',
+    type: 'commonjs',
+    architecture: 'mvc',
+    database: 'mongodb',
+    hashing: 'bcrypt',
+  });
+
+  fs.writeFileSync(
+    path.join(TEST_OUTPUT_DIR, 'fogoe.config.json'),
+    JSON.stringify({
+      defaults: {
+        language: 'ts',
+        arch: 'mvc',
+        runtime: 'express',
+        type: 'cjs',
+        database: 'mongodb',
+      }
+    }, null, 2)
+  );
+
+  const prevCwd = process.cwd();
+  try {
+    process.chdir(TEST_OUTPUT_DIR);
+
+    generateComponent('model', 'account');
+
+    const modelPath = path.join(TEST_OUTPUT_DIR, 'src/models/account.ts');
+    assert.ok(fs.existsSync(modelPath), 'TypeScript model must exist');
+
+    const modelContent = fs.readFileSync(modelPath, 'utf8');
+    assert.ok(modelContent.includes('import mongoose'), 'Should use import syntax in TypeScript');
+    assert.ok(modelContent.includes('export default mongoose.model'), 'Should use export default');
+    assert.strictEqual(modelContent.includes('module.exports ='), false, 'Should not use module.exports in TS');
+  } finally {
+    process.chdir(prevCwd);
+    if (fs.existsSync(TEST_OUTPUT_DIR)) {
+      fs.rmSync(TEST_OUTPUT_DIR, { recursive: true, force: true });
+    }
+  }
+});
+
+
 

@@ -5,7 +5,7 @@ const chalk = require('chalk');
 const { select } = require('./prompts');
 const { getPackageManager } = require('./installer');
 
-async function updateProject() {
+async function updateProject(options = {}) {
   const packageJsonPath = path.join(process.cwd(), 'package.json');
   if (!fs.existsSync(packageJsonPath)) {
     console.error(chalk.red('\n  ✗ package.json not found.'));
@@ -13,14 +13,16 @@ async function updateProject() {
     process.exit(1);
   }
 
-  const pm = getPackageManager();
+  const pm = getPackageManager(options.pm);
   console.log(chalk.cyan(`\n  Detected package manager: ${chalk.bold(pm)}`));
   console.log(chalk.yellow(`  This will update all project dependencies using "${pm} update/upgrade".`));
 
-  const proceed = await select('Do you want to continue?', ['yes', 'no']);
-  if (proceed !== 'yes') {
-    console.log(chalk.cyan('  Update cancelled.'));
-    return;
+  if (!options.yes) {
+    const proceed = await select('Do you want to continue?', ['yes', 'no']);
+    if (proceed !== 'yes') {
+      console.log(chalk.cyan('  Update cancelled.'));
+      return;
+    }
   }
 
   console.log(chalk.cyan(`\n  Updating dependencies...`));
@@ -30,7 +32,11 @@ async function updateProject() {
     } else if (pm === 'bun') {
       execSync('bun update', { stdio: 'inherit' });
     } else if (pm === 'pnpm') {
-      execSync('pnpm update', { stdio: 'inherit' });
+      try {
+        execSync('pnpm update', { stdio: 'inherit' });
+      } catch {
+        execSync('pnpm update --config.dangerouslyAllowAllBuilds=true', { stdio: 'inherit' });
+      }
     } else if (pm === 'yarn') {
       execSync('yarn upgrade', { stdio: 'inherit' });
     }

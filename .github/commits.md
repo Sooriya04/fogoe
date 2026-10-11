@@ -76,7 +76,7 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 7. **Comprehensive Automated Test Coverage:** Added dedicated unit and integration tests in `test/github.test.js` and expanded `test/ai.test.js`, bringing automated test coverage to 36 passing tests across Linux, macOS, and Windows.
 
 
-## ISSUE 24 : Comprehensive Codebase Audit, Git Execution Hardening & Non-Interactive Fixes
+## Fixes — Execution Hardening, Edge Cases, and Non-Interactive Automation
 
 1. **Deterministic & Safe Git Command Execution:** Converted all Git command invocations in `src/github/commands.js` and `src/index.js` (`fogoe push`) from raw shell string execution (`execSync`) to `execFileSync` with discrete argument arrays. This completely eliminates shell injection vectors and escaping errors when commit messages, branch names, or remotes contain quotes, backticks, dollar signs, or multiline strings.
 2. **Resilient `fogoe push` Flow:** Updated `fogoe push` to check repository working status via `git status --porcelain` before creating commits, preventing command failures on already-clean working trees. Added automatic fallback to detect active branch name and set the upstream remote tracking branch (`git push -u origin <branch>`) when upstream is not yet configured.
@@ -85,4 +85,9 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 5. **pnpm v10+ Build Script Resiliency in Plugin Manager:** Applied automated `--config.dangerouslyAllowAllBuilds=true` retries and fallback to npm in `src/plugins/index.js`, guaranteeing plugin package installations never fail on pnpm's strict build policies.
 6. **Unified Configuration Schema:** Aligned `fogoe.config.json` generation in `src/index.js` to match `composer.js`, ensuring `hashing`, `auth`, and `addons: []` fields are consistently structured.
 7. **Expanded Automated Test Suite:** Added unit tests verifying special-character commit message handling and non-interactive Git skips in `test/github.test.js`, bringing automated test suite coverage to 38 passing tests.
+8. **TypeScript Code Generation Module Integrity:** Fixed `src/generate.js` where generating models in TypeScript projects configured with CommonJS emitted `require(...)` and `module.exports` syntax in `.ts` files. Ensured all TypeScript model templates cleanly emit type-safe ES module imports and exports.
+9. **Full pnpm Build Script Retry in Installer:** Updated `src/installer.js` so both runtime and development dependencies are retried with `--config.dangerouslyAllowAllBuilds=true` when pnpm restricts build scripts, ensuring runtime dependencies are never missed on retries.
+10. **Headless & Flag Support in `fogoe update`:** Updated `src/update.js` to accept CLI options (`-y`, `--yes`, `--pm`), bypassing interactive prompt blocks in non-interactive CI runs and respecting preferred package manager flags.
+11. **Machine-Readable JSON in `fogoe status`:** Added structured JSON output to `src/status.js` when called with `--json`, enabling AI agents and CI environments to inspect project details without parsing ANSI chalk strings.
+12. **Automated Test Coverage Expanded:** Added unit test coverage for TypeScript MVC model generation in `test/generate.test.js`, bringing total passing test suite coverage to 39 automated tests.
 

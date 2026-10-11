@@ -181,6 +181,9 @@ function install(language, runtime, architecture, database = "none", hashing = "
       // In pnpm v10+, build scripts (like esbuild in tsx/vitest) are blocked by default.
       // Retry with dangerouslyAllowAllBuilds to unblock development tools.
       try {
+        if (trimPkgs) {
+          execSync(`pnpm add ${trimPkgs} --config.dangerouslyAllowAllBuilds=true`, { stdio });
+        }
         if (trimDev) {
           execSync(`pnpm add -D ${trimDev} --config.dangerouslyAllowAllBuilds=true`, { stdio });
         }

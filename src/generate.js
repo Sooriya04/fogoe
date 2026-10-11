@@ -805,7 +805,7 @@ model ${capName} {
 
   let template = '';
   if (database === 'mongodb') {
-    if (type === 'cjs') {
+    if (type === 'cjs' && language !== 'ts') {
       template = `const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -826,7 +826,7 @@ const ${rawName}Schema = new Schema({
 export default mongoose.model('${capName}', ${rawName}Schema);`;
     }
   } else if (database === 'drizzle') {
-    if (type === 'cjs') {
+    if (type === 'cjs' && language !== 'ts') {
       template = `const { pgTable, serial, text, timestamp } = require('drizzle-orm/pg-core');
 
 const ${rawName}s = pgTable('${rawName}s', {
@@ -847,7 +847,7 @@ export const ${rawName}s = pgTable('${rawName}s', {
     }
   } else {
     // sqlite/mysql/postgresql or none
-    if (type === 'cjs') {
+    if (type === 'cjs' && language !== 'ts') {
       template = `const db = require('../config/db');
 
 // Add model queries or operations for ${capName} here

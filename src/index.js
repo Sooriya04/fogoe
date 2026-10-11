@@ -276,12 +276,15 @@ function parseCliArgs(args) {
   }
 
   if (positionals[0] === 'status') {
-    checkStatus();
+    checkStatus({ json: flags.json });
     return;
   }
 
   if (positionals[0] === 'update') {
-    await updateProject();
+    await updateProject({
+      yes: flags.yes || flags.nonInteractive,
+      pm: flags.pm,
+    });
     return;
   }
 
