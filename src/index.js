@@ -237,14 +237,33 @@ function parseCliArgs(args) {
     }
 
     try {
-      const { execSync } = require('child_process');
-      const safeMsg = message.replace(/"/g, '\\"');
-      execSync('git add .', { stdio: 'inherit' });
-      execSync(`git commit -m "${safeMsg}"`, { stdio: 'inherit' });
-      execSync('git push', { stdio: 'inherit' });
+      const { execFileSync } = require('child_process');
+      const { ensureGitUserConfig } = require('./github/auth');
+      ensureGitUserConfig(process.cwd());
+
+      execFileSync('git', ['add', '.'], { stdio: 'inherit' });
+
+      // Check if there are staged or modified changes to commit
+      let hasChanges = false;
+      try {
+        const statusOutput = execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim();
+        hasChanges = statusOutput.length > 0;
+      } catch {}
+
+      if (hasChanges) {
+        execFileSync('git', ['commit', '-m', message], { stdio: 'inherit' });
+      }
+
+      try {
+        execFileSync('git', ['push'], { stdio: 'inherit' });
+      } catch (pushErr) {
+        // Fallback: if upstream is not yet set, detect active branch and set upstream
+        const currentBranch = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { encoding: 'utf8' }).trim();
+        execFileSync('git', ['push', '-u', 'origin', currentBranch], { stdio: 'inherit' });
+      }
       console.log(chalk.green('✓ Repository pushed successfully'));
     } catch (err) {
-      console.error(chalk.red('Failed to push changes. Ensure remote is configured.'));
+      console.error(chalk.red('Failed to push changes. Ensure remote is configured and you have push access.'));
       process.exit(1);
     }
     return;
@@ -279,7 +298,12 @@ function parseCliArgs(args) {
       process.exit(1);
     }
     const { initGit } = require('./github');
-    await initGit();
+    await initGit(process.cwd(), {
+      github: flags.github,
+      isPrivate: flags.private,
+      commit: flags.commit !== null ? flags.commit : true,
+      isNonInteractive: flags.yes || flags.nonInteractive,
+    });
 
     const config = JSON.parse(fs.readFileSync('fogoe.config.json', 'utf8'));
     if (!config.defaults) {
@@ -293,7 +317,12 @@ function parseCliArgs(args) {
 
   if (args.includes('git-init')) {
     const { initGit } = require('./github');
-    await initGit();
+    await initGit(process.cwd(), {
+      github: flags.github,
+      isPrivate: flags.private,
+      commit: flags.commit !== null ? flags.commit : true,
+      isNonInteractive: flags.yes || flags.nonInteractive,
+    });
     return;
   }
 
@@ -649,8 +678,11 @@ function parseCliArgs(args) {
       runtime: runtime,
       type: type === 'commonjs' ? 'cjs' : 'esm',
       database: database,
+      hashing: architecture === 'mvc' ? hashing : undefined,
+      auth: useJwt ? 'jwt' : 'none',
       git: initGitRepo,
     },
+    addons: [],
   };
 
   fs.writeFileSync('fogoe.config.json', JSON.stringify(fogoeConfig, null, 2));

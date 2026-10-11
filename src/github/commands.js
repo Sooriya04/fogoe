@@ -1,4 +1,4 @@
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const chalk = require('chalk');
 const { ensureGitUserConfig } = require('./auth');
 
@@ -11,11 +11,11 @@ const { ensureGitUserConfig } = require('./auth');
 function gitInit(targetDir = process.cwd(), branchName = 'main') {
   try {
     try {
-      execSync(`git init -b ${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+      execFileSync('git', ['init', '-b', branchName], { cwd: targetDir, stdio: 'ignore' });
     } catch {
-      execSync('git init', { cwd: targetDir, stdio: 'ignore' });
+      execFileSync('git', ['init'], { cwd: targetDir, stdio: 'ignore' });
       try {
-        execSync(`git symbolic-ref HEAD refs/heads/${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+        execFileSync('git', ['symbolic-ref', 'HEAD', `refs/heads/${branchName}`], { cwd: targetDir, stdio: 'ignore' });
       } catch {}
     }
     return { success: true, branch: branchName };
@@ -31,7 +31,7 @@ function gitInit(targetDir = process.cwd(), branchName = 'main') {
  */
 function gitAdd(targetDir = process.cwd()) {
   try {
-    execSync('git add -A', { cwd: targetDir, stdio: 'ignore' });
+    execFileSync('git', ['add', '-A'], { cwd: targetDir, stdio: 'ignore' });
     return { success: true };
   } catch (err) {
     return { success: false, error: err.message };
@@ -47,8 +47,7 @@ function gitAdd(targetDir = process.cwd()) {
 function gitCommit(message = 'chore: initial project commit from Fogoe', targetDir = process.cwd()) {
   try {
     ensureGitUserConfig(targetDir);
-    const safeMsg = message.replace(/"/g, '\\"');
-    execSync(`git commit -m "${safeMsg}"`, { cwd: targetDir, stdio: 'ignore' });
+    execFileSync('git', ['commit', '-m', message], { cwd: targetDir, stdio: 'ignore' });
     return { success: true, message };
   } catch (err) {
     return { success: false, error: err.message };
@@ -63,7 +62,7 @@ function gitCommit(message = 'chore: initial project commit from Fogoe', targetD
  */
 function gitSetBranch(branchName = 'main', targetDir = process.cwd()) {
   try {
-    execSync(`git branch -M ${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+    execFileSync('git', ['branch', '-M', branchName], { cwd: targetDir, stdio: 'ignore' });
     return { success: true, branch: branchName };
   } catch (err) {
     return { success: false, error: err.message };
@@ -81,14 +80,14 @@ function gitAddRemote(repoUrl, targetDir = process.cwd(), remoteName = 'origin')
   try {
     let existingRemotes = '';
     try {
-      existingRemotes = execSync('git remote', { cwd: targetDir, encoding: 'utf8' });
+      existingRemotes = execFileSync('git', ['remote'], { cwd: targetDir, encoding: 'utf8' });
     } catch {}
 
     const remoteList = existingRemotes.split('\n').map((r) => r.trim()).filter(Boolean);
     if (remoteList.includes(remoteName)) {
-      execSync(`git remote set-url ${remoteName} "${repoUrl}"`, { cwd: targetDir, stdio: 'ignore' });
+      execFileSync('git', ['remote', 'set-url', remoteName, repoUrl], { cwd: targetDir, stdio: 'ignore' });
     } else {
-      execSync(`git remote add ${remoteName} "${repoUrl}"`, { cwd: targetDir, stdio: 'ignore' });
+      execFileSync('git', ['remote', 'add', remoteName, repoUrl], { cwd: targetDir, stdio: 'ignore' });
     }
     return { success: true, remote: remoteName, url: repoUrl };
   } catch (err) {
@@ -103,7 +102,7 @@ function gitAddRemote(repoUrl, targetDir = process.cwd(), remoteName = 'origin')
  */
 function gitVerifyRemote(targetDir = process.cwd()) {
   try {
-    return execSync('git remote -v', { cwd: targetDir, encoding: 'utf8' }).trim();
+    return execFileSync('git', ['remote', '-v'], { cwd: targetDir, encoding: 'utf8' }).trim();
   } catch {
     return '';
   }
@@ -118,7 +117,7 @@ function gitVerifyRemote(targetDir = process.cwd()) {
  */
 function gitPush(branchName = 'main', targetDir = process.cwd(), remoteName = 'origin') {
   try {
-    execSync(`git push -u ${remoteName} ${branchName}`, { cwd: targetDir, stdio: 'ignore' });
+    execFileSync('git', ['push', '-u', remoteName, branchName], { cwd: targetDir, stdio: 'ignore' });
     return { success: true, branch: branchName, remote: remoteName };
   } catch (err) {
     return { success: false, error: err.message };
@@ -161,9 +160,11 @@ function normalizeGitHubUrl(input) {
 function createGitHubRepo({ name, isPrivate = false, push = true, targetDir = process.cwd() }) {
   try {
     const visibilityFlag = isPrivate ? '--private' : '--public';
-    const pushFlag = push ? '--push' : '';
-    const cmd = `gh repo create ${name} ${visibilityFlag} --source=. --remote=origin ${pushFlag}`;
-    const output = execSync(cmd, { cwd: targetDir, encoding: 'utf8' }).trim();
+    const ghArgs = ['repo', 'create', name, visibilityFlag, '--source=.', '--remote=origin'];
+    if (push) {
+      ghArgs.push('--push');
+    }
+    const output = execFileSync('gh', ghArgs, { cwd: targetDir, encoding: 'utf8' }).trim();
     return {
       success: true,
       url: output || `https://github.com/${name}`,

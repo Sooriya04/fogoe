@@ -166,3 +166,32 @@ test('setupGitRepository: Full orchestration initializes repo, .gitignore, and c
   const log = execSync('git log -1 --pretty=%B', { cwd: TEST_DIR, encoding: 'utf8' }).trim();
   assert.strictEqual(log, 'feat: bootstrap express api');
 });
+
+test('Git Commit: Handles quotes, backticks, and special characters safely without shell injection', () => {
+  fs.mkdirSync(TEST_DIR, { recursive: true });
+  gitInit(TEST_DIR, 'main');
+
+  fs.writeFileSync(path.join(TEST_DIR, 'file.txt'), 'content\n');
+  gitAdd(TEST_DIR);
+
+  const specialMsg = 'feat: add "$VAR" & `cmd` + "quoted" message';
+  const commitRes = gitCommit(specialMsg, TEST_DIR);
+  assert.strictEqual(commitRes.success, true);
+
+  const log = execSync('git log -1 --pretty=%B', { cwd: TEST_DIR, encoding: 'utf8' }).trim();
+  assert.strictEqual(log, specialMsg);
+});
+
+test('setupGitRepository: Skips gracefully when git is false', async () => {
+  fs.mkdirSync(TEST_DIR, { recursive: true });
+
+  const result = await setupGitRepository({
+    targetDir: TEST_DIR,
+    git: false,
+    silent: true,
+  });
+
+  assert.strictEqual(result.initialized, false);
+  assert.strictEqual(fs.existsSync(path.join(TEST_DIR, '.git')), false);
+});
+

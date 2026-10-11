@@ -55,6 +55,15 @@ function installPackages(packages, devPackages) {
   const { getPackageManager } = require('../installer');
   const pm = getPackageManager();
 
+  const runInstall = (cmd) => {
+    try {
+      execSync(cmd, { stdio: 'inherit' });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   if (packages) {
     console.log(chalk.cyan(`\n  Installing ${packages} with ${pm}...`));
     if (pm === "npm") {
@@ -62,11 +71,18 @@ function installPackages(packages, devPackages) {
     } else if (pm === "bun") {
       execSync(`bun add ${packages}`, { stdio: 'inherit' });
     } else if (pm === "pnpm") {
-      execSync(`pnpm add ${packages}`, { stdio: 'inherit' });
+      try {
+        execSync(`pnpm add ${packages}`, { stdio: 'inherit' });
+      } catch {
+        if (!runInstall(`pnpm add ${packages} --config.dangerouslyAllowAllBuilds=true`)) {
+          execSync(`npm install --save ${packages}`, { stdio: 'inherit' });
+        }
+      }
     } else if (pm === "yarn") {
       execSync(`yarn add ${packages}`, { stdio: 'inherit' });
     }
   }
+
   if (devPackages) {
     console.log(chalk.cyan(`  Installing ${devPackages} (dev) with ${pm}...`));
     if (pm === "npm") {
@@ -74,7 +90,13 @@ function installPackages(packages, devPackages) {
     } else if (pm === "bun") {
       execSync(`bun add -d ${devPackages}`, { stdio: 'inherit' });
     } else if (pm === "pnpm") {
-      execSync(`pnpm add -D ${devPackages}`, { stdio: 'inherit' });
+      try {
+        execSync(`pnpm add -D ${devPackages}`, { stdio: 'inherit' });
+      } catch {
+        if (!runInstall(`pnpm add -D ${devPackages} --config.dangerouslyAllowAllBuilds=true`)) {
+          execSync(`npm install --save-dev ${devPackages}`, { stdio: 'inherit' });
+        }
+      }
     } else if (pm === "yarn") {
       execSync(`yarn add -D ${devPackages}`, { stdio: 'inherit' });
     }

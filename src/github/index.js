@@ -208,10 +208,11 @@ async function setupGitRepository(options = {}) {
 }
 
 /**
- * Backward-compatible initGit for interactive `fogoe init` command
+ * Backward-compatible initGit for interactive or flagged `fogoe init` command
  * @param {string} targetDir
+ * @param {Object} options
  */
-async function initGit(targetDir = process.cwd()) {
+async function initGit(targetDir = process.cwd(), options = {}) {
   const stack = {};
   const configPath = path.join(targetDir, 'fogoe.config.json');
   if (fs.existsSync(configPath)) {
@@ -223,32 +224,34 @@ async function initGit(targetDir = process.cwd()) {
 
   const ghAvailable = hasGitHubCLI() && isGitHubAuthenticated();
 
-  let githubChoice = false;
-  let isPrivate = false;
+  let githubChoice = options.github || false;
+  let isPrivate = Boolean(options.isPrivate);
 
-  const shouldSetupGitHub = await select('Would you like to connect or create a GitHub repository?', ['no', 'yes']);
+  if (!options.isNonInteractive && options.github === undefined) {
+    const shouldSetupGitHub = await select('Would you like to connect or create a GitHub repository?', ['no', 'yes']);
 
-  if (shouldSetupGitHub === 'yes') {
-    if (ghAvailable) {
-      const action = await select('How would you like to set up GitHub?', [
-        { value: 'create_public', label: 'Create new Public GitHub repository' },
-        { value: 'create_private', label: 'Create new Private GitHub repository' },
-        { value: 'connect_url', label: 'Connect to existing GitHub repository URL' },
-      ]);
+    if (shouldSetupGitHub === 'yes') {
+      if (ghAvailable) {
+        const action = await select('How would you like to set up GitHub?', [
+          { value: 'create_public', label: 'Create new Public GitHub repository' },
+          { value: 'create_private', label: 'Create new Private GitHub repository' },
+          { value: 'connect_url', label: 'Connect to existing GitHub repository URL' },
+        ]);
 
-      if (action === 'create_public') {
-        githubChoice = true;
-        isPrivate = false;
-      } else if (action === 'create_private') {
-        githubChoice = true;
-        isPrivate = true;
+        if (action === 'create_public') {
+          githubChoice = true;
+          isPrivate = false;
+        } else if (action === 'create_private') {
+          githubChoice = true;
+          isPrivate = true;
+        } else {
+          const repoUrl = await input('GitHub repository URL (https://github.com/owner/repo.git)');
+          githubChoice = repoUrl ? repoUrl.trim() : null;
+        }
       } else {
         const repoUrl = await input('GitHub repository URL (https://github.com/owner/repo.git)');
         githubChoice = repoUrl ? repoUrl.trim() : null;
       }
-    } else {
-      const repoUrl = await input('GitHub repository URL (https://github.com/owner/repo.git)');
-      githubChoice = repoUrl ? repoUrl.trim() : null;
     }
   }
 
@@ -256,9 +259,10 @@ async function initGit(targetDir = process.cwd()) {
     targetDir,
     stack,
     git: true,
-    commit: true,
+    commit: options.commit !== undefined ? options.commit : true,
     github: githubChoice,
     isPrivate,
+    isNonInteractive: options.isNonInteractive,
   });
 }
 

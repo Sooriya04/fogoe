@@ -75,3 +75,14 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 6. **AI-Assisted Natural Language Parsing:** Enhanced `src/ai.js` to recognize repository requirements (e.g., `"with git and private github repo"`, `"with initial commit"`) from plain English prompts.
 7. **Comprehensive Automated Test Coverage:** Added dedicated unit and integration tests in `test/github.test.js` and expanded `test/ai.test.js`, bringing automated test coverage to 36 passing tests across Linux, macOS, and Windows.
 
+
+## ISSUE 24 : Comprehensive Codebase Audit, Git Execution Hardening & Non-Interactive Fixes
+
+1. **Deterministic & Safe Git Command Execution:** Converted all Git command invocations in `src/github/commands.js` and `src/index.js` (`fogoe push`) from raw shell string execution (`execSync`) to `execFileSync` with discrete argument arrays. This completely eliminates shell injection vectors and escaping errors when commit messages, branch names, or remotes contain quotes, backticks, dollar signs, or multiline strings.
+2. **Resilient `fogoe push` Flow:** Updated `fogoe push` to check repository working status via `git status --porcelain` before creating commits, preventing command failures on already-clean working trees. Added automatic fallback to detect active branch name and set the upstream remote tracking branch (`git push -u origin <branch>`) when upstream is not yet configured.
+3. **Graceful Branch Resolution on Fresh Repositories:** Fixed a fatal exit code 128 (`ambiguous argument 'HEAD'`) in `src/status.js` (`fogoe status`) when executed in newly initialized repositories prior to the initial commit by probing `git symbolic-ref --short HEAD` first with graceful fallbacks.
+4. **Headless & Non-Interactive Automation in `fogoe init`:** Updated `src/github/index.js` and CLI arguments in `src/index.js` to pass options (`--github`, `--private`, `--commit`, `--yes`), allowing `fogoe init` and `fogoe git-init` to run headlessly in CI and automated scripting environments without blocking on interactive prompts.
+5. **pnpm v10+ Build Script Resiliency in Plugin Manager:** Applied automated `--config.dangerouslyAllowAllBuilds=true` retries and fallback to npm in `src/plugins/index.js`, guaranteeing plugin package installations never fail on pnpm's strict build policies.
+6. **Unified Configuration Schema:** Aligned `fogoe.config.json` generation in `src/index.js` to match `composer.js`, ensuring `hashing`, `auth`, and `addons: []` fields are consistently structured.
+7. **Expanded Automated Test Suite:** Added unit tests verifying special-character commit message handling and non-interactive Git skips in `test/github.test.js`, bringing automated test suite coverage to 38 passing tests.
+

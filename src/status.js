@@ -75,7 +75,16 @@ function checkStatus() {
 
   if (isGitRepo) {
     try {
-      const branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+      let branch = '';
+      try {
+        branch = execSync('git symbolic-ref --short HEAD', { encoding: 'utf8' }).trim();
+      } catch {
+        try {
+          branch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+        } catch {
+          branch = 'main';
+        }
+      }
       const changes = execSync('git status --porcelain', { encoding: 'utf8' }).trim();
       const count = changes ? changes.split('\n').length : 0;
       if (count > 0) {
@@ -84,7 +93,7 @@ function checkStatus() {
         gitStatusText = `${chalk.green('Initialized ✓')}, branch: ${chalk.bold(branch)}, ${chalk.green('clean')}`;
       }
     } catch (err) {
-      gitStatusText = chalk.green('Initialized ✓ (unable to read branch/status)');
+      gitStatusText = chalk.green('Initialized ✓');
     }
   } else if (git) {
     gitStatusText = chalk.yellow('Configured in fogoe but git repo not initialized');
