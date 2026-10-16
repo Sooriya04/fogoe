@@ -167,3 +167,11 @@ test('setupCiCd: Orchestrates complete CI/CD and Docker files cleanly', async ()
   assert.ok(cfg.addons.includes('ci'));
   assert.ok(cfg.addons.includes('docker'));
 });
+
+test('Plugins Registry: ci and docker are registered as special delegation plugins', () => {
+  const { PLUGINS } = require('../src/plugins/registry');
+  assert.ok(PLUGINS.ci, 'PLUGINS.ci should exist');
+  assert.strictEqual(PLUGINS.ci.isSpecial, true);
+  assert.ok(PLUGINS.docker, 'PLUGINS.docker should exist');
+  assert.strictEqual(PLUGINS.docker.isSpecial, true);
+});

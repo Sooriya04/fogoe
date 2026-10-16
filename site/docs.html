@@ -1286,8 +1286,18 @@
               </tr>
               <tr>
                 <td><code>fogoe add [plugin]</code></td>
-                <td><code>redis</code>, <code>zod</code>, <code>mailer</code>, <code>stripe</code>, <code>ratelimit</code>, <code>swagger</code>, <code>socket</code></td>
-                <td>Installs and integrates modular backend capabilities into an existing project.</td>
+                <td><code>ci</code>, <code>docker</code>, <code>redis</code>, <code>zod</code>, <code>mailer</code>, <code>stripe</code>, <code>ratelimit</code>, <code>swagger</code>, <code>socket</code></td>
+                <td>Installs and integrates modular backend capabilities or DevOps pipelines into an existing project.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe add ci</code></td>
+                <td>—</td>
+                <td>Generates automated GitHub Actions workflow (<code>.github/workflows/ci.yml</code>) tailored to your tech stack.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe add docker</code></td>
+                <td>—</td>
+                <td>Generates production-grade multi-stage <code>Dockerfile</code> and comprehensive <code>.dockerignore</code>.</td>
               </tr>
               <tr>
                 <td><code>fogoe status</code></td>
@@ -1440,6 +1450,27 @@
                 <td>Boolean</td>
                 <td><code>false</code></td>
                 <td>Sets GitHub repository visibility (public by default).</td>
+              </tr>
+              <tr>
+                <td><code>--ci</code> / <code>--no-ci</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Generates stack-aware GitHub Actions CI/CD pipeline (<code>.github/workflows/ci.yml</code>).</td>
+              </tr>
+              <tr>
+                <td><code>--docker</code> / <code>--no-docker</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Generates production multi-stage <code>Dockerfile</code> and <code>.dockerignore</code>.</td>
+              </tr>
+              <tr>
+                <td><code>--deploy</code></td>
+                <td>—</td>
+                <td><code>dockerhub</code>, <code>fly</code>, <code>railway</code>, <code>render</code>, <code>none</code></td>
+                <td><code>none</code></td>
+                <td>Configures automated deployment stage with required repository secrets.</td>
               </tr>
               <tr>
                 <td><code>--ai</code></td>
@@ -2010,6 +2041,20 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
             </div>
             <p>Sets up real-time bi-directional WebSocket event communication server.</p>
           </div>
+          <div class="doc-card" id="plugin-ci">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">GitHub Actions CI/CD</h4>
+              <span class="doc-card-badge">fogoe add ci</span>
+            </div>
+            <p>Scaffolds complete <code>.github/workflows/ci.yml</code> configured for lint, test, build, Docker checks, and cloud deployments.</p>
+          </div>
+          <div class="doc-card" id="plugin-docker">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Docker Multi-Stage</h4>
+              <span class="doc-card-badge">fogoe add docker</span>
+            </div>
+            <p>Generates production-ready, security-hardened Alpine multi-stage <code>Dockerfile</code> and comprehensive <code>.dockerignore</code>.</p>
+          </div>
         </div>
       </section>
 
@@ -2026,16 +2071,16 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
         <div class="doc-grid-2">
           <div class="doc-card">
             <div class="doc-card-header">
-              <h4 class="doc-card-title">1. Docker &amp; Docker Compose</h4>
-              <span class="doc-card-badge">fogoe g docker</span>
+              <h4 class="doc-card-title">1. Docker Compose Multi-Container</h4>
+              <span class="doc-card-badge">fogoe add docker-compose</span>
             </div>
             <p style="margin-bottom: 10px;">
-              Automatically generate production-ready, multi-stage optimized <code>Dockerfile</code>s and full <code>docker-compose.yml</code> configurations tailored to your chosen stack.
+              Automatically generate full multi-container <code>docker-compose.yml</code> configurations tailored to your chosen stack and services.
             </p>
             <ul class="doc-ul" style="margin-left: 16px; margin-bottom: 0; font-size: 0.84rem;">
               <li>Pre-configured database containers (PostgreSQL, MongoDB, Redis, MySQL) with persistent storage volumes.</li>
-              <li>Multi-stage builds separating dev dependencies from production Node.js runtimes.</li>
-              <li>Integrated health check directives and network isolation.</li>
+              <li>Network orchestration linking app container with databases and cache tiers.</li>
+              <li>Integrated health check directives and environment file injection.</li>
             </ul>
           </div>
 
@@ -2056,16 +2101,16 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
 
           <div class="doc-card">
             <div class="doc-card-header">
-              <h4 class="doc-card-title">3. CI/CD Pipeline Generator</h4>
-              <span class="doc-card-badge">fogoe g ci</span>
+              <h4 class="doc-card-title">3. GitLab CI &amp; Bitbucket Pipelines</h4>
+              <span class="doc-card-badge">fogoe add gitlab-ci</span>
             </div>
             <p style="margin-bottom: 10px;">
-              Instant scaffolding of continuous integration and continuous deployment pipelines for GitHub Actions and GitLab CI.
+              Instant scaffolding of continuous integration and deployment pipelines for alternative git platforms (GitLab CI and Bitbucket).
             </p>
             <ul class="doc-ul" style="margin-left: 16px; margin-bottom: 0; font-size: 0.84rem;">
-              <li>Automated workflows for linting (ESLint), type-checking (tsc), and testing (Vitest).</li>
-              <li>Automated Docker image build and push to container registries (GHCR, Docker Hub).</li>
-              <li>Deployment templates for popular cloud hosts (AWS ECS, Render, Fly.io, Railway).</li>
+              <li>Generates <code>.gitlab-ci.yml</code> and <code>bitbucket-pipelines.yml</code> tailored to your package manager.</li>
+              <li>Automated multi-stage test, lint, and build jobs across runner environments.</li>
+              <li>Container registry login and cloud deployment triggers.</li>
             </ul>
           </div>
 

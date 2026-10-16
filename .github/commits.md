@@ -93,7 +93,7 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 13. **PostgreSQL Database Alias Normalization:** Normalized `database: "postgres"` and `"pg"` to `"postgresql"` across `src/composer.js` and `src/installer.js`, preventing missing database template directories and uninstalled PostgreSQL driver packages when short alias names are supplied.
 
 
-## Automated CI/CD & Docker Workflow Generator
+## Release v1.1.2 — Automated CI/CD Workflows, Multi-Stage Docker & Cloud Deployments
 
 1. **Stack-Aware GitHub Actions Workflows:** Implemented `src/ci/githubActions.js` to dynamically generate production-grade `.github/workflows/ci.yml` pipelines tailored to project choices across all supported package managers (`npm`, `pnpm`, `bun`, `yarn`), testing frameworks (`vitest`), linters (`eslint`), and TypeScript builds.
 2. **Multi-Stage Production Docker Support:** Created `src/ci/docker.js` generating lightweight, secure Alpine-based multi-stage `Dockerfile` and stack-aware `.dockerignore` for Node.js and Bun runtimes with non-root security execution.
@@ -101,8 +101,11 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 4. **CLI Integration & Headless Automation:** Added `fogoe add ci`, `fogoe add docker`, `--ci`, `--docker`, and `--deploy <platform>` flags, fully integrated into both interactive setup wizards and headless agent/CI generation (`-y`, `--non-interactive`, `--json`).
 5. **AI Prompt Requirements Parsing:** Enhanced `src/ai.js` natural-language parser to recognize Docker, GitHub Actions, and deployment target keywords from plain English prompts.
 6. **Project Diagnostics Extension:** Enhanced `src/status.js` (`fogoe status`) to inspect and report live CI/CD and Docker containerization status in both terminal and machine-readable JSON outputs.
-7. **Comprehensive Automated Test Suite:** Added dedicated unit and integration tests in `test/ci.test.js` validating workflow YAML generation, multi-stage Dockerfiles, deployment targets, and full orchestration across runtimes, bringing test coverage to 48 passing tests.
+7. **Comprehensive Automated Test Suite:** Added dedicated unit and integration tests in `test/ci.test.js` validating workflow YAML generation, multi-stage Dockerfiles, deployment targets, and full orchestration across runtimes, bringing test coverage to 49 passing tests.
 8. **Interactive Plugin & Subcommand Delegation:** Added `ci` and `docker` special plugin entries to `PLUGINS` registry in `src/plugins/registry.js` and wired clean delegation in `src/plugins/index.js`, allowing both interactive selection via `fogoe add` and direct CLI invocation via `fogoe add ci` / `fogoe add docker`. Decoupled deployment target prompting in `src/ci/index.js` to interactively prompt users when adding CI without blocking non-interactive workflows.
+9. **Branch-Aware Root CI Matrix:** Updated root `.github/workflows/ci.yml` so automated CI pipelines run tests across both `main` and `dev` branches on every push and pull request while preserving restricted npm releases to `main`.
+10. **Comprehensive Documentation & CLI Guide:** Documented all new workflows, Docker commands, flags (`--ci`, `--docker`, `--deploy`), and required secrets across `README.md`, `fogoe --help`, and the developer documentation site (`site/docs.html`).
+
 
 
 

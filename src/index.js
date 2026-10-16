@@ -215,6 +215,8 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('-y, --yes')}                    Accept default choices without prompting\n`);
 
     console.log(chalk.yellow('Available Plugins:'));
+    console.log(`  ${chalk.cyan('ci')}         — GitHub Actions automated CI/CD test, lint, and build pipeline`);
+    console.log(`  ${chalk.cyan('docker')}     — Production multi-stage Dockerfile & .dockerignore`);
     console.log(`  ${chalk.cyan('redis')}      — Redis client (ioredis)`);
     console.log(`  ${chalk.cyan('zod')}        — Schema validation (zod)`);
     console.log(`  ${chalk.cyan('mailer')}     — Email via SMTP (nodemailer)`);
@@ -224,6 +226,10 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)\n`);
 
     console.log(chalk.yellow('Examples:'));
+    console.log(`  ${chalk.gray('# Automated CI/CD & Docker setup')}`);
+    console.log('  fogoe add ci');
+    console.log('  fogoe add docker');
+    console.log('  fogoe create my-api --framework fastify --lang ts --ci --docker --deploy fly -y\n');
     console.log(`  ${chalk.gray('# Automated Git & GitHub repository setup')}`);
     console.log('  fogoe create my-api --framework fastify --lang ts --git --commit "feat: init api"');
     console.log('  fogoe create blog --framework express --lang js --git --github --private -y');

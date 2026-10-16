@@ -67,6 +67,8 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
   - **SQLite** (via `better-sqlite3`)
 - **Vertical Slice CRUD Generator:** Generate a synchronized Model, Controller, and Route in a single command (`fogoe g crud <name>`).
 - **Pluggable Architecture:** Add Redis, Zod, Stripe, Nodemailer, Rate Limiting, Swagger, and Socket.io to existing projects anytime (`fogoe add <plugin>`).
+- **🚀 Automated CI/CD & Multi-Stage Docker:** Generate stack-aware GitHub Actions workflows (`.github/workflows/ci.yml`) and production-ready Alpine multi-stage `Dockerfile` and `.dockerignore` for Node.js and Bun with non-root security execution.
+- **☁️ Multi-Target Cloud Deployments:** Built-in deployment workflow presets and secret guidance for **Docker Hub**, **Fly.io**, **Railway**, and **Render** (`--deploy <platform>`).
 - **🐙 Automated Git & GitHub Setup:** Initialize local Git repositories, generate stack-tailored `.gitignore` files (with SQLite, Prisma, and compilation rules), create initial commits (`--commit`), and connect or create remote repositories on GitHub (`--github`, `--private`).
 - **Built-in Git Lifecycle:** One-click repository initialization and atomic commits (`fogoe init`, `fogoe push`).
 
@@ -81,8 +83,10 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `fogoe create <name> --ai "<prompt>"` | AI-assisted scaffolding from natural-language description |
 | `fogoe generate <type> <name>` | Generate MVC components (`route`, `controller`, `model`, `crud`) |
 | `fogoe g crud <name>` | Generate complete 3-layer vertical slice (Model + Controller + Routes) |
-| `fogoe add [plugin]` | Add extensions: `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
-| `fogoe status` | Display project configuration and Git synchronization state |
+| `fogoe add [plugin]` | Add extensions: `ci`, `docker`, `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
+| `fogoe add ci` | Generate automated GitHub Actions test, lint, and build pipeline |
+| `fogoe add docker` | Generate production-ready multi-stage Dockerfile and `.dockerignore` |
+| `fogoe status` | Display project configuration, Git state, CI/CD, and Docker status |
 | `fogoe update` | Upgrade all project dependencies to their latest compatible versions |
 | `fogoe init` | Initialize Git repository and link with remote |
 | `fogoe push "<message>"` | Stage, commit, and push changes to remote repository |
@@ -113,6 +117,9 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `--commit` / `--no-commit` | — | Create initial project commit (`[message]` or boolean) | `false` |
 | `--github` | — | Create via `gh` CLI or connect to remote URL (`[url]` / `[owner/repo]`) | `false` |
 | `--private` / `--public` | — | Set GitHub repository visibility (default: public) | `false` |
+| `--ci` / `--no-ci` | — | Generate stack-aware GitHub Actions CI/CD pipeline | `false` |
+| `--docker` / `--no-docker` | — | Generate production multi-stage Dockerfile and `.dockerignore` | `false` |
+| `--deploy` | — | Cloud deployment target: `dockerhub`, `fly`, `railway`, `render`, `none` | `none` |
 | `--yes` | `-y` | Accept defaults for unspecified options | `false` |
 
 ---
@@ -301,13 +308,51 @@ fogoe create microservice --framework hono --lang ts --github https://github.com
 
 ---
 
-## 🧪 Testing & CI/CD
+## 🚀 Automated CI/CD, Docker & Cloud Deployments
+
+Fogoe automates continuous integration, multi-stage containerization, and cloud deployment pipelines out of the box:
+
+```bash
+# 1. Add CI/CD and Docker to any existing Fogoe project
+fogoe add ci
+fogoe add docker
+
+# 2. Scaffold with automated CI/CD and deployment targets
+fogoe create my-api --framework fastify --lang ts --ci --docker --deploy fly -y
+
+# 3. Docker Hub push pipeline
+fogoe create auth-service --framework express --lang ts --ci --docker --deploy dockerhub -y
+```
+
+### Supported Features & Targets:
+- **Stack-Aware GitHub Actions Workflows (`.github/workflows/ci.yml`)**:
+  - Automatically configured for your project package manager (`npm`, `pnpm`, `bun`, `yarn`).
+  - Pre-wired steps for dependency installation, linting (`eslint`), testing (`vitest`), and TypeScript compilation (`tsc`).
+  - Dual branch trigger support (`main` and `dev`).
+- **Production-Ready Multi-Stage Dockerfile**:
+  - Minimal Alpine base image (`node:20-alpine` or `oven/bun:1-alpine`).
+  - Isolated dependencies, builder, and production runner stages.
+  - Non-root security execution under dedicated `fogoe:nodejs` system user.
+  - Comprehensive `.dockerignore` excluding `.git`, `.env`, and build caches.
+- **Zero-Friction Cloud Deployments**:
+  - **Docker Hub** (`--deploy dockerhub`): Builds and pushes multi-architecture images.
+    - *Required Secrets*: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
+  - **Fly.io** (`--deploy fly`): Deploys containerized applications via `flyctl`.
+    - *Required Secret*: `FLY_API_TOKEN`
+  - **Railway** (`--deploy railway`): Deploys applications via Railway CLI.
+    - *Required Secrets*: `RAILWAY_TOKEN`, `RAILWAY_SERVICE_NAME`
+  - **Render** (`--deploy render`): Triggers instant deployment via webhook deploy hooks.
+    - *Required Secret*: `RENDER_DEPLOY_HOOK_URL`
+
+---
+
+## 🧪 Testing & Quality Assurance
 
 Fogoe is rigorously tested across operating systems and Node versions:
 
 - **OS Matrix**: Ubuntu (Linux), macOS, Windows
 - **Node Matrix**: Node.js 18.x, 20.x, 22.x
-- **Test Suite**: Native `node --test` runner with 36 passing unit & integration tests
+- **Test Suite**: Native `node --test` runner with 49 passing unit & integration tests
 
 Run tests locally:
 ```bash
