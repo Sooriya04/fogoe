@@ -16,13 +16,19 @@
   Complete with TypeScript/JavaScript, ORMs (<b>Drizzle</b>, <b>Prisma</b>), authentication, and a full CRUD code generator.
 </p>
 
+<p align="center">
+  <video src="https://sooriya04.github.io/fogoe/fogoe-trailer.mp4" controls="controls" width="100%" style="max-width: 820px; border-radius: 8px;">
+    Your browser does not support the video tag. Watch the trailer on <a href="https://sooriya04.github.io/fogoe/">the Fogoe website</a>.
+  </video>
+</p>
+
 </div>
 
 ---
 
 ## ⚡ Quick Start
 
-### 1. Interactive Clack TUI
+### 1. Interactive Terminal Wizard
 Run immediately via `npx` with zero global installation required:
 
 ```bash
@@ -33,8 +39,8 @@ npx fogoe
 npx fogoe create my-api
 ```
 
-### 2. Automated Non-Interactive Mode (CLI Flags)
-Scaffold fully automated projects with custom flags and skip prompts using `-y`:
+### 2. Automated CLI Flags (Non-Interactive)
+Scaffold production backends directly with flags and skip prompts using `-y`:
 
 ```bash
 # Fastify + TypeScript + Drizzle ORM + JWT Auth
@@ -49,311 +55,86 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 
 ---
 
-## ✨ Features
+## ✨ Features at a Glance
 
-- **🤖 AI-Assisted Scaffolding:** Describe your backend requirements in plain English (`--ai "..."`) and let Fogoe automatically configure runtime, database, auth, and tooling.
-- **⚡ Agent & CI Ready (`--json`):** Pure machine-readable JSON output on stdout, eliminating terminal noise for autonomous coding agents (Antigravity, Cursor, Copilot) and CI workflows.
-- **Interactive Clack TUI:** Fluid terminal wizard powered by `@clack/prompts` with animated spinners, hints, and error recovery.
-- **Headless Non-Interactive CLI:** Complete flag set (`--framework`, `--lang`, `--db`, `--auth`, `--install`, `--yes`) for automated scripts, CI/CD, and dockerization.
-- **4 Modern HTTP Runtimes:** Express, Fastify, Hono (`@hono/node-server`), and Koa.
-- **TypeScript & JavaScript First:** Pure NodeNext ES Modules (`"type": "module"`) or classic CommonJS (`require`).
-- **Disk-Based Template Architecture:** Real `.ts` and `.js` template files on disk, ensuring clean syntax and zero string escaping bugs.
-- **6 Database & ORM Integrations:**
-  - **Drizzle ORM** (with `drizzle-kit`, PostgreSQL driver, and migration scripts)
-  - **Prisma** (with schema generator and client)
-  - **MongoDB** (via `mongoose`)
-  - **PostgreSQL** (via `pg` connection pooling)
-  - **MySQL** (via `mysql2`)
-  - **SQLite** (via `better-sqlite3`)
-- **Vertical Slice CRUD Generator:** Generate a synchronized Model, Controller, and Route in a single command (`fogoe g crud <name>`).
-- **Pluggable Architecture:** Add Redis, Zod, Stripe, Nodemailer, Rate Limiting, Swagger, and Socket.io to existing projects anytime (`fogoe add <plugin>`).
-- **🚀 CI/CD & Docker:** Automated GitHub Actions workflows and multi-stage Dockerfiles with deployment targets (Fly.io, Docker Hub, Railway, Render).
-- **🐙 Automated Git & GitHub Setup:** Initialize local Git repositories, generate stack-tailored `.gitignore` files (with SQLite, Prisma, and compilation rules), create initial commits (`--commit`), and connect or create remote repositories on GitHub (`--github`, `--private`).
-- **Built-in Git Lifecycle:** One-click repository initialization and atomic commits (`fogoe init`, `fogoe push`).
+- **4 HTTP Runtimes:** Express, Fastify, Hono (`@hono/node-server`), and Koa.
+- **TypeScript & JavaScript First:** Pure NodeNext ES Modules or CommonJS.
+- **6 Databases & ORMs:** Drizzle ORM, Prisma, MongoDB (Mongoose), PostgreSQL, MySQL, and SQLite.
+- **Disk-Based Template Architecture:** Pure `.ts` and `.js` template files on disk for deterministic file generation.
+- **Vertical Slice CRUD Generator:** Generate Model, Controller, and Route in one command (`fogoe g crud <name>`).
+- **Project Doctor:** Audit repository health, detect broken configurations, and auto-repair (`fogoe doctor [--fix]`).
+- **AI-Assisted Scaffolding:** Scaffolds complete architectures from plain English requirements (`--ai "..."`).
+- **Headless Agent Mode (`--json`):** Clean JSON output on `stdout` for autonomous agents (Cursor, Antigravity) and CI.
+- **Automated CI/CD & Docker:** Pre-configured GitHub Actions pipelines and Alpine multi-stage Dockerfiles.
+- **Automated Git Setup:** Initial commit, stack-tailored `.gitignore`, and GitHub repository linking via `gh` CLI.
 
 ---
 
-## 🚀 CLI Commands
+## 🚀 Primary Commands
 
 | Command | Description |
 |---|---|
 | `fogoe [name]` | Interactive project initializer |
 | `fogoe create <name> [flags]` | Scaffold project into a named directory |
-| `fogoe create <name> --ai "<prompt>"` | AI-assisted scaffolding from natural-language description |
+| `fogoe create <name> --ai "<prompt>"` | AI-assisted scaffolding from plain English description |
 | `fogoe generate <type> <name>` | Generate MVC components (`route`, `controller`, `model`, `crud`) |
 | `fogoe g crud <name>` | Generate complete 3-layer vertical slice (Model + Controller + Routes) |
+| `fogoe doctor [--fix]` | Audit project health, configuration integrity, and safe auto-repair |
 | `fogoe add [plugin]` | Add extensions: `ci`, `docker`, `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
-| `fogoe add ci` | Generate automated GitHub Actions test, lint, and build pipeline |
-| `fogoe add docker` | Generate production-ready multi-stage Dockerfile and `.dockerignore` |
 | `fogoe status` | Display project configuration, Git state, CI/CD, and Docker status |
-| `fogoe doctor [--fix]` | Inspect project health, detect broken configs/unprotected secrets, and auto-repair |
 | `fogoe update` | Upgrade all project dependencies to their latest compatible versions |
 | `fogoe init` | Initialize Git repository and link with remote |
 | `fogoe push "<message>"` | Stage, commit, and push changes to remote repository |
-| `fogoe --help` | Display CLI usage guide |
-| `fogoe --version` | Display installed Fogoe version |
 
 ---
 
-## 🛠️ CLI Flags Reference
+## 🛠️ Essential Flags
 
-| Flag | Short | Allowed Values | Default |
-|---|---|---|---|
-| `--ai` | — | Natural-language project description | — |
-| `--json` | — | Output machine-readable JSON result | `false` |
-| `--fix` | — | Automatically repair fixable doctor issues with confirmation | `false` |
-| `--non-interactive` | — | Run without interactive prompts | `false` |
-| `--framework` | `-f` | `express`, `fastify`, `hono`, `koa` | `express` |
-| `--lang` | `-l` | `ts`, `typescript`, `js`, `javascript` | `javascript` |
-| `--type` | `-t` | `esm`, `module`, `cjs`, `commonjs` | `commonjs` (`module` if TS) |
-| `--arch` | `-a` | `minimal`, `mvc` | `minimal` |
-| `--db` | `-d` | `drizzle`, `prisma`, `mongodb`, `postgres`, `mysql`, `sqlite`, `none` | `none` |
-| `--hashing` | — | `bcrypt`, `argon2`, `crypto` | `bcrypt` |
-| `--auth` | — | `jwt`, `none` | `none` |
-| `--test` / `--no-test` | — | Vitest testing suite | `false` |
-| `--lint` / `--no-lint` | — | ESLint + Prettier configuration | `false` |
-| `--install` | `-i` | Run package manager installation | `false` |
-| `--pm` | — | `npm`, `pnpm`, `bun`, `yarn` (preferred package manager) | `npm` |
-| `--git` / `--no-git` | `-g` | Initialize Git repository with stack-tailored `.gitignore` | `false` |
-| `--commit` / `--no-commit` | — | Create initial project commit (`[message]` or boolean) | `false` |
-| `--github` | — | Create via `gh` CLI or connect to remote URL (`[url]` / `[owner/repo]`) | `false` |
-| `--private` / `--public` | — | Set GitHub repository visibility (default: public) | `false` |
-| `--ci` / `--no-ci` | — | Generate stack-aware GitHub Actions CI/CD pipeline | `false` |
-| `--docker` / `--no-docker` | — | Generate production multi-stage Dockerfile and `.dockerignore` | `false` |
-| `--deploy` | — | Cloud deployment target: `dockerhub`, `fly`, `railway`, `render`, `none` | `none` |
-| `--yes` | `-y` | Accept defaults for unspecified options | `false` |
+| Flag | Short | Allowed Values | Default | Description |
+|---|---|---|---|---|
+| `--framework` | `-f` | `express`, `fastify`, `hono`, `koa` | `express` | Web framework runtime |
+| `--lang` | `-l` | `ts`, `js` | `js` | TypeScript or JavaScript |
+| `--db` | `-d` | `drizzle`, `prisma`, `mongodb`, `postgres`, `mysql`, `sqlite`, `none` | `none` | Database driver / ORM |
+| `--auth` | — | `jwt`, `none` | `none` | Authentication strategy |
+| `--ai` | — | Plain text string | — | Natural-language prompt parsing |
+| `--json` | — | boolean | `false` | Machine-readable JSON output |
+| `--fix` | — | boolean | `false` | Safe auto-repair in `fogoe doctor` |
+| `--ci` | — | boolean | `false` | Generate GitHub Actions pipeline |
+| `--docker` | — | boolean | `false` | Generate production Dockerfile |
+| `--deploy` | — | `dockerhub`, `fly`, `railway`, `render`, `none` | `none` | Deployment preset |
+| `--install` | `-i` | boolean | `false` | Auto-install dependencies |
+| `--pm` | — | `npm`, `pnpm`, `bun`, `yarn` | `npm` | Preferred package manager |
+| `--yes` | `-y` | boolean | `false` | Accept default choices without prompting |
 
 ---
 
-## 🤖 AI-Assisted Scaffolding
+## 🩺 Project Doctor & Auto-Repair
 
-Describe what you want to build in plain English using the `--ai` flag. Fogoe parses your requirements, infers the best runtime, language, database, auth strategy, and architecture, and scaffolds the project immediately:
-
-```bash
-fogoe create store-api --ai "High-performance Fastify backend with PostgreSQL using Drizzle ORM and JWT auth in TypeScript"
-```
-
-You can combine `--ai` with explicit flags whenever you want to override a specific option:
+Run comprehensive diagnostics on any Fogoe project to detect configuration issues, unprotected secrets, or missing dependencies:
 
 ```bash
-# Inferred by AI, but explicitly force Express runtime:
-fogoe create store-api --ai "TypeScript API with Drizzle and JWT" --framework express
+# Run diagnostics
+fogoe doctor
+
+# Review and apply safe repairs with confirmation
+fogoe doctor --fix
+
+# Headless execution for CI & agents
+fogoe doctor --fix -y --json
 ```
+
+- **Safety Guarantee:** Fogoe Doctor will **never** overwrite existing secrets in `.env` and will never delete user files.
 
 ---
 
-## 🤖 Coding Agent & CI Automation (`--json`)
+## 📚 Detailed Documentation
 
-Coding agents and CI pipelines can scaffold projects and ingest clean, structured JSON results without parsing ANSI terminal codes:
+For in-depth guides, architectural diagrams, and configuration manuals:
 
-```bash
-fogoe create user-service --framework fastify --lang ts --db postgres --auth jwt --json
-```
-
-**JSON Output Example:**
-```json
-{
-  "success": true,
-  "name": "user-service",
-  "targetDir": "/workspace/user-service",
-  "config": {
-    "runtime": "fastify",
-    "language": "ts",
-    "type": "esm",
-    "architecture": "mvc",
-    "database": "postgresql",
-    "hashing": "bcrypt",
-    "useJwt": true,
-    "testing": false,
-    "linting": false,
-    "git": false,
-    "install": false
-  },
-  "files": [
-    ".env",
-    ".gitignore",
-    "package.json",
-    "src/app.ts",
-    "src/server.ts",
-    "tsconfig.json"
-  ]
-}
-```
-
----
-
-## 🧩 Full CRUD Vertical Slice Generator
-
-Fogoe includes an integrated vertical slice code generator for MVC projects. Running:
-
-```bash
-fogoe g crud product
-```
-
-Generates three synchronized components tailored to your selected runtime and database:
-
-1. **Model** (`src/models/product.ts`):
-   - Mongoose Schema (MongoDB)
-   - Drizzle `pgTable` schema (Drizzle ORM)
-   - Database query helper (PostgreSQL / MySQL / SQLite)
-   - Prisma schema instructions (Prisma)
-2. **Controller** (`src/controllers/productcontroller.ts`):
-   - `getAll` (List records)
-   - `getById` (Fetch record by ID)
-   - `create` (Store new record)
-   - `update` (Update existing record)
-   - `remove` (Delete record)
-3. **Route** (`src/routes/product.ts`):
-   - `GET /` -> `getAll`
-   - `GET /:id` -> `getById`
-   - `POST /` -> `create`
-   - `PUT /:id` -> `update`
-   - `DELETE /:id` -> `remove`
-
-You can also generate individual components:
-```bash
-fogoe g route user
-fogoe g controller user
-fogoe g model user
-```
-
----
-
-## 🔌 Modular Plugin Ecosystem
-
-Install and configure backend features into an existing Fogoe project on demand:
-
-```bash
-fogoe add ci          # Stack-aware GitHub Actions pipeline (.github/workflows/ci.yml)
-fogoe add docker      # Production multi-stage Dockerfile and .dockerignore
-fogoe add redis       # ioredis client with environment configuration
-fogoe add zod         # Zod schema validation middleware
-fogoe add mailer      # Nodemailer SMTP transporter helper
-fogoe add stripe      # Stripe SDK integration and webhook helpers
-fogoe add ratelimit   # Express / HTTP rate-limiting middleware
-fogoe add swagger     # OpenAPI swagger-ui-express documentation
-fogoe add socket      # Socket.io real-time websocket server setup
-```
-
-### CI/CD & Docker Generation (`v1.1.2`)
-Generate deployment-ready workflows directly during project creation or on demand:
-```bash
-# Scaffold with automated GitHub Actions CI and Dockerfile
-npx fogoe create my-api --ci --docker
-
-# Configure automated deployment pipeline (Docker Hub, Fly.io, Railway, Render)
-npx fogoe create my-api --ci --deploy fly -y
-```
-
----
-
-## 📁 Scaffolding Structures
-
-### Minimal Architecture
-```
-my-api/
-├── .env.example
-├── .gitignore
-├── README.md
-├── package.json
-└── src/
-    └── server.ts (or server.js)
-```
-
-### MVC Architecture (with Drizzle & Auth)
-```
-my-api/
-├── .env.example
-├── .gitignore
-├── README.md
-├── package.json
-├── drizzle.config.ts
-├── fogoe.config.json
-└── src/
-    ├── app.ts
-    ├── server.ts
-    ├── config/
-    │   └── db.ts
-    ├── controllers/
-    │   └── homecontroller.ts
-    ├── middlewares/
-    │   └── authMiddleware.ts
-    ├── models/
-    │   └── model.ts
-    ├── routes/
-    │   └── home.ts
-    └── utils/
-        └── hashing.ts
-```
-
----
-
-## 🐙 Automated Git & GitHub Setup
-
-Fogoe provides complete zero-friction source control automation:
-
-```bash
-# 1. Local Git repository with stack-tailored .gitignore and initial commit
-fogoe create my-api --framework fastify --lang ts --git --commit "feat: bootstrap my-api" -y
-
-# 2. Automated GitHub repository creation via gh CLI
-fogoe create blog-service --framework express --lang ts --git --github --private -y
-
-# 3. Connect to an existing remote GitHub repository
-fogoe create microservice --framework hono --lang ts --github https://github.com/my-org/microservice.git --commit
-```
-
-- **Stack-Tailored `.gitignore`**: Automatically configures ignore rules for SQLite databases (`*.db`, `*.sqlite`), Prisma, Drizzle artifacts, TypeScript compilation outputs (`dist/`, `*.tsbuildinfo`), coverage reports, and environment secrets.
-- **Safe Fallback Git Identity**: Commits succeed deterministically even on clean CI machines or containers without pre-configured global Git usernames.
-- **GitHub CLI Integration**: Creates public or private repositories and pushes the initial branch in one command.
-
----
-
-## 🚀 CI/CD & Docker
-
-Add automated GitHub Actions and multi-stage Dockerfiles to any project:
-
-```bash
-# Add to existing project
-fogoe add ci
-fogoe add docker
-
-# Or scaffold with CI/CD and cloud deployment
-fogoe create my-api --framework fastify --lang ts --ci --docker --deploy fly -y
-```
-
-Supports **Docker Hub**, **Fly.io**, **Railway**, and **Render** with stack-aware pipelines.
-
----
-
-## 🧪 Testing & CI/CD
-
-Fogoe is rigorously tested across operating systems and Node versions:
-
-- **OS Matrix**: Ubuntu (Linux), macOS, Windows
-- **Node Matrix**: Node.js 18.x, 20.x, 22.x
-- **Test Suite**: Native `node --test` runner with 49 passing unit & integration tests
-
-Run tests locally:
-```bash
-npm test
-```
-
----
-
-## 📁 Repository Structure
-
-```text
-fogoe/
-├── bin/              # CLI executable entry point (#!/usr/bin/env node)
-├── src/              # Core CLI engine, AI parser, composer, CRUD generators, installer
-├── templates/        # Clean on-disk project templates (Fastify, Express, Hono, Koa)
-├── site/             # Interactive web configurator & docs showcase source (Vite)
-├── test/             # Native node:test unit & integration test suites
-└── .github/          # GitHub Actions CI matrix and Pages deployment workflows
-```
-
-> **Note on Website Deployment:** The documentation website in `site/` is built dynamically into `site/dist/` and deployed to [GitHub Pages](https://sooriya04.github.io/fogoe/) via `.github/workflows/pages.yml`. When publishing to the NPM registry, only `bin/`, `src/`, `templates/`, and root documentation are packaged—`site/` is excluded.
+- 📖 **[Interactive Docs Website](https://sooriya04.github.io/fogoe/docs.html)** — Comprehensive interactive documentation and stack configurator.
+- ⚙️ **[CLI Reference & Advanced Flags](docs/cli.md)** — Complete CLI flag dictionary, AI parsing, agent JSON schemas, and CRUD generation.
+- 🏗️ **[Scaffolding Architecture & Templates](docs/architecture.md)** — Minimal vs MVC directory structures, on-disk templates, and repository layout.
+- 🚀 **[CI/CD, Docker & Deployments](docs/ci-docker.md)** — Multi-stage Alpine Dockerfiles, GitHub Actions matrix, cloud presets, and Git automation.
 
 ---
 

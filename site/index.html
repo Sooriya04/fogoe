@@ -1504,6 +1504,54 @@
       color: var(--text-primary);
     }
 
+    /* Trailer Video Card */
+    .trailer-card {
+      margin: 36px auto 32px;
+      max-width: 860px;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+    }
+    .trailer-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.02);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+    .trailer-dots {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .trailer-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .trailer-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .trailer-video {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      display: block;
+      background: #0F1115;
+    }
+
     /* ==========================================================================
        RESPONSIVE BREAKPOINTS
        ========================================================================== */
@@ -1532,12 +1580,45 @@
       .footer-content { flex-direction: column; text-align: center; }
     }
 
+    @media (max-width: 640px) {
+      .trailer-card {
+        margin: 20px auto 24px;
+        border-radius: 8px;
+      }
+      .trailer-header {
+        padding: 8px 12px;
+        font-size: 0.72rem;
+      }
+      .trailer-dot {
+        width: 8px;
+        height: 8px;
+      }
+    }
+
     @media (max-width: 480px) {
       .container { padding: 0 16px; }
       .metrics-row { grid-template-columns: 1fr; }
       .frameworks-grid, .plugins-grid { grid-template-columns: 1fr; }
-      .install-bar-cmd { flex-direction: column; align-items: flex-start; }
-      .copy-action-btn { align-self: flex-end; }
+      .install-bar-cmd {
+        padding: 10px 14px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+      .pkg-tab {
+        padding: 7px 9px;
+        font-size: 0.74rem;
+      }
+      .cmd-code {
+        font-size: 0.84rem;
+      }
+      .copy-action-btn {
+        padding: 4px 8px;
+        font-size: 0.72rem;
+        flex-shrink: 0;
+      }
       .crud-flow-bar { display: none; }
     }
   </style>
@@ -1646,6 +1727,24 @@
           <a href="#crud-generator" class="quick-pill"><span>CRUD Generator:</span> fogoe g crud product</a>
           <a href="#agent-mode" class="quick-pill"><span>Headless Agents:</span> fogoe create ... --json</a>
           <a href="./docs.html" class="quick-pill" style="border-color: rgba(56, 189, 248, 0.4); color: var(--text-primary);"><span>Docs:</span> Full CLI Reference &rarr;</a>
+        </div>
+
+        <!-- Launch Trailer Video Player -->
+        <div class="trailer-card">
+          <div class="trailer-header">
+            <div class="trailer-dots">
+              <span class="trailer-dot" style="background: #ef4444;"></span>
+              <span class="trailer-dot" style="background: #f59e0b;"></span>
+              <span class="trailer-dot" style="background: #10b981;"></span>
+            </div>
+            <span class="trailer-title">Fogoe Launch Trailer — 80s High-Impact Overview</span>
+          </div>
+          <video class="trailer-video" controls preload="metadata" playsinline>
+            <source src="./fogoe-trailer.mp4" type="video/mp4">
+            <source src="./public/fogoe-trailer.mp4" type="video/mp4">
+            <source src="fogoe-trailer.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         <!-- Metrics Row -->
