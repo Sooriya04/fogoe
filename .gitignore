@@ -6,3 +6,8 @@ site/dist/
 .DS_Store
 coverage/
 others
+.agents/
+.aider-desk/
+skills-lock.json
+video/
+

@@ -86,6 +86,7 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `fogoe add ci` | Generate automated GitHub Actions test, lint, and build pipeline |
 | `fogoe add docker` | Generate production-ready multi-stage Dockerfile and `.dockerignore` |
 | `fogoe status` | Display project configuration, Git state, CI/CD, and Docker status |
+| `fogoe doctor [--fix]` | Inspect project health, detect broken configs/unprotected secrets, and auto-repair |
 | `fogoe update` | Upgrade all project dependencies to their latest compatible versions |
 | `fogoe init` | Initialize Git repository and link with remote |
 | `fogoe push "<message>"` | Stage, commit, and push changes to remote repository |
@@ -100,6 +101,7 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 |---|---|---|---|
 | `--ai` | — | Natural-language project description | — |
 | `--json` | — | Output machine-readable JSON result | `false` |
+| `--fix` | — | Automatically repair fixable doctor issues with confirmation | `false` |
 | `--non-interactive` | — | Run without interactive prompts | `false` |
 | `--framework` | `-f` | `express`, `fastify`, `hono`, `koa` | `express` |
 | `--lang` | `-l` | `ts`, `typescript`, `js`, `javascript` | `javascript` |

@@ -107,5 +107,17 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 10. **Comprehensive Documentation & CLI Guide:** Documented all new workflows, Docker commands, flags (`--ci`, `--docker`, `--deploy`), and required secrets across `README.md`, `fogoe --help`, and the developer documentation site (`site/docs.html`).
 
 
+## Feature: Project Doctor & Safe Auto-Repair Suite (`fogoe doctor [--fix]`)
+
+1. **Intelligent Diagnostics Engine:** Implemented `src/doctor/index.js` to perform deep health audits across project configurations (`fogoe.config.json`, `package.json`), framework package availability, standard npm lifecycle scripts (`dev`, `start`, `build`), security `.gitignore` rules, `.env` connection strings, and TypeScript compiler configurations.
+2. **Safe & Non-Destructive Auto-Repair (`--fix`):** Architected a guarded repair workflow that displays a clear, numbered list of proposed modifications and requires confirmation before touching files or installing dependencies. Under no circumstances are existing `.env` secrets overwritten, nor are user files destructively modified.
+3. **Critical Git & Secret Protection:** Enforces `.env` presence in `.gitignore` to prevent credential leaks, identifies insecure placeholder tokens (`secret`, `your-secret-key`, `changeme`), and safely appends missing stack-specific environment variables (`DATABASE_URL`, `JWT_SECRET`, `PORT`).
+4. **TypeScript Configuration Self-Healing:** Detects missing `tsconfig.json` files and repairs non-relative path aliases (preventing `TS5090` build failures) by prepending `./`.
+5. **Headless Automation & Agent JSON (`--json`, `-y`):** Added machine-readable JSON mode for both diagnostics (`fogoe doctor --json`) and automated repair (`fogoe doctor --fix -y --json`), allowing autonomous coding agents and CI pipelines to inspect and repair backend projects programmatically.
+6. **Cross-Platform CI Pipeline Integration:** Integrated `node bin/cli.js doctor --json` into the root `.github/workflows/ci.yml` matrix across Node.js 18, 20, and 22 on Linux, macOS, and Windows.
+7. **Expanded Automated Test Suite:** Added comprehensive unit and integration tests in `test/doctor.test.js` covering environment parsing, framework auto-addition, secret preservation, TypeScript path fixing, and CLI executions, bringing the test suite to 62 passing tests.
+
+
+
 
 

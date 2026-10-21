@@ -8,6 +8,7 @@ const { checkStatus } = require('./status');
 const { updateProject } = require('./update');
 const { generateComponent } = require('./generate');
 const { parseAiPrompt } = require('./ai');
+const { runDoctor } = require('./doctor');
 const chalk = require('chalk');
 
 function parseCliArgs(args) {
@@ -31,6 +32,7 @@ function parseCliArgs(args) {
     docker: null,
     deploy: null,
     pm: null,
+    fix: false,
     yes: false,
     nonInteractive: false,
     ai: null,
@@ -49,6 +51,8 @@ function parseCliArgs(args) {
       flags.version = true;
     } else if (arg === '--yes' || arg === '-y') {
       flags.yes = true;
+    } else if (arg === '--fix') {
+      flags.fix = true;
     } else if (arg === '--non-interactive') {
       flags.nonInteractive = true;
     } else if (arg === '--json') {
@@ -185,6 +189,7 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('fogoe push <message>')}          Stage, commit, and push changes to remote`);
     console.log(`  ${chalk.green('fogoe add [plugin]')}            Add a plugin to an existing Fogoe project`);
     console.log(`  ${chalk.green('fogoe status')}                  Show project details and status`);
+    console.log(`  ${chalk.green('fogoe doctor [--fix]')}           Run diagnostics and optionally auto-repair project issues`);
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
     console.log(`  ${chalk.green('fogoe generate <type> <name>')}  Generate route, controller, model, or full crud`);
     console.log(`  ${chalk.green('fogoe g crud <name>')}           Vertical slice: Model + Controller + Routes\n`);
@@ -230,6 +235,9 @@ function parseCliArgs(args) {
     console.log('  fogoe add ci');
     console.log('  fogoe add docker');
     console.log('  fogoe create my-api --framework fastify --lang ts --ci --docker --deploy fly -y\n');
+    console.log(`  ${chalk.gray('# Project Diagnostics & Safe Auto-Repair')}`);
+    console.log('  fogoe doctor');
+    console.log('  fogoe doctor --fix\n');
     console.log(`  ${chalk.gray('# Automated Git & GitHub repository setup')}`);
     console.log('  fogoe create my-api --framework fastify --lang ts --git --commit "feat: init api"');
     console.log('  fogoe create blog --framework express --lang js --git --github --private -y');
@@ -310,6 +318,17 @@ function parseCliArgs(args) {
 
   if (positionals[0] === 'status') {
     checkStatus({ json: flags.json });
+    return;
+  }
+
+  if (positionals[0] === 'doctor') {
+    await runDoctor({
+      cwd: process.cwd(),
+      fix: flags.fix,
+      yes: flags.yes || flags.nonInteractive,
+      json: flags.json,
+      pm: flags.pm,
+    });
     return;
   }
 

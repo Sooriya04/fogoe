@@ -41,6 +41,9 @@ jobs:
       - name: Verify CLI help command
         run: node bin/cli.js --help
 
+      - name: Verify CLI doctor command
+        run: node bin/cli.js doctor --json
+
       - name: Verify package bundle contents (dry-run)
         run: npm pack --dry-run
 
