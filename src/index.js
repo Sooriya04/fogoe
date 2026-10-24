@@ -30,6 +30,8 @@ function parseCliArgs(args) {
     private: false,
     ci: null,
     docker: null,
+    dockerOs: null,
+    compose: null,
     deploy: null,
     pm: null,
     fix: false,
@@ -147,6 +149,16 @@ function parseCliArgs(args) {
       flags.docker = true;
     } else if (arg === '--no-docker') {
       flags.docker = false;
+    } else if (arg === '--docker-os' || arg === '--os') {
+      flags.dockerOs = args[++i];
+    } else if (arg.startsWith('--docker-os=')) {
+      flags.dockerOs = arg.split('=')[1];
+    } else if (arg.startsWith('--os=')) {
+      flags.dockerOs = arg.split('=')[1];
+    } else if (arg === '--compose') {
+      flags.compose = true;
+    } else if (arg === '--no-compose') {
+      flags.compose = false;
     } else if (arg === '--deploy') {
       flags.deploy = args[++i];
     } else if (arg.startsWith('--deploy=')) {
@@ -185,6 +197,9 @@ function parseCliArgs(args) {
     console.log(chalk.yellow('Commands:'));
     console.log(`  ${chalk.green('fogoe [name]')}                 Start the interactive project initializer`);
     console.log(`  ${chalk.green('fogoe create <name> [flags]')}  Create a new project in a specific directory`);
+    console.log(`  ${chalk.green('fogoe docker')}                 Generate multi-stage Dockerfile with base OS selector`);
+    console.log(`  ${chalk.green('fogoe compose')}                Generate stack-aware docker-compose.yml`);
+    console.log(`  ${chalk.green('fogoe ci')}                     Generate GitHub Actions CI/CD pipeline`);
     console.log(`  ${chalk.green('fogoe init')}                   Initialize Git repository and update config`);
     console.log(`  ${chalk.green('fogoe push <message>')}          Stage, commit, and push changes to remote`);
     console.log(`  ${chalk.green('fogoe add [plugin]')}            Add a plugin to an existing Fogoe project`);
@@ -216,12 +231,15 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('--github [url|owner/repo]')}    Create or connect remote GitHub repository`);
     console.log(`  ${chalk.green('--ci, --no-ci')}                Generate stack-aware GitHub Actions CI/CD pipeline`);
     console.log(`  ${chalk.green('--docker, --no-docker')}        Generate multi-stage Dockerfile and .dockerignore`);
+    console.log(`  ${chalk.green('--docker-os <os>')}             Container OS: alpine, debian, ubuntu, distroless`);
+    console.log(`  ${chalk.green('--compose, --no-compose')}      Generate stack-aware docker-compose.yml`);
     console.log(`  ${chalk.green('--deploy <platform>')}          Deploy target: dockerhub, fly, railway, render, none`);
     console.log(`  ${chalk.green('-y, --yes')}                    Accept default choices without prompting\n`);
 
     console.log(chalk.yellow('Available Plugins:'));
     console.log(`  ${chalk.cyan('ci')}         — GitHub Actions automated CI/CD test, lint, and build pipeline`);
-    console.log(`  ${chalk.cyan('docker')}     — Production multi-stage Dockerfile & .dockerignore`);
+    console.log(`  ${chalk.cyan('docker')}     — Production multi-stage Dockerfile (Alpine, Debian, Ubuntu, Distroless)`);
+    console.log(`  ${chalk.cyan('compose')}    — Docker Compose multi-container stack with app, database, and Redis`);
     console.log(`  ${chalk.cyan('redis')}      — Redis client (ioredis)`);
     console.log(`  ${chalk.cyan('zod')}        — Schema validation (zod)`);
     console.log(`  ${chalk.cyan('mailer')}     — Email via SMTP (nodemailer)`);
@@ -231,9 +249,12 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)\n`);
 
     console.log(chalk.yellow('Examples:'));
-    console.log(`  ${chalk.gray('# Automated CI/CD & Docker setup')}`);
+    console.log(`  ${chalk.gray('# Automated Containerization & Compose setup')}`);
+    console.log('  fogoe docker');
+    console.log('  fogoe compose');
+    console.log('  fogoe create my-api --framework fastify --lang ts --docker --docker-os debian --compose -y\n');
+    console.log(`  ${chalk.gray('# Automated CI/CD & Deployment')}`);
     console.log('  fogoe add ci');
-    console.log('  fogoe add docker');
     console.log('  fogoe create my-api --framework fastify --lang ts --ci --docker --deploy fly -y\n');
     console.log(`  ${chalk.gray('# Project Diagnostics & Safe Auto-Repair')}`);
     console.log('  fogoe doctor');
@@ -300,13 +321,48 @@ function parseCliArgs(args) {
     return;
   }
 
+  if (positionals[0] === 'docker') {
+    const { setupCiCd } = require('./ci');
+    await setupCiCd({
+      docker: true,
+      dockerOs: flags.dockerOs,
+      isNonInteractive: flags.yes || flags.nonInteractive,
+    });
+    return;
+  }
+
+  if (positionals[0] === 'compose' || positionals[0] === 'docker-compose') {
+    const { setupCompose } = require('./ci/compose');
+    await setupCompose({
+      targetDir: process.cwd(),
+      silent: flags.json,
+    });
+    return;
+  }
+
+  if (positionals[0] === 'ci') {
+    const { setupCiCd } = require('./ci');
+    await setupCiCd({
+      ci: true,
+      deploy: flags.deploy || undefined,
+      isNonInteractive: flags.yes || flags.nonInteractive,
+    });
+    return;
+  }
+
   if (positionals[0] === 'add') {
     const pluginName = positionals[1] || undefined;
+    if (pluginName === 'compose' || pluginName === 'docker-compose') {
+      const { setupCompose } = require('./ci/compose');
+      await setupCompose({ targetDir: process.cwd(), silent: flags.json });
+      return;
+    }
     if (pluginName === 'ci' || pluginName === 'docker' || pluginName === 'cicd') {
       const { setupCiCd } = require('./ci');
       await setupCiCd({
         ci: pluginName === 'ci' || pluginName === 'cicd' || flags.ci,
         docker: pluginName === 'docker' || pluginName === 'cicd' || flags.docker,
+        dockerOs: flags.dockerOs,
         deploy: flags.deploy || undefined,
         isNonInteractive: flags.yes || flags.nonInteractive,
       });
@@ -419,6 +475,8 @@ function parseCliArgs(args) {
     flags.private ||
     flags.ci !== null ||
     flags.docker !== null ||
+    flags.dockerOs !== null ||
+    flags.compose !== null ||
     flags.deploy !== null ||
     flags.testing !== null ||
     flags.linting !== null
@@ -778,12 +836,14 @@ function parseCliArgs(args) {
     if (initDocker === null && aiConfig.docker) initDocker = true;
   }
 
-  if (initCi || initDocker || (!isNonInteractive && (initCi === null && initDocker === null))) {
+  if (initCi || initDocker || flags.compose || (!isNonInteractive && (initCi === null && initDocker === null && flags.compose === null))) {
     const { setupCiCd } = require('./ci');
     ciResult = await setupCiCd({
       targetDir: process.cwd(),
       ci: initCi !== null ? initCi : undefined,
       docker: initDocker !== null ? initDocker : undefined,
+      dockerOs: flags.dockerOs,
+      compose: flags.compose !== null ? flags.compose : undefined,
       deploy: deployOption,
       isNonInteractive,
       silent: flags.json,

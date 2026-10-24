@@ -3,8 +3,9 @@ const path = require('path');
 const chalk = require('chalk');
 const { select, confirm } = require('../prompts');
 const { generateGitHubActionsWorkflow } = require('./githubActions');
-const { generateDockerfile, generateDockerignore } = require('./docker');
+const { generateDockerfile, generateDevDockerfile, generateDockerignore, DOCKER_OS_OPTIONS, normalizeDockerOs } = require('./docker');
 const { DEPLOY_TARGETS, isValidDeployTarget, getRequiredSecrets } = require('./deploy');
+const { generateDockerCompose, setupCompose } = require('./compose');
 const { getPackageManager } = require('../installer');
 
 /**
@@ -69,6 +70,8 @@ function detectProjectStack(targetDir = process.cwd()) {
  * @param {string} [options.targetDir]
  * @param {boolean} [options.ci] - Whether to generate GitHub Actions
  * @param {boolean} [options.docker] - Whether to generate Dockerfile
+ * @param {string} [options.dockerOs] - 'alpine' | 'debian' | 'ubuntu' | 'distroless'
+ * @param {boolean} [options.compose] - Whether to generate docker-compose.yml
  * @param {string} [options.deploy] - Deployment platform
  * @param {boolean} [options.isNonInteractive]
  * @param {boolean} [options.silent]
@@ -84,10 +87,12 @@ async function setupCiCd(options = {}) {
   const stack = detectProjectStack(targetDir);
   let generateCi = options.ci !== undefined ? Boolean(options.ci) : false;
   let generateDocker = options.docker !== undefined ? Boolean(options.docker) : false;
+  let generateCompose = options.compose !== undefined ? Boolean(options.compose) : false;
   let deployTarget = options.deploy !== undefined ? options.deploy : undefined;
+  let dockerOs = options.dockerOs ? normalizeDockerOs(options.dockerOs) : undefined;
 
   // Interactive selection if invoked manually without flags
-  if (!isNonInteractive && options.ci === undefined && options.docker === undefined) {
+  if (!isNonInteractive && options.ci === undefined && options.docker === undefined && options.compose === undefined) {
     const ciChoice = await select('Configure CI/CD automated pipeline?', [
       { value: 'all', label: 'Complete CI/CD & Docker (GitHub Actions + Dockerfile)' },
       { value: 'ci_only', label: 'GitHub Actions CI only (Test, Lint, Build)' },
@@ -124,7 +129,19 @@ async function setupCiCd(options = {}) {
     }
   }
 
+  // Interactive base OS selection if Docker is enabled and not explicitly specified
+  if (generateDocker && !dockerOs && !isNonInteractive) {
+    const osChoice = await select('Select container base distribution:', [
+      { value: 'alpine', label: 'Alpine Linux (node:20-alpine) — Ultra-lightweight (~140MB), minimal attack surface (Recommended)' },
+      { value: 'debian', label: 'Debian Slim (node:20-slim) — Standard glibc environment (~220MB), maximum C/C++ compatibility' },
+      { value: 'ubuntu', label: 'Ubuntu / Node Full (node:20) — Full environment with build tools (gcc, make, python)' },
+      { value: 'distroless', label: 'Google Distroless (gcr.io/distroless/nodejs20) — Hardened, package manager & shell-free' },
+    ]);
+    dockerOs = osChoice || 'alpine';
+  }
+
   deployTarget = deployTarget || 'none';
+  dockerOs = dockerOs || 'alpine';
 
   const createdFiles = [];
 
@@ -137,6 +154,7 @@ async function setupCiCd(options = {}) {
       language: stack.language,
       pm: stack.pm,
       port: stack.port,
+      os: dockerOs,
     });
     const dockerignoreContent = generateDockerignore();
 
@@ -145,12 +163,18 @@ async function setupCiCd(options = {}) {
     createdFiles.push('Dockerfile', '.dockerignore');
 
     if (!silent) {
-      console.log(chalk.green('  ✓ Created production Dockerfile'));
+      console.log(chalk.green(`  ✓ Created production Dockerfile (${DOCKER_OS_OPTIONS[dockerOs].name})`));
       console.log(chalk.green('  ✓ Created .dockerignore'));
     }
   }
 
-  // 2. Generate GitHub Actions workflow
+  // 2. Generate Docker Compose if requested
+  if (generateCompose) {
+    await setupCompose({ targetDir, silent });
+    createdFiles.push('docker-compose.yml');
+  }
+
+  // 3. Generate GitHub Actions workflow
   if (generateCi) {
     const workflowsDir = path.join(targetDir, '.github/workflows');
     fs.mkdirSync(workflowsDir, { recursive: true });
@@ -190,14 +214,18 @@ async function setupCiCd(options = {}) {
       if (!cfg.addons) cfg.addons = [];
       if (generateCi && !cfg.addons.includes('ci')) cfg.addons.push('ci');
       if (generateDocker && !cfg.addons.includes('docker')) cfg.addons.push('docker');
+      if (generateCompose && !cfg.addons.includes('compose')) cfg.addons.push('compose');
+      if (generateDocker) cfg.dockerOs = dockerOs;
       fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2));
     } catch {}
   }
 
   return {
-    configured: generateCi || generateDocker,
+    configured: generateCi || generateDocker || generateCompose,
     ci: generateCi,
     docker: generateDocker,
+    dockerOs,
+    compose: generateCompose,
     deploy: deployTarget,
     files: createdFiles,
   };
@@ -206,4 +234,8 @@ async function setupCiCd(options = {}) {
 module.exports = {
   detectProjectStack,
   setupCiCd,
+  setupCompose,
+  generateDockerCompose,
+  DOCKER_OS_OPTIONS,
+  normalizeDockerOs,
 };

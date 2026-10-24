@@ -138,6 +138,11 @@ async function addPlugin(pluginArg) {
   }
 
   if (plugin.isSpecial) {
+    if (pluginName === 'compose' || pluginName === 'docker-compose') {
+      const { setupCompose } = require('../ci/compose');
+      await setupCompose({ targetDir: process.cwd() });
+      return;
+    }
     const { setupCiCd } = require('../ci');
     await setupCiCd({
       ci: pluginName === 'ci',

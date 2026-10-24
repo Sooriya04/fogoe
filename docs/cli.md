@@ -29,6 +29,8 @@ Complete guide to all CLI commands, flags, AI prompt parsing, automated coding a
 | `--private` / `--public` | — | boolean | `false` | Sets GitHub repository visibility |
 | `--ci` / `--no-ci` | — | boolean | `false` | Generates stack-aware GitHub Actions workflow |
 | `--docker` / `--no-docker` | — | boolean | `false` | Generates multi-stage Dockerfile and `.dockerignore` |
+| `--docker-os` | `--os` | `alpine`, `debian`, `ubuntu`, `distroless` | `alpine` | Linux container base distribution |
+| `--compose` / `--no-compose` | — | boolean | `false` | Generates stack-tailored `docker-compose.yml` |
 | `--deploy` | — | `dockerhub`, `fly`, `railway`, `render`, `none` | `none` | Cloud deployment trigger target |
 | `--yes` | `-y` | boolean | `false` | Accepts default choices for unspecified flags |
 
@@ -128,13 +130,20 @@ fogoe g model user
 
 ---
 
-## 🔌 Modular Plugin Ecosystem
+## 🔌 Modular Plugin Ecosystem & Direct Commands
 
-Install and configure backend features into an existing Fogoe project on demand:
+Install and configure backend features into an existing Fogoe project on demand using direct commands or the `fogoe add` plugin manager:
 
 ```bash
-fogoe add ci          # Stack-aware GitHub Actions pipeline (.github/workflows/ci.yml)
+# Direct commands:
+fogoe docker          # Multi-distribution Dockerfile generation (interactive or with --docker-os)
+fogoe compose         # Stack-aware docker-compose.yml for app + database + redis
+fogoe ci              # Stack-aware GitHub Actions workflow (.github/workflows/ci.yml)
+
+# Plugin manager equivalents:
 fogoe add docker      # Production multi-stage Dockerfile and .dockerignore
+fogoe add compose     # docker-compose.yml tailored to database & cache
+fogoe add ci          # Stack-aware GitHub Actions pipeline (.github/workflows/ci.yml)
 fogoe add redis       # ioredis client with environment configuration
 fogoe add zod         # Zod schema validation middleware
 fogoe add mailer      # Nodemailer SMTP transporter helper

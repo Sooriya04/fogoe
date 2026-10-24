@@ -168,10 +168,95 @@ test('setupCiCd: Orchestrates complete CI/CD and Docker files cleanly', async ()
   assert.ok(cfg.addons.includes('docker'));
 });
 
-test('Plugins Registry: ci and docker are registered as special delegation plugins', () => {
+test('Docker Generator: Debian Slim distribution', () => {
+  const dockerfile = generateDockerfile({
+    language: 'typescript',
+    pm: 'npm',
+    os: 'debian',
+  });
+
+  assert.ok(dockerfile.includes('FROM node:20-slim AS base'));
+  assert.ok(dockerfile.includes('groupadd --system --gid 1001 nodejs'));
+  assert.ok(dockerfile.includes('useradd --system --uid 1001 -g nodejs fogoe'));
+  assert.ok(dockerfile.includes('HEALTHCHECK'));
+});
+
+test('Docker Generator: Ubuntu distribution', () => {
+  const dockerfile = generateDockerfile({
+    language: 'javascript',
+    pm: 'npm',
+    os: 'ubuntu',
+  });
+
+  assert.ok(dockerfile.includes('FROM node:20 AS base'));
+  assert.ok(dockerfile.includes('groupadd --system --gid 1001 nodejs'));
+});
+
+test('Docker Generator: Google Distroless distribution', () => {
+  const dockerfile = generateDockerfile({
+    language: 'typescript',
+    pm: 'pnpm',
+    os: 'distroless',
+  });
+
+  assert.ok(dockerfile.includes('FROM gcr.io/distroless/nodejs20-debian12 AS runner'));
+  assert.ok(dockerfile.includes('USER nonroot'));
+  assert.ok(dockerfile.includes('CMD ["dist/server.js"]'));
+});
+
+test('Docker Generator: Development Dockerfile with hot reload', () => {
+  const { generateDevDockerfile } = require('../src/ci/docker');
+  const devDoc = generateDevDockerfile({
+    language: 'typescript',
+    pm: 'npm',
+    os: 'alpine',
+  });
+
+  assert.ok(devDoc.includes('ENV NODE_ENV=development'));
+  assert.ok(devDoc.includes('CMD ["npm", "run", "dev"]'));
+});
+
+test('Docker Compose: Generates complete stack for PostgreSQL and Redis', () => {
+  const { generateDockerCompose } = require('../src/ci/compose');
+  const compose = generateDockerCompose({
+    name: 'store-api',
+    port: '4000',
+    database: 'postgres',
+    redis: true,
+  });
+
+  assert.ok(compose.includes('container_name: store-api'));
+  assert.ok(compose.includes('image: postgres:16-alpine'));
+  assert.ok(compose.includes('image: redis:7-alpine'));
+  assert.ok(compose.includes('DATABASE_URL=postgresql://fogoe:fogoe_password@db:5432/fogoe_db'));
+  assert.ok(compose.includes('REDIS_URL=redis://redis:6379'));
+  assert.ok(compose.includes('postgres_data:'));
+  assert.ok(compose.includes('redis_data:'));
+});
+
+test('Docker Compose: Generates stack for MongoDB', () => {
+  const { generateDockerCompose } = require('../src/ci/compose');
+  const compose = generateDockerCompose({
+    name: 'mongo-service',
+    port: '3000',
+    database: 'mongodb',
+    redis: false,
+  });
+
+  assert.ok(compose.includes('image: mongo:7-jammy'));
+  assert.ok(compose.includes('DATABASE_URL=mongodb://fogoe:fogoe_password@db:27017/fogoe_db?authSource=admin'));
+  assert.ok(compose.includes('mongo_data:'));
+  assert.strictEqual(compose.includes('redis:'), false);
+});
+
+test('Plugins Registry: ci, docker, and compose are registered as special delegation plugins', () => {
   const { PLUGINS } = require('../src/plugins/registry');
   assert.ok(PLUGINS.ci, 'PLUGINS.ci should exist');
   assert.strictEqual(PLUGINS.ci.isSpecial, true);
   assert.ok(PLUGINS.docker, 'PLUGINS.docker should exist');
   assert.strictEqual(PLUGINS.docker.isSpecial, true);
+  assert.ok(PLUGINS.compose, 'PLUGINS.compose should exist');
+  assert.strictEqual(PLUGINS.compose.isSpecial, true);
+  assert.ok(PLUGINS['docker-compose'], 'PLUGINS.docker-compose should exist');
+  assert.strictEqual(PLUGINS['docker-compose'].isSpecial, true);
 });

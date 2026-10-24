@@ -1,6 +1,6 @@
 # CI/CD, Docker & Cloud Deployments in Fogoe
 
-Detailed guide to Fogoe's automated GitHub Actions workflows, multi-stage Alpine Dockerfiles, and zero-friction cloud deployment targets.
+Detailed guide to Fogoe's automated GitHub Actions workflows, multi-distribution Dockerfiles, Docker Compose stacks, and zero-friction cloud deployment targets.
 
 ---
 
@@ -9,12 +9,19 @@ Detailed guide to Fogoe's automated GitHub Actions workflows, multi-stage Alpine
 Add automated deployment assets directly during scaffolding or on demand:
 
 ```bash
-# During project creation
-npx fogoe create my-api --framework fastify --lang ts --ci --docker --deploy fly -y
+# During project creation with specific Docker OS and Compose:
+npx fogoe create my-api --framework fastify --lang ts --docker --docker-os alpine --compose --db postgres -y
 
-# Add to an existing Fogoe project
-fogoe add ci
+# Dedicated standalone commands in any project:
+fogoe docker                   # Interactive Base OS selection prompt
+fogoe docker --docker-os debian # Headless Debian Slim Dockerfile
+fogoe compose                  # Generates stack-aware docker-compose.yml
+fogoe ci --deploy fly          # Generates GitHub Actions workflow
+
+# Or via plugin addition:
 fogoe add docker
+fogoe add compose
+fogoe add ci
 ```
 
 ---
@@ -42,14 +49,42 @@ fogoe create microservice --framework hono --lang ts --github https://github.com
 
 ---
 
-## 🐳 Multi-Stage Dockerfile Generation
+## 🐳 Multi-Distribution Dockerfile Generation
 
-Fogoe generates production-hardened, multi-stage Dockerfiles based on Alpine Linux:
+When executing `fogoe docker` or generating a project with `--docker`, developers can choose their preferred Linux container base distribution:
 
-- **Build Stage:** Installs dev dependencies, runs compilation (`tsc` or bundling), and purges build caches.
-- **Production Stage:** Only includes production dependencies and compiled outputs.
-- **Security Hardening:** Runs under an unprivileged non-root user (`USER node`).
-- **Stack-Aware `.dockerignore`:** Excludes `node_modules`, `.env`, local database files, logs, and Git metadata.
+| OS Distribution | Node Base Image | Bun Base Image | Characteristics |
+|---|---|---|---|
+| **Alpine Linux** (`alpine`) *(Default)* | `node:20-alpine` | `oven/bun:1-alpine` | Ultra-lightweight (~50MB), `libc6-compat`, `wget` healthcheck. |
+| **Debian Slim** (`debian`) | `node:20-slim` | `oven/bun:1-slim` | Standard glibc compatibility, minimal footprint, ideal for native C++ addons (`sharp`, `canvas`, `bcrypt`). |
+| **Ubuntu** (`ubuntu`) | `node:20` | `oven/bun:1` | Full Linux environment with pre-installed build tools and wide compatibility. |
+| **Google Distroless** (`distroless`) | `gcr.io/distroless/nodejs20-debian12` | `oven/bun:distroless` | Maximum security, zero shell, minimal attack surface running as non-root `USER nonroot`. |
+
+### Docker Security & Optimization:
+- **Multi-Stage Build Pipeline**: Build stage compiles TypeScript and prunes dev dependencies, production stage contains only minimal runtime artifacts.
+- **Non-Root Principle**: Configured with unprivileged user permissions (`USER node` / `USER nonroot`).
+- **Native Healthchecks**: Injected container `HEALTHCHECK` directive for orchestrators (Kubernetes, Docker Swarm, ECS).
+- **Development Dockerfile (`Dockerfile.dev`)**: Fogoe also outputs a development Dockerfile with hot reloading (`npm run dev` / `bun run dev`) for containerized local workflows.
+- **Stack-Aware `.dockerignore`**: Excludes `node_modules`, `.env`, local database files, logs, and Git metadata.
+
+---
+
+## 📦 Stack-Aware Docker Compose (`fogoe compose`)
+
+Fogoe automatically inspects your project database and plugins to generate a complete `docker-compose.yml`:
+
+```bash
+fogoe compose
+```
+
+- **App Service**: Automatically maps your container port, sets `NODE_ENV=production`, configures depends-on services with health conditions, and connects to an isolated bridge network (`fogoe-network`).
+- **Database Services**:
+  - **PostgreSQL**: `postgres:16-alpine` with persistent volume and `pg_isready` healthcheck.
+  - **MongoDB**: `mongo:7-jammy` with persistent volume and healthcheck.
+  - **MySQL**: `mysql:8` with persistent volume and `mysqladmin ping` healthcheck.
+- **Cache Services**:
+  - **Redis**: `redis:7-alpine` with healthcheck whenever the `redis` plugin is enabled.
+- **Persistent Named Volumes**: Guarantees zero data loss across container teardown and restarts.
 
 ---
 

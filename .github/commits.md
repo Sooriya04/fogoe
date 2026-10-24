@@ -130,7 +130,32 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Removed technical resolution badges and added graceful ellipsis text overflow for mobile navigation bars.
 
 
+## Multi-Distribution Docker Base OS Selection, Stack-Aware Compose & CLI Subcommands
 
+1. **Multi-Distribution Dockerfile Generation:**
+   - Implemented interactive and headless Linux container base distribution selection across Alpine Linux (`node:20-alpine` / `oven/bun:1-alpine`), Debian Slim (`node:20-slim` / `oven/bun:1-slim`), Ubuntu (`node:20` / `oven/bun:1`), and Google Distroless (`gcr.io/distroless/nodejs20-debian12` / `oven/bun:distroless`).
+   - Configured secure unprivileged non-root user execution (`USER fogoe` / `USER nonroot`).
 
+2. **Built-in Container Healthchecks:**
+   - Injected container `HEALTHCHECK` directives into production Dockerfiles (`wget` spider check on Alpine, native `node -e http.get` one-liner on Debian and Ubuntu) for orchestrator readiness verification.
 
+3. **Development Dockerfile (`Dockerfile.dev`):**
+   - Added dedicated development container generation configured for live hot reloading (`npm run dev` / `bun run dev`) alongside production Dockerfiles.
 
+4. **Stack-Aware Docker Compose Generator (`fogoe compose`):**
+   - Implemented `src/ci/compose.js` generating complete multi-container `docker-compose.yml` configurations with service orchestration, container port mapping, persistent named volumes, and bridge network `fogoe-network`:
+     - PostgreSQL (`postgres:16-alpine` + `pg_isready` healthcheck)
+     - MongoDB (`mongo:7-jammy` + ping healthcheck)
+     - MySQL (`mysql:8` + `mysqladmin ping` healthcheck)
+     - Redis cache service (`redis:7-alpine` + ping healthcheck) when `redis` addon or dependency is present
+
+5. **Direct CLI Subcommands & Flags:**
+   - Added standalone commands: `fogoe docker` (prompts for Base OS), `fogoe compose` (generates stack-aware `docker-compose.yml`), and `fogoe ci`.
+   - Added CLI flags: `--docker-os <os>`, `--os <os>`, `--compose`, and `--no-compose`.
+   - Added plugin delegation for `compose` and `docker-compose` via `fogoe add compose`.
+
+6. **Documentation & Reference Updates:**
+   - Updated `docs/ci-docker.md` and `docs/cli.md` covering all new container commands, distributions, compose services, and flags.
+
+7. **Automated Test Suite Expansion:**
+   - Added unit and integration tests in `test/ci.test.js` covering multi-OS Dockerfile generation, development Dockerfile, and Docker Compose generation for databases and Redis, bringing passing automated test suite to 68 tests.

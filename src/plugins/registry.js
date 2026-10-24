@@ -79,7 +79,15 @@ const PLUGINS = {
     isSpecial: true,
   },
   docker: {
-    description: 'Docker — production multi-stage Dockerfile & .dockerignore',
+    description: 'Docker — multi-stage Dockerfile & .dockerignore (Alpine, Debian, Ubuntu, Distroless)',
+    isSpecial: true,
+  },
+  compose: {
+    description: 'Docker Compose — multi-container stack with app, database, and Redis',
+    isSpecial: true,
+  },
+  'docker-compose': {
+    description: 'Docker Compose — multi-container stack with app, database, and Redis',
     isSpecial: true,
   },
 };
