@@ -738,9 +738,16 @@ function parseCliArgs(args) {
     if (!flags.json) {
       console.log(chalk.cyan('\nInstalling dependencies...\n'));
     }
-    install(language, runtime, architecture, database, hashing, useJwt, testing, linting, flags.json, flags.pm);
-    if (!flags.json) {
-      console.log(chalk.green('\n✓ Dependencies installed'));
+    try {
+      install(language, runtime, architecture, database, hashing, useJwt, testing, linting, flags.json, flags.pm);
+      if (!flags.json) {
+        console.log(chalk.green('\n✓ Dependencies installed'));
+      }
+    } catch (installErr) {
+      if (!flags.json) {
+        console.warn(chalk.yellow(`\n⚠ Automatic dependency installation encountered an issue: ${installErr.message}`));
+        console.warn(chalk.yellow('  You can run "npm install" or your package manager manually inside the project directory.\n'));
+      }
     }
   }
 

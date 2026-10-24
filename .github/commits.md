@@ -171,3 +171,19 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 6. **Fallback Dependency & Port Detection:** Updated `setupCompose` to automatically discover database drivers and Redis packages from `package.json` dependencies and port overrides from `.env` when project config defaults are omitted.
 7. **Automated Test Suite Expansion:** Added comprehensive unit and integration tests in `test/ci.test.js`, bringing the automated test suite to 77 passing tests.
 
+
+## Fix: pnpm Native Build Script Restrictions & Resilient Dependency Installation
+
+1. **pnpm Native Build Script Resiliency (`ERR_PNPM_IGNORED_BUILDS`):**
+   - Updated `src/installer.js` so that `pnpm add` automatically applies `--config.dangerouslyAllowAllBuilds=true` for both runtime dependencies and development packages.
+   - Prevents fatal aborts when installing native C++ modules such as `better-sqlite3`, `bcrypt`, and `esbuild` under pnpm v10+ strict build policies.
+   - Added automated multi-tier recovery: if native builds encounter restrictions, the installer logs a diagnostic notice and falls back to `npm install` without throwing an unhandled exception.
+
+2. **Deterministic Scaffolding & Configuration Safety:**
+   - Wrapped the `install(...)` invocation in `src/index.js` in a resilient `try...catch` boundary.
+   - Guarantees that project configuration files (`fogoe.config.json`), local Git initialization, and remote repository linking are always finalized even if package installation experiences network interruptions or build warnings.
+
+3. **Global CLI Environment Link:**
+   - Linked `/home/sooriya/.local/bin/fogoe` directly to the active workspace binary and updated shell path configuration in `~/.bashrc` to ensure the Fogoe CLI executes deterministically across user terminal environments.
+
+

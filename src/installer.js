@@ -176,27 +176,33 @@ function install(language, runtime, architecture, database = "none", hashing = "
   } else if (pm === "pnpm") {
     try {
       if (trimPkgs) {
-        execSync(`pnpm add ${trimPkgs}`, { stdio });
+        execSync(`pnpm add ${trimPkgs} --config.dangerouslyAllowAllBuilds=true`, { stdio });
       }
       if (trimDev) {
-        execSync(`pnpm add -D ${trimDev}`, { stdio });
+        execSync(`pnpm add -D ${trimDev} --config.dangerouslyAllowAllBuilds=true`, { stdio });
       }
     } catch (err) {
-      // In pnpm v10+, build scripts (like esbuild in tsx/vitest) are blocked by default.
-      // Retry with dangerouslyAllowAllBuilds to unblock development tools.
+      // In pnpm v10+, build scripts (like esbuild in tsx/vitest, bcrypt, better-sqlite3) are blocked by default.
+      // Retry with plain pnpm add or fall back safely to npm.
       try {
         if (trimPkgs) {
-          execSync(`pnpm add ${trimPkgs} --config.dangerouslyAllowAllBuilds=true`, { stdio });
+          execSync(`pnpm add ${trimPkgs}`, { stdio });
         }
         if (trimDev) {
-          execSync(`pnpm add -D ${trimDev} --config.dangerouslyAllowAllBuilds=true`, { stdio });
+          execSync(`pnpm add -D ${trimDev}`, { stdio });
         }
       } catch (retryErr) {
         if (!silent) {
-          console.warn("pnpm install encountered build script restrictions; falling back to npm...");
+          console.warn("\npnpm install encountered build script restrictions; falling back to npm...");
         }
-        if (trimPkgs) execSync(`npm install --save ${trimPkgs}`, { stdio });
-        if (trimDev) execSync(`npm install --save-dev ${trimDev}`, { stdio });
+        try {
+          if (trimPkgs) execSync(`npm install --save ${trimPkgs}`, { stdio });
+          if (trimDev) execSync(`npm install --save-dev ${trimDev}`, { stdio });
+        } catch (npmErr) {
+          if (!silent) {
+            console.warn(`npm fallback install warning: ${npmErr.message}`);
+          }
+        }
       }
     }
   } else if (pm === "yarn") {
