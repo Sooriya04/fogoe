@@ -61,14 +61,16 @@ function normalizeDockerOs(os = 'alpine') {
  * @returns {string} Dockerfile content
  */
 function generateDockerfile(options = {}) {
+  const opts = options || {};
   const {
     language = 'javascript',
     pm = 'npm',
     port = '3000',
     os = 'alpine',
-  } = options;
+  } = opts;
 
   const targetOs = normalizeDockerOs(os);
+  const targetPort = String(port || '3000').trim();
   const isTs = language === 'typescript' || language === 'ts';
 
   // ── Bun Runtime ──────────────────────────────────────────────────────────
@@ -87,19 +89,19 @@ RUN bun install --frozen-lockfile || bun install
 FROM ${DOCKER_OS_OPTIONS.distroless.bunRunnerBase} AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=${port}
+ENV PORT=${targetPort}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-EXPOSE ${port}
+EXPOSE ${targetPort}
 CMD ["run", "start"]
 `;
     }
 
     const bunBase = targetOs === 'debian'
       ? DOCKER_OS_OPTIONS.debian.bunBase
-      : DOCKER_OS_OPTIONS.alpine.bunBase;
+      : (targetOs === 'ubuntu' ? DOCKER_OS_OPTIONS.ubuntu.bunBase : DOCKER_OS_OPTIONS.alpine.bunBase);
 
     return `# --- Bun Runtime Base (${DOCKER_OS_OPTIONS[targetOs].name}) ---
 FROM ${bunBase} AS base
@@ -114,14 +116,14 @@ RUN bun install --frozen-lockfile || bun install
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=${port}
+ENV PORT=${targetPort}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-EXPOSE ${port}
+EXPOSE ${targetPort}
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${port}/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${targetPort}/health || exit 1
 
 CMD ["bun", "run", "start"]
 `;
@@ -173,7 +175,7 @@ CMD ["bun", "run", "start"]
     lines.push(`FROM ${DOCKER_OS_OPTIONS.distroless.runnerBase} AS runner`);
     lines.push('WORKDIR /app');
     lines.push('ENV NODE_ENV=production');
-    lines.push(`ENV PORT=${port}`);
+    lines.push(`ENV PORT=${targetPort}`);
     lines.push('');
 
     if (isTs) {
@@ -186,7 +188,7 @@ CMD ["bun", "run", "start"]
     }
     lines.push('');
     lines.push('USER nonroot');
-    lines.push(`EXPOSE ${port}`);
+    lines.push(`EXPOSE ${targetPort}`);
     lines.push('');
 
     if (isTs) {
@@ -253,7 +255,7 @@ CMD ["bun", "run", "start"]
   lines.push('FROM base AS runner');
   lines.push('WORKDIR /app');
   lines.push('ENV NODE_ENV=production');
-  lines.push(`ENV PORT=${port}`);
+  lines.push(`ENV PORT=${targetPort}`);
   lines.push('');
 
   // System user setup
@@ -278,16 +280,16 @@ CMD ["bun", "run", "start"]
 
   lines.push('');
   lines.push('USER fogoe');
-  lines.push(`EXPOSE ${port}`);
+  lines.push(`EXPOSE ${targetPort}`);
   lines.push('');
 
   // Built-in container healthcheck
   if (targetOs === 'alpine') {
     lines.push('HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\');
-    lines.push(`  CMD wget --no-verbose --tries=1 --spider http://localhost:${port}/health || exit 1`);
+    lines.push(`  CMD wget --no-verbose --tries=1 --spider http://localhost:${targetPort}/health || exit 1`);
   } else {
     lines.push('HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\');
-    lines.push(`  CMD node -e "require('http').get('http://localhost:${port}/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" || exit 1`);
+    lines.push(`  CMD node -e "require('http').get('http://localhost:${targetPort}/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" || exit 1`);
   }
   lines.push('');
 
@@ -311,14 +313,16 @@ CMD ["bun", "run", "start"]
  * @returns {string}
  */
 function generateDevDockerfile(options = {}) {
+  const opts = options || {};
   const {
     language = 'javascript',
     pm = 'npm',
     port = '3000',
     os = 'alpine',
-  } = options;
+  } = opts;
 
   const targetOs = normalizeDockerOs(os);
+  const targetPort = String(port || '3000').trim();
   const osConfig = DOCKER_OS_OPTIONS[targetOs] || DOCKER_OS_OPTIONS.alpine;
   const baseImage = pm === 'bun' ? osConfig.bunBase : osConfig.nodeBase;
 
@@ -327,7 +331,7 @@ function generateDevDockerfile(options = {}) {
   lines.push(`FROM ${baseImage}`);
   lines.push('WORKDIR /app');
   lines.push('ENV NODE_ENV=development');
-  lines.push(`ENV PORT=${port}`);
+  lines.push(`ENV PORT=${targetPort}`);
   lines.push('');
 
   if (targetOs === 'alpine' && pm !== 'bun') {
@@ -352,11 +356,15 @@ function generateDevDockerfile(options = {}) {
   lines.push('');
 
   lines.push('COPY . .');
-  lines.push(`EXPOSE ${port}`);
+  lines.push(`EXPOSE ${targetPort}`);
   lines.push('');
 
   if (pm === 'bun') {
     lines.push('CMD ["bun", "run", "dev"]');
+  } else if (pm === 'pnpm') {
+    lines.push('CMD ["pnpm", "run", "dev"]');
+  } else if (pm === 'yarn') {
+    lines.push('CMD ["yarn", "run", "dev"]');
   } else {
     lines.push('CMD ["npm", "run", "dev"]');
   }

@@ -260,3 +260,142 @@ test('Plugins Registry: ci, docker, and compose are registered as special delega
   assert.ok(PLUGINS['docker-compose'], 'PLUGINS.docker-compose should exist');
   assert.strictEqual(PLUGINS['docker-compose'].isSpecial, true);
 });
+
+test('Docker Generator: Handles null, empty options, and invalid OS gracefully', () => {
+  const { generateDockerfile, normalizeDockerOs } = require('../src/ci/docker');
+
+  const dockerDefault = generateDockerfile(null);
+  assert.ok(dockerDefault.includes('node:20-alpine'));
+
+  const dockerEmpty = generateDockerfile({});
+  assert.ok(dockerEmpty.includes('node:20-alpine'));
+
+  const dockerInvalid = generateDockerfile({ os: 'unknown_bsd_os' });
+  assert.ok(dockerInvalid.includes('node:20-alpine'));
+
+  assert.strictEqual(normalizeDockerOs('  DEBIAN-slim '), 'debian');
+  assert.strictEqual(normalizeDockerOs('UBUNTU'), 'ubuntu');
+  assert.strictEqual(normalizeDockerOs('distroless'), 'distroless');
+});
+
+test('Docker Generator: Bun with Ubuntu distribution uses oven/bun:1', () => {
+  const { generateDockerfile, generateDevDockerfile } = require('../src/ci/docker');
+
+  const prodDocker = generateDockerfile({ pm: 'bun', os: 'ubuntu' });
+  assert.ok(prodDocker.includes('FROM oven/bun:1 AS base'));
+
+  const devDocker = generateDevDockerfile({ pm: 'bun', os: 'ubuntu' });
+  assert.ok(devDocker.includes('FROM oven/bun:1'));
+});
+
+test('Docker Generator: Distroless with JavaScript and custom port', () => {
+  const { generateDockerfile } = require('../src/ci/docker');
+
+  const dockerfile = generateDockerfile({
+    language: 'javascript',
+    pm: 'npm',
+    os: 'distroless',
+    port: 8080,
+  });
+
+  assert.ok(dockerfile.includes('ENV PORT=8080'));
+  assert.ok(dockerfile.includes('EXPOSE 8080'));
+  assert.ok(dockerfile.includes('USER nonroot'));
+  assert.ok(dockerfile.includes('CMD ["src/server.js"]'));
+  assert.strictEqual(dockerfile.includes('AS builder'), false, 'JS should not have builder stage in distroless');
+});
+
+test('Docker Generator: Development Dockerfile with pnpm and yarn', () => {
+  const { generateDevDockerfile } = require('../src/ci/docker');
+
+  const pnpmDocker = generateDevDockerfile({ pm: 'pnpm' });
+  assert.ok(pnpmDocker.includes('CMD ["pnpm", "run", "dev"]'));
+
+  const yarnDocker = generateDevDockerfile({ pm: 'yarn' });
+  assert.ok(yarnDocker.includes('CMD ["yarn", "run", "dev"]'));
+});
+
+test('Docker Compose: Sanitizes service names with spaces and special characters', () => {
+  const { generateDockerCompose } = require('../src/ci/compose');
+
+  const compose = generateDockerCompose({
+    name: 'My Awesome Service!!',
+    database: 'postgres',
+    redis: true,
+  });
+
+  assert.ok(compose.includes('container_name: my-awesome-service'));
+  assert.ok(compose.includes('container_name: my-awesome-service-db'));
+  assert.ok(compose.includes('container_name: my-awesome-service-redis'));
+});
+
+test('Docker Compose: MySQL and MongoDB include healthchecks and app conditions', () => {
+  const { generateDockerCompose } = require('../src/ci/compose');
+
+  const mysqlCompose = generateDockerCompose({ database: 'mysql' });
+  assert.ok(mysqlCompose.includes('mysqladmin'));
+  assert.ok(mysqlCompose.includes('condition: service_healthy'));
+
+  const mongoCompose = generateDockerCompose({ database: 'mongodb' });
+  assert.ok(mongoCompose.includes('mongosh'));
+  assert.ok(mongoCompose.includes('condition: service_healthy'));
+});
+
+test('Docker Compose: Handles SQLite and none databases without empty YAML blocks', () => {
+  const { generateDockerCompose } = require('../src/ci/compose');
+
+  const sqliteCompose = generateDockerCompose({ database: 'sqlite' });
+  assert.strictEqual(sqliteCompose.includes('db:'), false);
+  assert.strictEqual(sqliteCompose.includes('depends_on:'), false);
+  assert.strictEqual(sqliteCompose.includes('volumes:'), false);
+
+  const noneCompose = generateDockerCompose({ database: 'none', redis: false });
+  assert.strictEqual(noneCompose.includes('depends_on:'), false);
+  assert.strictEqual(noneCompose.includes('volumes:'), false);
+  assert.ok(noneCompose.includes('services:'));
+  assert.ok(noneCompose.includes('app:'));
+});
+
+test('Docker Compose: setupCompose inspects package.json dependencies as fallback', async () => {
+  const { setupCompose } = require('../src/ci/compose');
+
+  fs.mkdirSync(TEST_CI_DIR, { recursive: true });
+  fs.writeFileSync(
+    path.join(TEST_CI_DIR, 'package.json'),
+    JSON.stringify({
+      name: 'fallback-pkg-service',
+      dependencies: {
+        pg: '^8.11.0',
+        ioredis: '^5.3.0',
+      },
+    }, null, 2)
+  );
+  fs.writeFileSync(path.join(TEST_CI_DIR, '.env'), 'PORT=5000\n');
+
+  await setupCompose({ targetDir: TEST_CI_DIR, silent: true });
+
+  const compose = fs.readFileSync(path.join(TEST_CI_DIR, 'docker-compose.yml'), 'utf8');
+  assert.ok(compose.includes('container_name: fallback-pkg-service'));
+  assert.ok(compose.includes('"5000:5000"'));
+  assert.ok(compose.includes('postgres:16-alpine'));
+  assert.ok(compose.includes('redis:7-alpine'));
+});
+
+test('Docker Compose: setupCompose avoids duplicate compose in addons array', async () => {
+  const { setupCompose } = require('../src/ci/compose');
+
+  fs.mkdirSync(TEST_CI_DIR, { recursive: true });
+  fs.writeFileSync(
+    path.join(TEST_CI_DIR, 'fogoe.config.json'),
+    JSON.stringify({
+      name: 'unique-addon-test',
+      addons: ['compose'],
+    }, null, 2)
+  );
+
+  await setupCompose({ targetDir: TEST_CI_DIR, silent: true });
+
+  const cfg = JSON.parse(fs.readFileSync(path.join(TEST_CI_DIR, 'fogoe.config.json'), 'utf8'));
+  const occurrences = cfg.addons.filter(a => a === 'compose').length;
+  assert.strictEqual(occurrences, 1, 'Should not duplicate compose in addons');
+});

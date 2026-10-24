@@ -3,6 +3,19 @@ const path = require('path');
 const chalk = require('chalk');
 
 /**
+ * Sanitize service name to be a valid Docker container and compose service name
+ * @param {string} name
+ * @returns {string}
+ */
+function sanitizeServiceName(name) {
+  return String(name || 'fogoe-app')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9_.-]/g, '-')
+    .replace(/^-+|-+$/g, '') || 'fogoe-app';
+}
+
+/**
  * Generate production / standard docker-compose.yml tailored to project stack
  *
  * @param {Object} options
@@ -13,14 +26,18 @@ const chalk = require('chalk');
  * @returns {string} docker-compose.yml content
  */
 function generateDockerCompose(options = {}) {
+  const opts = options || {};
   const {
     name = 'fogoe-app',
     port = '3000',
     database = 'none',
     redis = false,
-  } = options;
+  } = opts;
 
-  const dbLower = String(database).toLowerCase();
+  const appName = sanitizeServiceName(name);
+  const targetPort = String(port || '3000').trim();
+
+  const dbLower = String(database || 'none').toLowerCase();
   const isPostgres = dbLower.includes('postgres') || dbLower.includes('drizzle') || dbLower.includes('prisma');
   const isMongo = dbLower.includes('mongo');
   const isMysql = dbLower.includes('mysql');
@@ -33,13 +50,13 @@ function generateDockerCompose(options = {}) {
   lines.push('    build:');
   lines.push('      context: .');
   lines.push('      dockerfile: Dockerfile');
-  lines.push(`    container_name: ${name}`);
+  lines.push(`    container_name: ${appName}`);
   lines.push('    restart: unless-stopped');
   lines.push('    ports:');
-  lines.push(`      - "${port}:${port}"`);
+  lines.push(`      - "${targetPort}:${targetPort}"`);
   lines.push('    environment:');
   lines.push('      - NODE_ENV=production');
-  lines.push(`      - PORT=${port}`);
+  lines.push(`      - PORT=${targetPort}`);
 
   if (isPostgres) {
     lines.push('      - DATABASE_URL=postgresql://fogoe:fogoe_password@db:5432/fogoe_db');
@@ -60,8 +77,11 @@ function generateDockerCompose(options = {}) {
   if (depends.length > 0) {
     lines.push('    depends_on:');
     for (const dep of depends) {
-      if (dep === 'db' && isPostgres) {
+      if (dep === 'db') {
         lines.push('      db:');
+        lines.push('        condition: service_healthy');
+      } else if (dep === 'redis') {
+        lines.push('      redis:');
         lines.push('        condition: service_healthy');
       } else {
         lines.push(`      - ${dep}`);
@@ -77,7 +97,7 @@ function generateDockerCompose(options = {}) {
   if (isPostgres) {
     lines.push('  db:');
     lines.push('    image: postgres:16-alpine');
-    lines.push(`    container_name: ${name}-db`);
+    lines.push(`    container_name: ${appName}-db`);
     lines.push('    restart: unless-stopped');
     lines.push('    environment:');
     lines.push('      POSTGRES_USER: fogoe');
@@ -98,7 +118,7 @@ function generateDockerCompose(options = {}) {
   } else if (isMongo) {
     lines.push('  db:');
     lines.push('    image: mongo:7-jammy');
-    lines.push(`    container_name: ${name}-db`);
+    lines.push(`    container_name: ${appName}-db`);
     lines.push('    restart: unless-stopped');
     lines.push('    environment:');
     lines.push('      MONGO_INITDB_ROOT_USERNAME: fogoe');
@@ -107,13 +127,18 @@ function generateDockerCompose(options = {}) {
     lines.push('      - "27017:27017"');
     lines.push('    volumes:');
     lines.push('      - mongo_data:/data/db');
+    lines.push('    healthcheck:');
+    lines.push('      test: ["CMD", "mongosh", "--eval", "db.adminCommand(\'ping\')", "-u", "fogoe", "-p", "fogoe_password"]');
+    lines.push('      interval: 10s');
+    lines.push('      timeout: 5s');
+    lines.push('      retries: 5');
     lines.push('    networks:');
     lines.push('      - fogoe-network');
     lines.push('');
   } else if (isMysql) {
     lines.push('  db:');
     lines.push('    image: mysql:8');
-    lines.push(`    container_name: ${name}-db`);
+    lines.push(`    container_name: ${appName}-db`);
     lines.push('    restart: unless-stopped');
     lines.push('    environment:');
     lines.push('      MYSQL_ROOT_PASSWORD: fogoe_password');
@@ -136,7 +161,7 @@ function generateDockerCompose(options = {}) {
   if (redis) {
     lines.push('  redis:');
     lines.push('    image: redis:7-alpine');
-    lines.push(`    container_name: ${name}-redis`);
+    lines.push(`    container_name: ${appName}-redis`);
     lines.push('    restart: unless-stopped');
     lines.push('    ports:');
     lines.push('      - "6379:6379"');
@@ -184,10 +209,11 @@ function generateDockerCompose(options = {}) {
  * @returns {Promise<Object>}
  */
 async function setupCompose(options = {}) {
+  const opts = options || {};
   const {
     targetDir = process.cwd(),
     silent = false,
-  } = options;
+  } = opts;
 
   let projectName = path.basename(targetDir);
   let database = 'none';
@@ -203,6 +229,33 @@ async function setupCompose(options = {}) {
       if (cfg.addons && Array.isArray(cfg.addons)) {
         if (cfg.addons.includes('redis')) redis = true;
       }
+    } catch {}
+  }
+
+  // Fallback: inspect package.json if database or redis not explicitly set in config
+  const pkgPath = path.join(targetDir, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (pkg.name && projectName === path.basename(targetDir)) projectName = pkg.name;
+      const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+      if (deps['ioredis'] || deps['redis']) redis = true;
+      if (database === 'none') {
+        if (deps['pg'] || deps['drizzle-orm'] || deps['@prisma/client']) database = 'postgres';
+        else if (deps['mongoose'] || deps['mongodb']) database = 'mongodb';
+        else if (deps['mysql2'] || deps['mysql']) database = 'mysql';
+        else if (deps['better-sqlite3']) database = 'sqlite';
+      }
+    } catch {}
+  }
+
+  // Detect port from .env if present
+  const envPath = path.join(targetDir, '.env');
+  if (fs.existsSync(envPath)) {
+    try {
+      const envContent = fs.readFileSync(envPath, 'utf8');
+      const portMatch = envContent.match(/PORT=(\d+)/);
+      if (portMatch) port = portMatch[1];
     } catch {}
   }
 
@@ -239,4 +292,5 @@ async function setupCompose(options = {}) {
 module.exports = {
   generateDockerCompose,
   setupCompose,
+  sanitizeServiceName,
 };

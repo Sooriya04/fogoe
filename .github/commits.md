@@ -159,3 +159,15 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 
 7. **Automated Test Suite Expansion:**
    - Added unit and integration tests in `test/ci.test.js` covering multi-OS Dockerfile generation, development Dockerfile, and Docker Compose generation for databases and Redis, bringing passing automated test suite to 68 tests.
+
+
+## Hardening: Container Healthchecks, Service Name Sanitization & Runtime Distributions
+
+1. **Service Name Sanitization:** Implemented `sanitizeServiceName()` to convert project names containing whitespace or special characters into valid Docker container and compose service identifiers.
+2. **Synchronized Container Healthchecks:** Configured `depends_on` conditions with `condition: service_healthy` for PostgreSQL, MongoDB, MySQL, and Redis services to prevent application boot race conditions and connection refused errors.
+3. **MongoDB Healthcheck Probe:** Injected native `mongosh` admin ping probe into MongoDB compose services.
+4. **Development Container Package Manager Support:** Updated `Dockerfile.dev` generation to output `pnpm run dev`, `yarn run dev`, `bun run dev`, or `npm run dev` according to the active package manager.
+5. **Bun on Ubuntu Base Image:** Configured Bun runtime generation on Ubuntu distributions to use official `oven/bun:1` image.
+6. **Fallback Dependency & Port Detection:** Updated `setupCompose` to automatically discover database drivers and Redis packages from `package.json` dependencies and port overrides from `.env` when project config defaults are omitted.
+7. **Automated Test Suite Expansion:** Added comprehensive unit and integration tests in `test/ci.test.js`, bringing the automated test suite to 77 passing tests.
+
