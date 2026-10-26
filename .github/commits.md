@@ -187,3 +187,22 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Linked `/home/sooriya/.local/bin/fogoe` directly to the active workspace binary and updated shell path configuration in `~/.bashrc` to ensure the Fogoe CLI executes deterministically across user terminal environments.
 
 
+## Release v1.2.0 — Multi-Distribution Docker Base OS, Stack-Aware Compose & Documentation Sync
+
+1. **Version Bump to v1.2.0:** Bumped package version in `package.json` and `package-lock.json` to trigger the automated npm release workflow upon push to `main`.
+2. **Developer Documentation Site Update (`site/docs.html`):**
+   - Added dedicated **Docker & Container Orchestration** documentation section with sidebar navigation links.
+   - Documented `fogoe docker` with interactive Base OS selection (Alpine, Debian Slim, Ubuntu, Distroless), non-root unprivileged security, healthcheck probes, and hot-reloading `Dockerfile.dev`.
+   - Documented `fogoe compose` with stack-aware database (PostgreSQL, MongoDB, MySQL) and Redis orchestration, persistent named volumes, and synchronized boot healthchecks.
+   - Documented standard developer container runtime workflow (`docker compose up -d`, `docker compose ps`, `docker compose logs -f app`, `docker compose down`).
+   - Updated CLI Commands and Flags reference tables with `--docker-os` and `--compose`.
+   - Added container runtime architecture and pnpm native build script answers to Troubleshooting & FAQ.
+   - Updated roadmap from Docker Compose to Kubernetes & Helm manifests (`fogoe add k8s`).
+3. **Showcase Landing Page (`site/index.html`):**
+   - Updated release hero banner and version badges to v1.2.0.
+   - Added Multi-OS Docker & Compose featured spotlight card to the comprehensive guides section.
+4. **README Synchronization:** Updated Primary Commands and Essential Flags reference tables.
+
+
+
+

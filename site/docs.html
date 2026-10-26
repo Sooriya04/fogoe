@@ -946,7 +946,7 @@
           <span>fogoe</span>
         </a>
         <span class="docs-badge">Docs</span>
-        <span class="version-tag">v1.1.2</span>
+        <span class="version-tag">v1.2.0</span>
       </div>
 
       <div class="nav-center">
@@ -1045,6 +1045,16 @@
           <li><a href="#auth-security" class="sidebar-link">Authentication &amp; Security</a></li>
           <li><a href="#git-github" class="sidebar-link">Git &amp; GitHub Automation</a></li>
           <li><a href="#testing-quality" class="sidebar-link">Testing &amp; Code Quality</a></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">DevOps &amp; Containers</div>
+        <ul class="sidebar-links">
+          <li><a href="#docker-containers" class="sidebar-link">Containerization Suite <span class="sidebar-pill">v1.2</span></a></li>
+          <li><a href="#docker-distros" class="sidebar-link">Multi-OS Dockerfile</a></li>
+          <li><a href="#compose-orchestration" class="sidebar-link">Stack-Aware Compose</a></li>
+          <li><a href="#container-workflow" class="sidebar-link">Developer Runtime Guide</a></li>
         </ul>
       </div>
 
@@ -1190,7 +1200,7 @@
           </div>
           <div class="code-content"><span class="prompt-char">$</span> npx fogoe create payment-api
 
-<span style="color:#38bdf8;">◇</span>  <span style="font-weight:700;">Welcome to Fogoe v1.1.2</span>
+<span style="color:#38bdf8;">◇</span>  <span style="font-weight:700;">Welcome to Fogoe v1.2.0</span>
 <span style="color:#71717a;">│</span>
 <span style="color:#38bdf8;">◇</span>  Select web framework › <span style="color:#34d399;">Fastify</span> (High-performance API)
 <span style="color:#38bdf8;">◇</span>  Select language      › <span style="color:#34d399;">TypeScript</span> (Strict NodeNext ESM)
@@ -1286,18 +1296,23 @@
               </tr>
               <tr>
                 <td><code>fogoe add [plugin]</code></td>
-                <td><code>ci</code>, <code>docker</code>, <code>redis</code>, <code>zod</code>, <code>mailer</code>, <code>stripe</code>, <code>ratelimit</code>, <code>swagger</code>, <code>socket</code></td>
+                <td><code>ci</code>, <code>docker</code>, <code>compose</code>, <code>redis</code>, <code>zod</code>, <code>mailer</code>, <code>stripe</code>, <code>ratelimit</code>, <code>swagger</code>, <code>socket</code></td>
                 <td>Installs and integrates modular backend capabilities or DevOps pipelines into an existing project.</td>
               </tr>
               <tr>
-                <td><code>fogoe add ci</code></td>
-                <td>—</td>
-                <td>Generates automated GitHub Actions workflow (<code>.github/workflows/ci.yml</code>) tailored to your tech stack.</td>
+                <td><code>fogoe docker</code></td>
+                <td><code>[--docker-os &lt;os&gt;]</code></td>
+                <td>Generates production multi-distribution <code>Dockerfile</code> (Alpine, Debian Slim, Ubuntu, Distroless) and <code>.dockerignore</code>.</td>
               </tr>
               <tr>
-                <td><code>fogoe add docker</code></td>
+                <td><code>fogoe compose</code></td>
                 <td>—</td>
-                <td>Generates production-grade multi-stage <code>Dockerfile</code> and comprehensive <code>.dockerignore</code>.</td>
+                <td>Generates stack-aware <code>docker-compose.yml</code> tailored to your database (PostgreSQL, MongoDB, MySQL) and Redis cache.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe ci</code></td>
+                <td><code>[--deploy &lt;target&gt;]</code></td>
+                <td>Generates automated GitHub Actions workflow (<code>.github/workflows/ci.yml</code>) tailored to your tech stack.</td>
               </tr>
               <tr>
                 <td><code>fogoe status</code></td>
@@ -1464,6 +1479,20 @@
                 <td>Boolean</td>
                 <td><code>false</code></td>
                 <td>Generates production multi-stage <code>Dockerfile</code> and <code>.dockerignore</code>.</td>
+              </tr>
+              <tr>
+                <td><code>--docker-os</code></td>
+                <td><code>--os</code></td>
+                <td><code>alpine</code>, <code>debian</code>, <code>ubuntu</code>, <code>distroless</code></td>
+                <td><code>alpine</code></td>
+                <td>Sets container Linux base distribution (Alpine, Debian Slim, Ubuntu, Distroless).</td>
+              </tr>
+              <tr>
+                <td><code>--compose</code> / <code>--no-compose</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Generates stack-tailored <code>docker-compose.yml</code> for application, database, and Redis.</td>
               </tr>
               <tr>
                 <td><code>--deploy</code></td>
@@ -1988,7 +2017,155 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
         </div>
       </section>
 
-      <!-- 17. PLUGINS ECOSYSTEM -->
+      <!-- 17. DOCKER & CONTAINER ORCHESTRATION -->
+      <section id="docker-containers" class="doc-section">
+        <div class="doc-badge-row">
+          <span class="doc-badge">DevOps Suite</span>
+          <span class="doc-badge" style="color: var(--accent-purple); background: rgba(192, 132, 252, 0.12); border-color: rgba(192, 132, 252, 0.3);">v1.2.0</span>
+        </div>
+        <h1 class="doc-title">Docker &amp; Container Orchestration</h1>
+        <p class="doc-lead">
+          Fogoe provides automated, security-hardened containerization pipelines. Generate production-ready multi-stage Dockerfiles across 4 distinct Linux distributions, and scaffold stack-tailored Docker Compose environments with synchronized database healthchecks.
+        </p>
+
+        <h2 class="doc-h2" id="docker-distros">
+          <span>Multi-Distribution Dockerfiles (fogoe docker)</span>
+          <a href="#docker-distros" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          Scaffold multi-stage container assets on demand with <code>fogoe docker</code> or by passing <code>--docker</code> during project creation. Fogoe supports 4 distinct base Linux distributions via <code>--docker-os &lt;distribution&gt;</code>:
+        </p>
+
+        <div class="doc-grid-2">
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Alpine Linux (Default)</h4>
+              <span class="doc-card-badge">--docker-os alpine</span>
+            </div>
+            <p>Ultra-compact musl-based container image. Delivers minimal footprint (~150MB image size) ideal for cloud deployments, serverless containers, and low-latency transfer times.</p>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Debian Bookworm Slim</h4>
+              <span class="doc-card-badge">--docker-os debian</span>
+            </div>
+            <p>Official glibc runtime baseline. Recommended when working with native C/C++ bindings (such as <code>bcrypt</code>, <code>better-sqlite3</code>, <code>canvas</code>, or Sharp) to ensure flawless pre-compiled binary execution.</p>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Ubuntu Noble</h4>
+              <span class="doc-card-badge">--docker-os ubuntu</span>
+            </div>
+            <p>Canonical LTS enterprise environment based on Ubuntu 24.04 Noble Numbat. Compatible with enterprise compliance baselines, system packages, and proprietary cloud dependencies.</p>
+          </div>
+          <div class="doc-card">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Google Distroless</h4>
+              <span class="doc-card-badge">--docker-os distroless</span>
+            </div>
+            <p>Maximum security posture. Distroless containers contain only your application runtime without package managers, shells, or auxiliary utilities, dramatically shrinking the CVE attack surface.</p>
+          </div>
+        </div>
+
+        <h3 class="doc-h3">Production Hardening &amp; Development Hot Reloading</h3>
+        <p class="doc-p">
+          Fogoe's Docker generator produces both a production <code>Dockerfile</code> and a live development container <code>Dockerfile.dev</code>:
+        </p>
+        <ul class="doc-ul">
+          <li><strong>Multi-Stage Caching:</strong> Separates dependency installation, TypeScript compilation, and runtime packaging into isolated cache layers for lightning-fast incremental builds.</li>
+          <li><strong>Unprivileged Non-Root Execution:</strong> Production images drop root permissions and execute as <code>appuser</code> (or <code>nonroot:nonroot</code> on Distroless) for container security.</li>
+          <li><strong>Native Healthchecks:</strong> Automatically injects <code>HEALTHCHECK --interval=30s --timeout=3s</code> probes to monitor the application endpoint.</li>
+          <li><strong>Local Hot Reloading (<code>Dockerfile.dev</code>):</strong> Leverages volume mounts to enable source code synchronization with active package manager dev scripts (<code>npm run dev</code>, <code>pnpm run dev</code>, <code>bun run dev</code>).</li>
+        </ul>
+
+        <h2 class="doc-h2" id="compose-orchestration">
+          <span>Stack-Aware Docker Compose (fogoe compose)</span>
+          <a href="#compose-orchestration" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          Run <code>fogoe compose</code> in any existing Fogoe project (or pass <code>--compose</code> to <code>fogoe create</code>). Fogoe inspects your project metadata, database drivers, ORM configuration, and cache services to generate a customized <code>docker-compose.yml</code>:
+        </p>
+        <ul class="doc-ul">
+          <li><strong>Database Engine Provisioning:</strong> Configures official Docker images matching your project:
+            <ul style="margin-left: 20px; margin-top: 6px;">
+              <li><strong>PostgreSQL:</strong> <code>postgres:16-alpine</code> with <code>pg_isready</code> healthcheck probe and named volume <code>postgres_data</code>.</li>
+              <li><strong>MongoDB:</strong> <code>mongo:7-jammy</code> with <code>mongosh</code> ping probe and named volume <code>mongo_data</code>.</li>
+              <li><strong>MySQL:</strong> <code>mysql:8</code> with <code>mysqladmin ping</code> probe and named volume <code>mysql_data</code>.</li>
+              <li><strong>Redis:</strong> <code>redis:7-alpine</code> with <code>redis-cli ping</code> probe and named volume <code>redis_data</code>.</li>
+            </ul>
+          </li>
+          <li><strong>Synchronized Boot Dependencies:</strong> The application service uses <code>condition: service_healthy</code> on its dependencies, ensuring database initialization completes before the Node server starts.</li>
+          <li><strong>Environment &amp; Networking:</strong> Injects variables from <code>.env</code> and orchestrates services on a dedicated private bridge network (<code>app-network</code>).</li>
+        </ul>
+
+        <div class="callout callout-info">
+          <div class="callout-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            Separation of Concerns: Environment Scaffolding vs. Container Runtime
+          </div>
+          Fogoe generates and configures your container architecture, but intentionally does not usurp your Docker daemon. Developers retain full ownership and execute standard Docker commands to manage their runtime environments.
+        </div>
+
+        <h2 class="doc-h2" id="container-workflow">
+          <span>Developer Runtime Workflow</span>
+          <a href="#container-workflow" class="anchor-link">#</a>
+        </h2>
+        <p class="doc-p">
+          Once Fogoe has generated your Docker and Compose configurations, run your stack using standard Docker CLI commands:
+        </p>
+
+        <h3 class="doc-h3">1. Launch Services in Detached Mode</h3>
+        <p class="doc-p">Starts your application and all database/cache dependencies in the background:</p>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> docker compose up -d</div>
+        </div>
+
+        <h3 class="doc-h3">2. Inspect Container Status &amp; Health Probes</h3>
+        <p class="doc-p">Check running containers and verify that health checks report <code>healthy</code>:</p>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> docker compose ps</div>
+        </div>
+
+        <h3 class="doc-h3">3. Stream Application Logs</h3>
+        <p class="doc-p">Follow real-time HTTP server logs and database connection queries:</p>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> docker compose logs -f app</div>
+        </div>
+
+        <h3 class="doc-h3">4. Rebuild After Dependency Changes</h3>
+        <p class="doc-p">When modifying <code>package.json</code> or adding native plugins, rebuild the container image:</p>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> docker compose up -d --build</div>
+        </div>
+
+        <h3 class="doc-h3">5. Stop and Clean Up Services</h3>
+        <p class="doc-p">Gracefully stops containers while preserving database volume data:</p>
+        <div class="code-block">
+          <div class="code-block-header">
+            <span class="code-lang-tag">bash</span>
+            <button class="copy-btn" onclick="copySnippet(this)">Copy</button>
+          </div>
+          <div class="code-content"><span class="prompt-char">$</span> docker compose down</div>
+        </div>
+      </section>
+
+      <!-- 18. PLUGINS ECOSYSTEM -->
       <section id="plugins-overview" class="doc-section">
         <div class="doc-badge-row">
           <span class="doc-badge">Extensions</span>
@@ -2050,15 +2227,22 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
           </div>
           <div class="doc-card" id="plugin-docker">
             <div class="doc-card-header">
-              <h4 class="doc-card-title">Docker Multi-Stage</h4>
-              <span class="doc-card-badge">fogoe add docker</span>
+              <h4 class="doc-card-title">Docker Multi-Distribution</h4>
+              <span class="doc-card-badge">fogoe docker</span>
             </div>
-            <p>Generates production-ready, security-hardened Alpine multi-stage <code>Dockerfile</code> and comprehensive <code>.dockerignore</code>.</p>
+            <p>Generates production multi-stage <code>Dockerfile</code>, development container (<code>Dockerfile.dev</code>), and <code>.dockerignore</code>. Supports Alpine Linux, Debian Slim, Ubuntu, and Google Distroless with unprivileged non-root execution and healthcheck probes.</p>
+          </div>
+          <div class="doc-card" id="plugin-compose">
+            <div class="doc-card-header">
+              <h4 class="doc-card-title">Docker Compose Multi-Container</h4>
+              <span class="doc-card-badge">fogoe compose</span>
+            </div>
+            <p>Generates complete <code>docker-compose.yml</code> tailored to your project. Orchestrates PostgreSQL (16-alpine), MongoDB (7-jammy), MySQL (8), or Redis (7-alpine) with persistent named volumes, isolated bridge network, and synchronized healthcheck boot probes.</p>
           </div>
         </div>
       </section>
 
-      <!-- 18. UPCOMING FEATURES & ROADMAP -->
+      <!-- 19. UPCOMING FEATURES & ROADMAP -->
       <section id="upcoming-features" class="doc-section">
         <div class="doc-badge-row">
           <span class="doc-badge" style="color: var(--accent-purple); background: rgba(192, 132, 252, 0.12); border-color: rgba(192, 132, 252, 0.3);">Roadmap</span>
@@ -2071,16 +2255,16 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
         <div class="doc-grid-2">
           <div class="doc-card">
             <div class="doc-card-header">
-              <h4 class="doc-card-title">1. Docker Compose Multi-Container</h4>
-              <span class="doc-card-badge">fogoe add docker-compose</span>
+              <h4 class="doc-card-title">1. Kubernetes Manifests &amp; Helm Charts</h4>
+              <span class="doc-card-badge">fogoe add k8s</span>
             </div>
             <p style="margin-bottom: 10px;">
-              Automatically generate full multi-container <code>docker-compose.yml</code> configurations tailored to your chosen stack and services.
+              Automated generation of production-ready Kubernetes deployment manifests, service definitions, ConfigMaps, and Helm charts tailored to Fogoe backends.
             </p>
             <ul class="doc-ul" style="margin-left: 16px; margin-bottom: 0; font-size: 0.84rem;">
-              <li>Pre-configured database containers (PostgreSQL, MongoDB, Redis, MySQL) with persistent storage volumes.</li>
-              <li>Network orchestration linking app container with databases and cache tiers.</li>
-              <li>Integrated health check directives and environment file injection.</li>
+              <li>Zero-friction Deployment, Service, and Ingress YAML definitions with resource requests and limits.</li>
+              <li>Horizontal Pod Autoscaler (HPA) and rolling update configurations.</li>
+              <li>SealedSecrets / ExternalSecrets integration for safe credential injection.</li>
             </ul>
           </div>
 
@@ -2131,7 +2315,7 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
         </div>
       </section>
 
-      <!-- 19. TROUBLESHOOTING & FAQ -->
+      <!-- 20. TROUBLESHOOTING & FAQ -->
       <section id="troubleshooting" class="doc-section">
         <h2 class="doc-h2" id="faq-section">
           <span>Troubleshooting &amp; FAQ</span>
@@ -2143,7 +2327,26 @@ router.<span class="fn">delete</span>(<span class="str">"/:id"</span>, productCo
           No. You can run Fogoe directly on demand with <code>npx fogoe</code>, <code>pnpm dlx fogoe</code>, <code>bunx fogoe</code>, or <code>yarn dlx fogoe</code>.
         </p>
 
+        <h3 class="doc-h3">Q: Does Fogoe run docker compose up for me?</h3>
+        <p class="doc-p">
+          No. Fogoe is an environment scaffold and code generator. It crafts production-grade <code>Dockerfile</code> and <code>docker-compose.yml</code> assets tailored to your stack, but leaves container runtime lifecycle (such as <code>docker compose up -d</code>) under developer control.
+        </p>
+
+        <h3 class="doc-h3">Q: How does Fogoe handle pnpm build script approvals for native C++ modules?</h3>
+        <p class="doc-p">
+          Fogoe automatically passes <code>--config.dangerouslyAllowAllBuilds=true</code> during <code>pnpm</code> installations and provides multi-tier fallback to <code>npm</code>, preventing <code>[ERR_PNPM_IGNORED_BUILDS]</code> errors when installing packages with native C++ compilation steps (such as <code>better-sqlite3</code> and <code>bcrypt</code>).
+        </p>
+
         <h3 class="doc-h3">Q: Why does Fogoe use on-disk templates instead of embedded template strings?</h3>
+        <p class="doc-p">
+          Embedded string templates often suffer from syntax errors, difficult formatting, and escaping issues. Fogoe keeps pure, syntax-checked template files on disk, ensuring atomic and deterministic file generation every time.
+        </p>
+
+        <h3 class="doc-h3">Q: How do I run my generated project?</h3>
+        <p class="doc-p">
+          Navigate to your project directory and run <code>npm run dev</code> for hot-reloading development or <code>npm run build &amp;&amp; npm start</code> for production builds.
+        </p>
+      </section>
         <p class="doc-p">
           Embedded string templates often suffer from syntax errors, difficult formatting, and escaping issues. Fogoe keeps pure, syntax-checked template files on disk, ensuring atomic and deterministic file generation every time.
         </p>

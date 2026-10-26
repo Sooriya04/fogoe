@@ -77,10 +77,13 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `fogoe [name]` | Interactive project initializer |
 | `fogoe create <name> [flags]` | Scaffold project into a named directory |
 | `fogoe create <name> --ai "<prompt>"` | AI-assisted scaffolding from plain English description |
+| `fogoe docker` | Generate multi-distribution Dockerfile (Alpine, Debian, Ubuntu, Distroless) |
+| `fogoe compose` | Generate stack-aware `docker-compose.yml` for app, database, and Redis |
+| `fogoe ci` | Generate stack-aware GitHub Actions CI/CD pipeline |
 | `fogoe generate <type> <name>` | Generate MVC components (`route`, `controller`, `model`, `crud`) |
 | `fogoe g crud <name>` | Generate complete 3-layer vertical slice (Model + Controller + Routes) |
 | `fogoe doctor [--fix]` | Audit project health, configuration integrity, and safe auto-repair |
-| `fogoe add [plugin]` | Add extensions: `ci`, `docker`, `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
+| `fogoe add [plugin]` | Add extensions: `ci`, `docker`, `compose`, `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
 | `fogoe status` | Display project configuration, Git state, CI/CD, and Docker status |
 | `fogoe update` | Upgrade all project dependencies to their latest compatible versions |
 | `fogoe init` | Initialize Git repository and link with remote |
@@ -101,6 +104,8 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `--fix` | — | boolean | `false` | Safe auto-repair in `fogoe doctor` |
 | `--ci` | — | boolean | `false` | Generate GitHub Actions pipeline |
 | `--docker` | — | boolean | `false` | Generate production Dockerfile |
+| `--docker-os` | `--os` | `alpine`, `debian`, `ubuntu`, `distroless` | `alpine` | Base container OS distribution |
+| `--compose` | — | boolean | `false` | Generate stack-aware `docker-compose.yml` |
 | `--deploy` | — | `dockerhub`, `fly`, `railway`, `render`, `none` | `none` | Deployment preset |
 | `--install` | `-i` | boolean | `false` | Auto-install dependencies |
 | `--pm` | — | `npm`, `pnpm`, `bun`, `yarn` | `npm` | Preferred package manager |
