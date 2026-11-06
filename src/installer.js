@@ -1,4 +1,4 @@
-const { execSync } = require("child_process");
+const { execSync, execFileSync } = require("child_process");
 
 // Database package mapping
 const dbPackages = {
@@ -156,63 +156,91 @@ function install(language, runtime, architecture, database = "none", hashing = "
 
   const trimPkgs = packages.trim();
   const trimDev = devPackages.trim();
+  installPackageList({ packages: trimPkgs, devPackages: trimDev, pm, silent });
+}
+
+/**
+ * Universal safe package installer helper.
+ * Uses execFileSync with discrete argument arrays to prevent shell injection.
+ */
+function installPackageList({ packages = "", devPackages = "", pm = null, silent = false }) {
+  const activePm = pm || getPackageManager();
   const stdio = silent ? "ignore" : "inherit";
 
-  // Run separate commands for runtime dependencies and devDependencies
-  if (pm === "npm") {
-    if (trimPkgs) {
-      execSync(`npm install --save ${trimPkgs}`, { stdio });
-    }
-    if (trimDev) {
-      execSync(`npm install --save-dev ${trimDev}`, { stdio });
-    }
-  } else if (pm === "bun") {
-    if (trimPkgs) {
-      execSync(`bun add ${trimPkgs}`, { stdio });
-    }
-    if (trimDev) {
-      execSync(`bun add -d ${trimDev}`, { stdio });
-    }
-  } else if (pm === "pnpm") {
+  const splitPkgs = (typeof packages === "string" ? packages.split(" ") : packages).filter(Boolean);
+  const splitDev = (typeof devPackages === "string" ? devPackages.split(" ") : devPackages).filter(Boolean);
+
+  if (splitPkgs.length === 0 && splitDev.length === 0) return;
+
+  const runCmd = (cmd, args) => {
     try {
-      if (trimPkgs) {
-        execSync(`pnpm add ${trimPkgs} --config.dangerouslyAllowAllBuilds=true`, { stdio });
-      }
-      if (trimDev) {
-        execSync(`pnpm add -D ${trimDev} --config.dangerouslyAllowAllBuilds=true`, { stdio });
-      }
-    } catch (err) {
-      // In pnpm v10+, build scripts (like esbuild in tsx/vitest, bcrypt, better-sqlite3) are blocked by default.
-      // Retry with plain pnpm add or fall back safely to npm.
-      try {
-        if (trimPkgs) {
-          execSync(`pnpm add ${trimPkgs}`, { stdio });
-        }
-        if (trimDev) {
-          execSync(`pnpm add -D ${trimDev}`, { stdio });
-        }
-      } catch (retryErr) {
+      execFileSync(cmd, args, { stdio });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  if (activePm === "npm") {
+    if (splitPkgs.length > 0) runCmd("npm", ["install", "--save", ...splitPkgs]);
+    if (splitDev.length > 0) runCmd("npm", ["install", "--save-dev", ...splitDev]);
+  } else if (activePm === "bun") {
+    if (splitPkgs.length > 0) runCmd("bun", ["add", ...splitPkgs]);
+    if (splitDev.length > 0) runCmd("bun", ["add", "-d", ...splitDev]);
+  } else if (activePm === "pnpm") {
+    let success = true;
+    if (splitPkgs.length > 0) {
+      success = runCmd("pnpm", ["add", ...splitPkgs, "--config.dangerouslyAllowAllBuilds=true"]);
+    }
+    if (success && splitDev.length > 0) {
+      success = runCmd("pnpm", ["add", "-D", ...splitDev, "--config.dangerouslyAllowAllBuilds=true"]);
+    }
+
+    if (!success) {
+      // In pnpm v10+, build scripts might fail, retry plain pnpm add or fall back to npm
+      let retrySuccess = true;
+      if (splitPkgs.length > 0) retrySuccess = runCmd("pnpm", ["add", ...splitPkgs]);
+      if (retrySuccess && splitDev.length > 0) retrySuccess = runCmd("pnpm", ["add", "-D", ...splitDev]);
+
+      if (!retrySuccess) {
         if (!silent) {
           console.warn("\npnpm install encountered build script restrictions; falling back to npm...");
         }
-        try {
-          if (trimPkgs) execSync(`npm install --save ${trimPkgs}`, { stdio });
-          if (trimDev) execSync(`npm install --save-dev ${trimDev}`, { stdio });
-        } catch (npmErr) {
-          if (!silent) {
-            console.warn(`npm fallback install warning: ${npmErr.message}`);
-          }
-        }
+        if (splitPkgs.length > 0) runCmd("npm", ["install", "--save", ...splitPkgs]);
+        if (splitDev.length > 0) runCmd("npm", ["install", "--save-dev", ...splitDev]);
       }
     }
-  } else if (pm === "yarn") {
-    if (trimPkgs) {
-      execSync(`yarn add ${trimPkgs}`, { stdio });
-    }
-    if (trimDev) {
-      execSync(`yarn add -D ${trimDev}`, { stdio });
-    }
+  } else if (activePm === "yarn") {
+    if (splitPkgs.length > 0) runCmd("yarn", ["add", ...splitPkgs]);
+    if (splitDev.length > 0) runCmd("yarn", ["add", "-D", ...splitDev]);
   }
 }
 
-module.exports = { install, getPackageManager };
+/**
+ * Universal safe package uninstaller helper.
+ * Uses execFileSync with discrete argument arrays to prevent shell injection.
+ */
+function uninstallPackageList({ packages = "", pm = null, silent = false }) {
+  const activePm = pm || getPackageManager();
+  const stdio = silent ? "ignore" : "inherit";
+
+  const splitPkgs = (typeof packages === "string" ? packages.split(" ") : packages).filter(Boolean);
+  if (splitPkgs.length === 0) return;
+
+  if (activePm === "npm") {
+    execFileSync("npm", ["uninstall", ...splitPkgs], { stdio });
+  } else if (activePm === "bun") {
+    execFileSync("bun", ["remove", ...splitPkgs], { stdio });
+  } else if (activePm === "pnpm") {
+    execFileSync("pnpm", ["remove", ...splitPkgs], { stdio });
+  } else if (activePm === "yarn") {
+    execFileSync("yarn", ["remove", ...splitPkgs], { stdio });
+  }
+}
+
+module.exports = {
+  install,
+  getPackageManager,
+  installPackageList,
+  uninstallPackageList,
+};

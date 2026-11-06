@@ -10,6 +10,9 @@ test('npm package resolver: checks package existence on registry', () => {
   assert.strictEqual(checkNpmPackageExists('lodash'), true);
   assert.strictEqual(checkNpmPackageExists('chalk'), true);
   assert.strictEqual(checkNpmPackageExists('non-existent-package-fogoe-999999'), false);
+  // Rejects invalid names and shell injection without shelling out
+  assert.strictEqual(checkNpmPackageExists('foo; touch /tmp/hacked'), false);
+  assert.strictEqual(checkNpmPackageExists('Invalid Name'), false);
 });
 
 test('npm package resolver: detects external types package for lodash', () => {

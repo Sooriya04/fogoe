@@ -1,59 +1,31 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const chalk = require('chalk');
 const { select } = require('../prompts');
 const { PLUGINS } = require('./registry');
 const templates = require('./templates');
+const { installPackageList, uninstallPackageList } = require('../installer');
 
 /**
- * Resolve the file content for a plugin given the project config.
+ * Validate npm package name syntax before querying the network.
  */
-function resolveTemplate(pluginName, language, moduleType) {
-  const tmpl = templates[pluginName];
-  if (!tmpl) throw new Error(`No template found for plugin "${pluginName}"`);
-
-  if (language === 'ts') {
-    return tmpl.ts;
-  }
-  // JS: pick commonjs or module variant
-  return moduleType === 'esm' ? tmpl.js.module : tmpl.js.commonjs;
-}
-
-/**
- * Append env vars to .env without duplicating existing keys.
- */
-function appendEnvVars(envVars) {
-  const envPath = path.join(process.cwd(), '.env');
-  if (!envVars) return;
-
-  if (!fs.existsSync(envPath)) {
-    fs.writeFileSync(envPath, envVars + '\n');
-    console.log(chalk.green('  ✓ .env created with required variables'));
-    return;
-  }
-
-  const current = fs.readFileSync(envPath, 'utf8');
-  const toAppend = envVars
-    .split('\n')
-    .filter((line) => {
-      const key = line.split('=')[0].trim();
-      return key && !current.includes(key + '=');
-    })
-    .join('\n');
-
-  if (toAppend) {
-    fs.appendFileSync(envPath, '\n' + toAppend + '\n');
-    console.log(chalk.green('  ✓ .env updated with required variables'));
-  }
+function isValidNpmPackageName(name) {
+  if (!name || typeof name !== 'string' || name.length > 214) return false;
+  // Scoped or non-scoped valid npm package name regex
+  return /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(name);
 }
 
 /**
  * Check if a package name exists on npm registry.
+ * Uses execFileSync with discrete arguments to prevent shell injection.
  */
 function checkNpmPackageExists(packageName) {
+  if (!isValidNpmPackageName(packageName)) {
+    return false;
+  }
   try {
-    execSync(`npm view ${packageName} version`, {
+    execFileSync('npm', ['view', packageName, 'version'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
     });
@@ -65,15 +37,19 @@ function checkNpmPackageExists(packageName) {
 
 /**
  * Check if @types package exists on npm and is needed.
+ * Uses execFileSync with discrete arguments to prevent shell injection.
  */
 function resolveTypesPackage(packageName) {
+  if (!isValidNpmPackageName(packageName)) {
+    return null;
+  }
   try {
     // Check if main package already bundles types
-    const typings = execSync(`npm view ${packageName} typings`, {
+    const typings = execFileSync('npm', ['view', packageName, 'typings'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
     }).trim();
-    const types = execSync(`npm view ${packageName} types`, {
+    const types = execFileSync('npm', ['view', packageName, 'types'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
     }).trim();
@@ -98,56 +74,7 @@ function resolveTypesPackage(packageName) {
  * Install npm packages.
  */
 function installPackages(packages, devPackages, preferredPm = null, silent = false) {
-  const { getPackageManager } = require('../installer');
-  const pm = getPackageManager(preferredPm);
-  const stdio = silent ? 'ignore' : 'inherit';
-
-  const runInstall = (cmd) => {
-    try {
-      execSync(cmd, { stdio });
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  if (packages) {
-    if (!silent) console.log(chalk.cyan(`\n  Installing ${packages} with ${pm}...`));
-    if (pm === "npm") {
-      execSync(`npm install --save ${packages}`, { stdio });
-    } else if (pm === "bun") {
-      execSync(`bun add ${packages}`, { stdio });
-    } else if (pm === "pnpm") {
-      try {
-        execSync(`pnpm add ${packages}`, { stdio });
-      } catch {
-        if (!runInstall(`pnpm add ${packages} --config.dangerouslyAllowAllBuilds=true`)) {
-          execSync(`npm install --save ${packages}`, { stdio });
-        }
-      }
-    } else if (pm === "yarn") {
-      execSync(`yarn add ${packages}`, { stdio });
-    }
-  }
-
-  if (devPackages) {
-    if (!silent) console.log(chalk.cyan(`  Installing ${devPackages} (dev) with ${pm}...`));
-    if (pm === "npm") {
-      execSync(`npm install --save-dev ${devPackages}`, { stdio });
-    } else if (pm === "bun") {
-      execSync(`bun add -d ${devPackages}`, { stdio });
-    } else if (pm === "pnpm") {
-      try {
-        execSync(`pnpm add -D ${devPackages}`, { stdio });
-      } catch {
-        if (!runInstall(`pnpm add -D ${devPackages} --config.dangerouslyAllowAllBuilds=true`)) {
-          execSync(`npm install --save-dev ${devPackages}`, { stdio });
-        }
-      }
-    } else if (pm === "yarn") {
-      execSync(`yarn add -D ${devPackages}`, { stdio });
-    }
-  }
+  installPackageList({ packages, devPackages, pm: preferredPm, silent });
 }
 
 /**
@@ -300,24 +227,52 @@ async function addPlugin(pluginArg, options = {}) {
 }
 
 /**
+ * Resolve the file content for a plugin given the project config.
+ */
+function resolveTemplate(pluginName, language, moduleType) {
+  const tmpl = templates[pluginName];
+  if (!tmpl) throw new Error(`No template found for plugin "${pluginName}"`);
+
+  if (language === 'ts') {
+    return tmpl.ts;
+  }
+  // JS: pick commonjs or module variant
+  return moduleType === 'esm' ? tmpl.js.module : tmpl.js.commonjs;
+}
+
+/**
+ * Append env vars to .env without duplicating existing keys.
+ */
+function appendEnvVars(envVars) {
+  const envPath = path.join(process.cwd(), '.env');
+  if (!envVars) return;
+
+  if (!fs.existsSync(envPath)) {
+    fs.writeFileSync(envPath, envVars + '\n');
+    console.log(chalk.green('  ✓ .env created with required variables'));
+    return;
+  }
+
+  const current = fs.readFileSync(envPath, 'utf8');
+  const toAppend = envVars
+    .split('\n')
+    .filter((line) => {
+      const key = line.split('=')[0].trim();
+      return key && !current.includes(key + '=');
+    })
+    .join('\n');
+
+  if (toAppend) {
+    fs.appendFileSync(envPath, '\n' + toAppend + '\n');
+    console.log(chalk.green('  ✓ .env updated with required variables'));
+  }
+}
+
+/**
  * Uninstall npm packages.
  */
 function uninstallPackages(packages, preferredPm = null, silent = false) {
-  if (!packages || !packages.trim()) return;
-  const { getPackageManager } = require('../installer');
-  const pm = getPackageManager(preferredPm);
-  const stdio = silent ? 'ignore' : 'inherit';
-
-  if (!silent) console.log(chalk.cyan(`\n  Uninstalling ${packages} with ${pm}...`));
-  if (pm === "npm") {
-    execSync(`npm uninstall ${packages}`, { stdio });
-  } else if (pm === "bun") {
-    execSync(`bun remove ${packages}`, { stdio });
-  } else if (pm === "pnpm") {
-    execSync(`pnpm remove ${packages}`, { stdio });
-  } else if (pm === "yarn") {
-    execSync(`yarn remove ${packages}`, { stdio });
-  }
+  uninstallPackageList({ packages, pm: preferredPm, silent });
 }
 
 /**

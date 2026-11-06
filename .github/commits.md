@@ -238,3 +238,17 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Expanded `test/plugins.test.js` to verify automated uninstallation, `@types` cleanup, and config sync, bringing the test suite to 82 passing tests.
 
 
+## Fixes: Codebase Audit & Security Hardening (Ponytail Audit)
+
+1. **Security & Shell Injection Prevention:**
+   - Replaced raw shell string execution (`execSync("npm view ...")`) in `src/plugins/index.js` with `execFileSync` and discrete argument arrays (`['view', packageName, 'version']`), closing arbitrary shell injection vulnerabilities when untrusted package names are passed.
+2. **Unified Package Installation & Uninstallation Logic:**
+   - Extracted `installPackageList()` and `uninstallPackageList()` into `src/installer.js` and removed duplicated package manager installation code in `src/plugins/index.js`.
+   - Now both initial scaffolding and `fogoe add` / `fogoe remove` share the exact same resilient pnpm build-script fallbacks and multi-package manager execution logic.
+3. **Dependency Cleanup:**
+   - Removed unused dependency `prompts` from `package.json` and `package-lock.json`, keeping only `@clack/prompts`.
+4. **Validation Guard on NPM Lookups:**
+   - Added `isValidNpmPackageName()` to validate syntax before querying the npm registry, preventing network delay and errors on malformed package names.
+
+
+
