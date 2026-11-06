@@ -220,3 +220,21 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 5. **Automated Unit & Integration Test Suite:**
    - Added `test/plugins.test.js` covering npm registry verification, bundled vs. external `@types` package resolution, and end-to-end headless JSON package installation, bringing the total passing test suite to 81 tests.
 
+
+## Feature: Package & Plugin Uninstaller (`fogoe remove` / `fogoe rm`)
+
+1. **Package Uninstaller Command:**
+   - Implemented `removePlugin()` in `src/plugins/index.js` accessible via `fogoe remove <package>` or `fogoe rm <package>` in `src/index.js`.
+   - Supports uninstalling both pre-configured Fogoe plugins (`redis`, `stripe`, `mailer`, etc.) and arbitrary packages installed from npm.
+   - Stack-aware execution automatically detects and invokes the active package manager (`npm uninstall`, `pnpm remove`, `bun remove`, `yarn remove`).
+2. **Automated Companion `@types` Cleanup:**
+   - Automatically detects companion `@types/<package>` in `devDependencies` and uninstalls them in the same command, keeping TypeScript projects clean without orphaned types.
+3. **Configuration & Addon Synchronization:**
+   - Automatically removes the plugin from `fogoe.config.json`'s `addons` array if it was tracked.
+4. **Interactive & Machine-Readable Output:**
+   - Prompts with an interactive list of all installed packages and addons when invoked without arguments (`fogoe remove`).
+   - Supports `--json` flag returning `{ success: true, package, removedPackages, configUpdated }` with silent output for agents and CI automation.
+5. **Test Coverage:**
+   - Expanded `test/plugins.test.js` to verify automated uninstallation, `@types` cleanup, and config sync, bringing the test suite to 82 passing tests.
+
+

@@ -299,8 +299,138 @@ async function addPlugin(pluginArg, options = {}) {
   if (hints[pluginName]) console.log(hints[pluginName] + '\n');
 }
 
+/**
+ * Uninstall npm packages.
+ */
+function uninstallPackages(packages, preferredPm = null, silent = false) {
+  if (!packages || !packages.trim()) return;
+  const { getPackageManager } = require('../installer');
+  const pm = getPackageManager(preferredPm);
+  const stdio = silent ? 'ignore' : 'inherit';
+
+  if (!silent) console.log(chalk.cyan(`\n  Uninstalling ${packages} with ${pm}...`));
+  if (pm === "npm") {
+    execSync(`npm uninstall ${packages}`, { stdio });
+  } else if (pm === "bun") {
+    execSync(`bun remove ${packages}`, { stdio });
+  } else if (pm === "pnpm") {
+    execSync(`pnpm remove ${packages}`, { stdio });
+  } else if (pm === "yarn") {
+    execSync(`yarn remove ${packages}`, { stdio });
+  }
+}
+
+/**
+ * Main entry point for `fogoe remove [packageName]` (or `fogoe rm`)
+ * Supports removing pre-configured plugins or any arbitrary npm package,
+ * including auto-cleanup of companion @types packages and fogoe.config.json addons.
+ *
+ * @param {string|undefined} packageArg - package name
+ * @param {object} options - { json: boolean, pm: string }
+ */
+async function removePlugin(packageArg, options = {}) {
+  const { json = false, pm = null } = options;
+
+  // ── 1. Validate we are inside a Fogoe project ──────────────────────────────
+  const configPath = path.join(process.cwd(), 'fogoe.config.json');
+  if (!fs.existsSync(configPath)) {
+    if (json) {
+      console.log(JSON.stringify({ success: false, error: 'fogoe.config.json not found' }));
+      process.exit(1);
+    }
+    console.error(chalk.red('\n  ✗ fogoe.config.json not found.'));
+    console.error(chalk.yellow('    Run fogoe inside a Fogoe project directory.\n'));
+    process.exit(1);
+  }
+
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  const { language = 'js' } = config.defaults || {};
+
+  const pkgJsonPath = path.join(process.cwd(), 'package.json');
+  const pkgJson = fs.existsSync(pkgJsonPath) ? JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8')) : { dependencies: {}, devDependencies: {} };
+  const deps = pkgJson.dependencies || {};
+  const devDeps = pkgJson.devDependencies || {};
+
+  // ── 2. Determine package to remove ─────────────────────────────────────────
+  let targetPackage = packageArg;
+  if (!targetPackage) {
+    const installed = Array.from(new Set([
+      ...(config.addons || []),
+      ...Object.keys(deps),
+      ...Object.keys(devDeps),
+    ])).sort();
+
+    if (installed.length === 0) {
+      if (json) {
+        console.log(JSON.stringify({ success: false, error: 'No packages found to remove' }));
+        process.exit(0);
+      }
+      console.log(chalk.yellow('\n  No packages found to remove.\n'));
+      return;
+    }
+
+    const chosen = await select('Select a package or addon to remove', installed);
+    if (!chosen) process.exit(0);
+    targetPackage = chosen;
+  }
+
+  // ── 3. Resolve packages and companion @types ────────────────────────────────
+  const packagesToUninstall = [];
+  const plugin = PLUGINS[targetPackage];
+
+  if (plugin && plugin.packages) {
+    packagesToUninstall.push(...plugin.packages.split(' ').filter(Boolean));
+    if (plugin.devPackages) {
+      packagesToUninstall.push(...plugin.devPackages.split(' ').filter(Boolean));
+    }
+  } else {
+    packagesToUninstall.push(targetPackage);
+    // Check if companion @types exists in devDependencies
+    const typesName = targetPackage.startsWith('@')
+      ? `@types/${targetPackage.slice(1).replace('/', '__')}`
+      : `@types/${targetPackage}`;
+
+    if (devDeps[typesName] || deps[typesName]) {
+      packagesToUninstall.push(typesName);
+    }
+  }
+
+  // Only attempt to uninstall what is actually listed in package.json
+  const toRemove = packagesToUninstall.filter((pkg) => deps[pkg] || devDeps[pkg]);
+  const removeList = toRemove.length > 0 ? toRemove : packagesToUninstall;
+
+  if (removeList.length > 0) {
+    uninstallPackages(removeList.join(' '), pm, json);
+  }
+
+  // ── 4. Clean up fogoe.config.json addons ───────────────────────────────────
+  let configUpdated = false;
+  if (config.addons && config.addons.includes(targetPackage)) {
+    config.addons = config.addons.filter((a) => a !== targetPackage);
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+    configUpdated = true;
+  }
+
+  if (json) {
+    console.log(JSON.stringify({
+      success: true,
+      package: targetPackage,
+      removedPackages: removeList,
+      configUpdated,
+    }));
+    return;
+  }
+
+  if (configUpdated) {
+    console.log(chalk.green(`  ✓ fogoe.config.json updated (removed ${targetPackage} from addons)`));
+  }
+  console.log(chalk.green(`\n  ✓ Successfully removed ${chalk.bold(targetPackage)}!\n`));
+}
+
 module.exports = {
   addPlugin,
+  removePlugin,
+  uninstallPackages,
   checkNpmPackageExists,
   resolveTypesPackage,
 };

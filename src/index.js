@@ -3,7 +3,7 @@ const path = require('path');
 const { intro, outro, input, select, confirm, spinner } = require('./prompts');
 const { composeProject } = require('./composer');
 const { install } = require('./installer');
-const { addPlugin } = require('./plugins');
+const { addPlugin, removePlugin } = require('./plugins');
 const { checkStatus } = require('./status');
 const { updateProject } = require('./update');
 const { generateComponent } = require('./generate');
@@ -206,6 +206,7 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('fogoe init')}                   Initialize Git repository and update config`);
     console.log(`  ${chalk.green('fogoe push <message>')}          Stage, commit, and push changes to remote`);
     console.log(`  ${chalk.green('fogoe add <package> [-D]')}      Add a plugin or any npm package to project`);
+    console.log(`  ${chalk.green('fogoe remove <package>')}        Remove a plugin or npm package (alias: rm)`);
     console.log(`  ${chalk.green('fogoe status')}                  Show project details and status`);
     console.log(`  ${chalk.green('fogoe doctor [--fix]')}           Run diagnostics and optionally auto-repair project issues`);
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
@@ -373,6 +374,15 @@ function parseCliArgs(args) {
     }
     await addPlugin(pluginName, {
       dev: flags.dev,
+      json: flags.json,
+      pm: flags.pm,
+    });
+    return;
+  }
+
+  if (positionals[0] === 'remove' || positionals[0] === 'rm') {
+    const packageName = positionals[1] || undefined;
+    await removePlugin(packageName, {
       json: flags.json,
       pm: flags.pm,
     });

@@ -50,3 +50,47 @@ test('CLI add command: supports arbitrary npm package via --json', () => {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('CLI remove command: removes package, cleans @types, and updates fogoe.config.json', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-remove-test-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'test-app',
+          version: '1.0.0',
+          dependencies: { 'is-sorted': '^1.0.0' },
+          devDependencies: { '@types/is-sorted': '^1.0.0' },
+        },
+        null,
+        2
+      )
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ defaults: { language: 'ts' }, addons: ['redis', 'is-sorted'] }, null, 2)
+    );
+
+    const cliPath = path.resolve(__dirname, '../bin/cli.js');
+    const output = execSync(`node ${cliPath} remove is-sorted --json`, {
+      cwd: tmpDir,
+      encoding: 'utf8',
+    });
+
+    const parsed = JSON.parse(output.trim());
+    assert.strictEqual(parsed.success, true);
+    assert.strictEqual(parsed.package, 'is-sorted');
+    assert.strictEqual(parsed.configUpdated, true);
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, 'package.json'), 'utf8'));
+    assert.strictEqual(pkg.dependencies?.['is-sorted'], undefined);
+    assert.strictEqual(pkg.devDependencies?.['@types/is-sorted'], undefined);
+
+    const config = JSON.parse(fs.readFileSync(path.join(tmpDir, 'fogoe.config.json'), 'utf8'));
+    assert.deepStrictEqual(config.addons, ['redis']);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
