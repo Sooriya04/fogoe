@@ -34,6 +34,7 @@ function parseCliArgs(args) {
     compose: null,
     deploy: null,
     pm: null,
+    dev: false,
     fix: false,
     yes: false,
     nonInteractive: false,
@@ -169,6 +170,8 @@ function parseCliArgs(args) {
       flags.pm = arg.split('=')[1];
     } else if (arg.startsWith('--package-manager=')) {
       flags.pm = arg.split('=')[1];
+    } else if (arg === '--dev' || arg === '-D' || arg === '--save-dev') {
+      flags.dev = true;
     } else if (!arg.startsWith('-')) {
       positionals.push(arg);
     }
@@ -202,7 +205,7 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('fogoe ci')}                     Generate GitHub Actions CI/CD pipeline`);
     console.log(`  ${chalk.green('fogoe init')}                   Initialize Git repository and update config`);
     console.log(`  ${chalk.green('fogoe push <message>')}          Stage, commit, and push changes to remote`);
-    console.log(`  ${chalk.green('fogoe add [plugin]')}            Add a plugin to an existing Fogoe project`);
+    console.log(`  ${chalk.green('fogoe add <package> [-D]')}      Add a plugin or any npm package to project`);
     console.log(`  ${chalk.green('fogoe status')}                  Show project details and status`);
     console.log(`  ${chalk.green('fogoe doctor [--fix]')}           Run diagnostics and optionally auto-repair project issues`);
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
@@ -368,7 +371,11 @@ function parseCliArgs(args) {
       });
       return;
     }
-    await addPlugin(pluginName);
+    await addPlugin(pluginName, {
+      dev: flags.dev,
+      json: flags.json,
+      pm: flags.pm,
+    });
     return;
   }
 

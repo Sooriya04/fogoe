@@ -204,5 +204,19 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 4. **README Synchronization:** Updated Primary Commands and Essential Flags reference tables.
 
 
+## Feature: Universal NPM Package Support & Smart TypeScript Types in `fogoe add`
 
+1. **Arbitrary NPM Package Installation:**
+   - Enhanced `fogoe add <package>` in `src/plugins/index.js` to install any valid package from the npm registry (e.g. `fogoe add lodash`, `fogoe add axios`, `fogoe add dayjs`) in addition to pre-configured Fogoe plugins (`redis`, `stripe`, `swagger`, `ratelimit`, etc.).
+   - Implemented `checkNpmPackageExists()` to query the npm registry before installation, providing helpful warnings and fallbacks when an unknown or misspelled package is requested.
+2. **Automated TypeScript `@types` Resolution:**
+   - Added `resolveTypesPackage()`: When installing an arbitrary npm package in a TypeScript project (`language: "ts"`), Fogoe automatically inspects the package on npm.
+   - If the package bundles its own types (e.g. `axios`, `prisma`), redundant type packages are avoided.
+   - If types are published separately (e.g. `lodash` -> `@types/lodash`), Fogoe automatically installs the corresponding `@types` package as a `devDependency`.
+3. **Dev Dependency Flag Support (`-D` / `--dev`):**
+   - Added `--dev` / `-D` / `--save-dev` flag parsing in `src/index.js`, allowing direct dev dependency installation (e.g., `fogoe add -D vitest`).
+4. **Headless & Agent JSON Output (`--json`):**
+   - Added silent headless installation with machine-readable JSON output (`--json`) and quiet package manager execution, returning `{ success: true, package, isDev, installedTypes }` directly for autonomous AI agents and CI scripts.
+5. **Automated Unit & Integration Test Suite:**
+   - Added `test/plugins.test.js` covering npm registry verification, bundled vs. external `@types` package resolution, and end-to-end headless JSON package installation, bringing the total passing test suite to 81 tests.
 

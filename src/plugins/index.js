@@ -49,15 +49,62 @@ function appendEnvVars(envVars) {
 }
 
 /**
+ * Check if a package name exists on npm registry.
+ */
+function checkNpmPackageExists(packageName) {
+  try {
+    execSync(`npm view ${packageName} version`, {
+      stdio: ['pipe', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Check if @types package exists on npm and is needed.
+ */
+function resolveTypesPackage(packageName) {
+  try {
+    // Check if main package already bundles types
+    const typings = execSync(`npm view ${packageName} typings`, {
+      stdio: ['pipe', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    }).trim();
+    const types = execSync(`npm view ${packageName} types`, {
+      stdio: ['pipe', 'pipe', 'ignore'],
+      encoding: 'utf8',
+    }).trim();
+
+    if (typings || types) {
+      return null; // Already includes bundled types
+    }
+
+    // Strip scope if scoped (e.g. @foo/bar -> foo__bar)
+    const typesName = packageName.startsWith('@')
+      ? `@types/${packageName.slice(1).replace('/', '__')}`
+      : `@types/${packageName}`;
+
+    const exists = checkNpmPackageExists(typesName);
+    return exists ? typesName : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Install npm packages.
  */
-function installPackages(packages, devPackages) {
+function installPackages(packages, devPackages, preferredPm = null, silent = false) {
   const { getPackageManager } = require('../installer');
-  const pm = getPackageManager();
+  const pm = getPackageManager(preferredPm);
+  const stdio = silent ? 'ignore' : 'inherit';
 
   const runInstall = (cmd) => {
     try {
-      execSync(cmd, { stdio: 'inherit' });
+      execSync(cmd, { stdio });
       return true;
     } catch {
       return false;
@@ -65,52 +112,61 @@ function installPackages(packages, devPackages) {
   };
 
   if (packages) {
-    console.log(chalk.cyan(`\n  Installing ${packages} with ${pm}...`));
+    if (!silent) console.log(chalk.cyan(`\n  Installing ${packages} with ${pm}...`));
     if (pm === "npm") {
-      execSync(`npm install --save ${packages}`, { stdio: 'inherit' });
+      execSync(`npm install --save ${packages}`, { stdio });
     } else if (pm === "bun") {
-      execSync(`bun add ${packages}`, { stdio: 'inherit' });
+      execSync(`bun add ${packages}`, { stdio });
     } else if (pm === "pnpm") {
       try {
-        execSync(`pnpm add ${packages}`, { stdio: 'inherit' });
+        execSync(`pnpm add ${packages}`, { stdio });
       } catch {
         if (!runInstall(`pnpm add ${packages} --config.dangerouslyAllowAllBuilds=true`)) {
-          execSync(`npm install --save ${packages}`, { stdio: 'inherit' });
+          execSync(`npm install --save ${packages}`, { stdio });
         }
       }
     } else if (pm === "yarn") {
-      execSync(`yarn add ${packages}`, { stdio: 'inherit' });
+      execSync(`yarn add ${packages}`, { stdio });
     }
   }
 
   if (devPackages) {
-    console.log(chalk.cyan(`  Installing ${devPackages} (dev) with ${pm}...`));
+    if (!silent) console.log(chalk.cyan(`  Installing ${devPackages} (dev) with ${pm}...`));
     if (pm === "npm") {
-      execSync(`npm install --save-dev ${devPackages}`, { stdio: 'inherit' });
+      execSync(`npm install --save-dev ${devPackages}`, { stdio });
     } else if (pm === "bun") {
-      execSync(`bun add -d ${devPackages}`, { stdio: 'inherit' });
+      execSync(`bun add -d ${devPackages}`, { stdio });
     } else if (pm === "pnpm") {
       try {
-        execSync(`pnpm add -D ${devPackages}`, { stdio: 'inherit' });
+        execSync(`pnpm add -D ${devPackages}`, { stdio });
       } catch {
         if (!runInstall(`pnpm add -D ${devPackages} --config.dangerouslyAllowAllBuilds=true`)) {
-          execSync(`npm install --save-dev ${devPackages}`, { stdio: 'inherit' });
+          execSync(`npm install --save-dev ${devPackages}`, { stdio });
         }
       }
     } else if (pm === "yarn") {
-      execSync(`yarn add -D ${devPackages}`, { stdio: 'inherit' });
+      execSync(`yarn add -D ${devPackages}`, { stdio });
     }
   }
 }
 
 /**
  * Main entry point for `fogoe add [pluginName]`
- * @param {string|undefined} pluginArg - plugin name from CLI args, or undefined to prompt
+ * Supports both pre-configured Fogoe plugins and any package from the npm registry.
+ *
+ * @param {string|undefined} pluginArg - plugin or npm package name
+ * @param {object} options - { dev: boolean, json: boolean, pm: string }
  */
-async function addPlugin(pluginArg) {
+async function addPlugin(pluginArg, options = {}) {
+  const { dev = false, json = false, pm = null } = options;
+
   // ── 1. Validate we are inside a Fogoe project ──────────────────────────────
   const configPath = path.join(process.cwd(), 'fogoe.config.json');
   if (!fs.existsSync(configPath)) {
+    if (json) {
+      console.log(JSON.stringify({ success: false, error: 'fogoe.config.json not found' }));
+      process.exit(1);
+    }
     console.error(chalk.red('\n  ✗ fogoe.config.json not found.'));
     console.error(chalk.yellow('    Run fogoe inside a Fogoe project directory.\n'));
     process.exit(1);
@@ -131,10 +187,51 @@ async function addPlugin(pluginArg) {
   }
 
   const plugin = PLUGINS[pluginName];
+
+  // ── Case A: Arbitrary npm package (not in pre-configured PLUGINS) ───────────
   if (!plugin) {
-    console.error(chalk.red(`\n  ✗ Unknown plugin: "${pluginName}"`));
-    console.error(chalk.yellow(`    Available plugins: ${Object.keys(PLUGINS).join(', ')}\n`));
-    process.exit(1);
+    // Check if the package exists on npm
+    const exists = checkNpmPackageExists(pluginName);
+    if (!exists) {
+      if (json) {
+        console.log(JSON.stringify({ success: false, error: `Package "${pluginName}" not found on npm registry` }));
+        process.exit(1);
+      }
+      console.error(chalk.red(`\n  ✗ Package "${pluginName}" not found on npm registry.`));
+      console.error(chalk.yellow(`    Available pre-configured plugins: ${Object.keys(PLUGINS).join(', ')}\n`));
+      process.exit(1);
+    }
+
+    if (!json) {
+      console.log(chalk.cyan(`\n  Adding package ${chalk.bold(pluginName)} from npm...`));
+    }
+
+    let mainPkgs = dev ? '' : pluginName;
+    let devPkgs = dev ? pluginName : '';
+
+    // If project is TypeScript and user installed as regular dependency, auto-detect @types
+    if (language === 'ts' && !dev) {
+      const typesPkg = resolveTypesPackage(pluginName);
+      if (typesPkg) {
+        if (!json) console.log(chalk.gray(`  Found TypeScript definitions: ${typesPkg}`));
+        devPkgs = devPkgs ? `${devPkgs} ${typesPkg}` : typesPkg;
+      }
+    }
+
+    installPackages(mainPkgs, devPkgs, pm, json);
+
+    if (json) {
+      console.log(JSON.stringify({
+        success: true,
+        package: pluginName,
+        isDev: dev,
+        installedTypes: devPkgs || null,
+      }));
+      return;
+    }
+
+    console.log(chalk.green(`\n  ✓ Successfully installed ${pluginName}!\n`));
+    return;
   }
 
   if (plugin.isSpecial) {
@@ -172,7 +269,7 @@ async function addPlugin(pluginArg) {
   // ── 5. Install packages ────────────────────────────────────────────────────
   // Skip dev type packages when project is JS (no TypeScript)
   const devPkgs = language === 'ts' ? plugin.devPackages : '';
-  installPackages(plugin.packages, devPkgs);
+  installPackages(plugin.packages, devPkgs, pm);
 
   // ── 6. Append env vars ─────────────────────────────────────────────────────
   appendEnvVars(plugin.envVars);
@@ -202,4 +299,8 @@ async function addPlugin(pluginArg) {
   if (hints[pluginName]) console.log(hints[pluginName] + '\n');
 }
 
-module.exports = { addPlugin };
+module.exports = {
+  addPlugin,
+  checkNpmPackageExists,
+  resolveTypesPackage,
+};

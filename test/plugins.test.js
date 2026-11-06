@@ -1,0 +1,52 @@
+const test = require('node:test');
+const assert = require('node:assert');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+const { execSync } = require('child_process');
+const { checkNpmPackageExists, resolveTypesPackage } = require('../src/plugins');
+
+test('npm package resolver: checks package existence on registry', () => {
+  assert.strictEqual(checkNpmPackageExists('lodash'), true);
+  assert.strictEqual(checkNpmPackageExists('chalk'), true);
+  assert.strictEqual(checkNpmPackageExists('non-existent-package-fogoe-999999'), false);
+});
+
+test('npm package resolver: detects external types package for lodash', () => {
+  const typesPkg = resolveTypesPackage('lodash');
+  assert.strictEqual(typesPkg, '@types/lodash');
+});
+
+test('npm package resolver: returns null when package bundles its own types', () => {
+  const typesPkg = resolveTypesPackage('axios');
+  assert.strictEqual(typesPkg, null);
+});
+
+test('CLI add command: supports arbitrary npm package via --json', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-add-test-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-app', version: '1.0.0', dependencies: {} }, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ defaults: { language: 'js', type: 'cjs' } }, null, 2)
+    );
+
+    const cliPath = path.resolve(__dirname, '../bin/cli.js');
+    const output = execSync(`node ${cliPath} add is-sorted --json`, {
+      cwd: tmpDir,
+      encoding: 'utf8',
+    });
+
+    const parsed = JSON.parse(output.trim());
+    assert.strictEqual(parsed.success, true);
+    assert.strictEqual(parsed.package, 'is-sorted');
+
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmpDir, 'package.json'), 'utf8'));
+    assert.ok(pkg.dependencies['is-sorted'], 'is-sorted was saved to dependencies');
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
