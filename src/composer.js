@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { buildPackageJson } = require('./packageJson');
 const { buildTsConfig } = require('./tsconfig');
+const { writeAgentManifest } = require('./agent');
 
 const TEMPLATES_ROOT = path.join(__dirname, '../templates');
 
@@ -234,6 +235,19 @@ function composeProject(options) {
     };
     fs.writeFileSync(configPath, JSON.stringify(fogoeConfig, null, 2));
   }
+
+  // 9. Generate fogoe.agent.json machine-readable agent contract
+  writeAgentManifest(targetDir, {
+    name,
+    runtime,
+    language: isTypeScript ? 'ts' : 'js',
+    architecture,
+    type: typeCode,
+    database: normalizedDb,
+    auth: useJwt ? 'jwt' : 'none',
+    port: vars.PORT,
+    addons: [],
+  });
 
   return {
     targetDir,

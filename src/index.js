@@ -207,6 +207,7 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('fogoe push <message>')}          Stage, commit, and push changes to remote`);
     console.log(`  ${chalk.green('fogoe add <package> [-D]')}      Add a plugin or any npm package to project`);
     console.log(`  ${chalk.green('fogoe remove <package>')}        Remove a plugin or npm package (alias: rm)`);
+    console.log(`  ${chalk.green('fogoe schema')}                  Emit machine-readable agent manifest contract`);
     console.log(`  ${chalk.green('fogoe status')}                  Show project details and status`);
     console.log(`  ${chalk.green('fogoe doctor [--fix]')}           Run diagnostics and optionally auto-repair project issues`);
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
@@ -386,6 +387,19 @@ function parseCliArgs(args) {
       json: flags.json,
       pm: flags.pm,
     });
+    return;
+  }
+
+  if (positionals[0] === 'schema' || positionals[0] === 'manifest') {
+    const { getProjectManifest } = require('./agent');
+    const manifest = getProjectManifest(process.cwd());
+    if (flags.json) {
+      console.log(JSON.stringify(manifest, null, 2));
+    } else {
+      console.log(chalk.cyan('\n  Agent Manifest Schema:\n'));
+      console.log(JSON.stringify(manifest, null, 2));
+      console.log(chalk.green('\n  ✓ Written to fogoe.agent.json\n'));
+    }
     return;
   }
 

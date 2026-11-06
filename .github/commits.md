@@ -251,4 +251,19 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Added `isValidNpmPackageName()` to validate syntax before querying the npm registry, preventing network delay and errors on malformed package names.
 
 
+## Feature: Machine-Readable Agent Manifest Contract (`fogoe.agent.json` & `fogoe schema`)
+
+1. **Modular Agent Architecture (`src/agent/index.js`):**
+   - Created dedicated `src/agent/` module with `buildAgentManifest()`, `writeAgentManifest()`, and `getProjectManifest()`.
+2. **Automatic Contract Generation (`fogoe.agent.json`):**
+   - Automatically generated in every scaffolded project root alongside `fogoe.config.json` and `package.json`.
+   - Outlines exact structural layout (`entryPoint`, `routes`, `controllers`, `models`, `middlewares`, `schema`), naming conventions, TypeScript path aliases, and rest endpoint conventions.
+   - Supplies deterministic CLI recipes (`fogoe generate crud <name>`, `fogoe add <pkg>`, `fogoe remove <pkg>`, `fogoe doctor --json`).
+3. **CLI Command (`fogoe schema` / `fogoe manifest`):**
+   - Added `fogoe schema [--json]` command allowing AI coding agents to inspect the project contract dynamically without parsing arbitrary source code.
+4. **Automated Test Suite:**
+   - Added `test/agent.test.js` validating manifest schema structure, composer integration, and CLI headless output, bringing total passing test suite to 85 tests.
+
+
+
 
