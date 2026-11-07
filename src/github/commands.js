@@ -1,4 +1,4 @@
-const { execSync, execFileSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const chalk = require('chalk');
 const { ensureGitUserConfig } = require('./auth');
 

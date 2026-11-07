@@ -350,6 +350,13 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - All 102 automated tests passing.
 
 
+## Cleanup: Remove Unused execSync Import in Git Commands
+
+1. **Clean Child Process Imports ([`src/github/commands.js`](file:///media/workspace/fogoe/src/github/commands.js)):**
+   - Removed unused `execSync` from `child_process` import destructuring since all git operations use `execFileSync`.
+
+
+
 
 
 
