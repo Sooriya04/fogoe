@@ -251,7 +251,8 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.cyan('stripe')}     — Payment processing (stripe)`);
     console.log(`  ${chalk.cyan('ratelimit')}  — Request rate limiting (stack-aware: Express, Fastify, Hono, Koa)`);
     console.log(`  ${chalk.cyan('swagger')}    — API docs & Swagger UI (stack-aware: Express, Fastify, Hono, Koa)`);
-    console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)\n`);
+    console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)`);
+    console.log(`  ${chalk.cyan('queue')}      — Background job & message queue (BullMQ + Redis)\n`);
 
     console.log(chalk.yellow('Examples:'));
     console.log(`  ${chalk.gray('# Automated Containerization & Compose setup')}`);

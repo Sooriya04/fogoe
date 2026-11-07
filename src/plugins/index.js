@@ -256,6 +256,8 @@ async function addPlugin(pluginArg, options = {}) {
     ratelimit: getRateLimitHint(runtime, plugin),
     swagger: getSwaggerHint(runtime, plugin),
     socket: `  ${chalk.cyan('Next:')} Wrap your server in server.js:\n    ${chalk.gray(`const http = require('http')\n    const { setupSocket } = require('./${plugin.outputDir}/${plugin.outputFile}')\n    const server = http.createServer(app)\n    setupSocket(server)\n    server.listen(PORT)`)}`,
+    queue: `  ${chalk.cyan('Next:')} Ensure Redis is running (or run fogoe compose up -d), then enqueue jobs:\n    ${chalk.gray(`const { addJob } = require('./${plugin.outputDir}/${plugin.outputFile}')\n    await addJob('send-email', { to: 'user@example.com' })`)}`,
+    bullmq: `  ${chalk.cyan('Next:')} Ensure Redis is running (or run fogoe compose up -d), then enqueue jobs:\n    ${chalk.gray(`const { addJob } = require('./${plugin.outputDir}/${plugin.outputFile}')\n    await addJob('send-email', { to: 'user@example.com' })`)}`,
   };
 
   if (hints[pluginName]) console.log(hints[pluginName] + '\n');

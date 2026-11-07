@@ -298,5 +298,20 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Expanded `test/plugins.test.js` with unit and integration tests verifying package resolution, template syntax, runtime detection, and headless CLI scaffolding, bringing the passing test suite to 89 tests.
 
 
+## Feature: Background Job Queue Plugin (`fogoe add queue` / `bullmq`)
+
+1. **BullMQ Plugin Registration (`src/plugins/registry.js`):**
+   - Registered `queue` and alias `bullmq` pointing to `bullmq` on npm with zero runtime devDependencies (bundled types).
+   - Injected standard `REDIS_URL=redis://localhost:6379` into `.env` automatically upon addition.
+2. **Production Queue & Worker Templates (`src/plugins/templates.js`):**
+   - Implemented `src/queues/queue.[js|ts]` with configured `defaultQueue`, active `defaultWorker`, and generic helper function `addJob(name, data, opts)`.
+   - Included mandatory `maxRetriesPerRequest: null` connection configuration required by BullMQ to prevent runtime connection assertion crashes.
+   - Provided full type safety with `Job` types in TypeScript.
+3. **Lifecycle & Guidance Integration:**
+   - Added `queue` to CLI help output in `src/index.js` and stack guidance hints in `src/plugins/index.js`.
+4. **Automated Test Suite Expansion:**
+   - Added unit tests in `test/plugins.test.js` verifying metadata and multi-variant (CJS, ESM, TS) template rendering, bringing total passing test suite to 90 tests.
+
+
 
 

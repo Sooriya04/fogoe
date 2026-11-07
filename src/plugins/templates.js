@@ -1093,4 +1093,134 @@ export function setupSocket(server: HttpServer) {
   envVars: null,
 };
 
-module.exports = { redis, zod, mailer, stripe, ratelimit, swagger, socket };
+// ─────────────────────────────────────────────
+// QUEUE (bullmq)
+// ─────────────────────────────────────────────
+
+const queue = {
+  js: {
+    commonjs: `const { Queue, Worker } = require('bullmq');
+
+const redisUrl = new URL(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+const connection = {
+  host: redisUrl.hostname || '127.0.0.1',
+  port: Number(redisUrl.port) || 6379,
+  password: redisUrl.password || undefined,
+  maxRetriesPerRequest: null,
+};
+
+const defaultQueue = new Queue('default', { connection });
+
+const defaultWorker = new Worker(
+  'default',
+  async (job) => {
+    console.log(\`[Queue] Processing job \${job.id} (\${job.name})\`);
+    // TODO: Process async jobs here
+    return { status: 'completed' };
+  },
+  { connection }
+);
+
+defaultWorker.on('completed', (job) => {
+  console.log(\`[Queue] Job \${job.id} completed\`);
+});
+
+defaultWorker.on('failed', (job, err) => {
+  console.error(\`[Queue] Job \${job ? job.id : 'unknown'} failed:\`, err.message);
+});
+
+async function addJob(name, data = {}, opts = {}) {
+  return defaultQueue.add(name, data, opts);
+}
+
+module.exports = {
+  defaultQueue,
+  defaultWorker,
+  addJob,
+};
+`,
+    module: `import { Queue, Worker } from 'bullmq';
+
+const redisUrl = new URL(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+const connection = {
+  host: redisUrl.hostname || '127.0.0.1',
+  port: Number(redisUrl.port) || 6379,
+  password: redisUrl.password || undefined,
+  maxRetriesPerRequest: null,
+};
+
+export const defaultQueue = new Queue('default', { connection });
+
+export const defaultWorker = new Worker(
+  'default',
+  async (job) => {
+    console.log(\`[Queue] Processing job \${job.id} (\${job.name})\`);
+    // TODO: Process async jobs here
+    return { status: 'completed' };
+  },
+  { connection }
+);
+
+defaultWorker.on('completed', (job) => {
+  console.log(\`[Queue] Job \${job.id} completed\`);
+});
+
+defaultWorker.on('failed', (job, err) => {
+  console.error(\`[Queue] Job \${job?.id} failed:\`, err.message);
+});
+
+export async function addJob(name, data = {}, opts = {}) {
+  return defaultQueue.add(name, data, opts);
+}
+
+export default {
+  defaultQueue,
+  defaultWorker,
+  addJob,
+};
+`,
+  },
+  ts: `import { Queue, Worker, Job } from 'bullmq';
+
+const redisUrl = new URL(process.env.REDIS_URL || 'redis://127.0.0.1:6379');
+const connection = {
+  host: redisUrl.hostname || '127.0.0.1',
+  port: Number(redisUrl.port) || 6379,
+  password: redisUrl.password || undefined,
+  maxRetriesPerRequest: null,
+};
+
+export const defaultQueue = new Queue('default', { connection });
+
+export const defaultWorker = new Worker(
+  'default',
+  async (job: Job) => {
+    console.log(\`[Queue] Processing job \${job.id} (\${job.name})\`);
+    // TODO: Process async jobs here
+    return { status: 'completed' };
+  },
+  { connection }
+);
+
+defaultWorker.on('completed', (job: Job) => {
+  console.log(\`[Queue] Job \${job.id} completed\`);
+});
+
+defaultWorker.on('failed', (job: Job | undefined, err: Error) => {
+  console.error(\`[Queue] Job \${job?.id} failed:\`, err.message);
+});
+
+export async function addJob<T = any>(name: string, data: T = {} as T, opts = {}) {
+  return defaultQueue.add(name, data, opts);
+}
+
+export default {
+  defaultQueue,
+  defaultWorker,
+  addJob,
+};
+`,
+  envVars: 'REDIS_URL=redis://localhost:6379',
+};
+
+module.exports = { redis, zod, mailer, stripe, ratelimit, swagger, socket, queue, bullmq: queue };

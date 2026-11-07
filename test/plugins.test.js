@@ -195,3 +195,35 @@ test('CLI add command: scaffolds stack-aware plugin file for Fastify without err
   }
 });
 
+test('Queue plugin: BullMQ metadata and template rendering', () => {
+  const queueMeta = getPluginConfig('queue');
+  assert.ok(queueMeta, 'queue plugin exists');
+  assert.strictEqual(queueMeta.packages, 'bullmq');
+  assert.strictEqual(queueMeta.outputDir, 'src/queues');
+  assert.strictEqual(queueMeta.outputFile, 'queue');
+  assert.strictEqual(queueMeta.envVars, 'REDIS_URL=redis://localhost:6379');
+
+  const bullmqMeta = getPluginConfig('bullmq');
+  assert.ok(bullmqMeta, 'bullmq alias exists');
+  assert.strictEqual(bullmqMeta.packages, 'bullmq');
+
+  // CommonJS
+  const cjsTmpl = resolveTemplate('queue', 'js', 'cjs');
+  assert.ok(cjsTmpl.includes("require('bullmq')"), 'CJS imports bullmq');
+  assert.ok(cjsTmpl.includes('defaultQueue'), 'CJS defines defaultQueue');
+  assert.ok(cjsTmpl.includes('defaultWorker'), 'CJS defines defaultWorker');
+  assert.ok(cjsTmpl.includes('addJob'), 'CJS defines addJob');
+  assert.ok(cjsTmpl.includes('maxRetriesPerRequest: null'), 'CJS includes maxRetriesPerRequest: null for BullMQ compatibility');
+
+  // ESM
+  const esmTmpl = resolveTemplate('queue', 'js', 'esm');
+  assert.ok(esmTmpl.includes("import { Queue, Worker } from 'bullmq'"), 'ESM imports bullmq');
+  assert.ok(esmTmpl.includes('export const defaultQueue'), 'ESM exports defaultQueue');
+
+  // TypeScript
+  const tsTmpl = resolveTemplate('queue', 'ts', 'esm');
+  assert.ok(tsTmpl.includes("import { Queue, Worker, Job } from 'bullmq'"), 'TS imports Job type');
+  assert.ok(tsTmpl.includes('job: Job'), 'TS types worker job');
+  assert.ok(tsTmpl.includes('addJob<T = any>'), 'TS provides generic addJob');
+});
+
