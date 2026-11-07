@@ -310,7 +310,8 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 3. **Lifecycle & Guidance Integration:**
    - Added `queue` to CLI help output in `src/index.js` and stack guidance hints in `src/plugins/index.js`.
 4. **Automated Test Suite Expansion:**
-   - Added unit tests in `test/plugins.test.js` verifying metadata and multi-variant (CJS, ESM, TS) template rendering, bringing total passing test suite to 90 tests.
+   - Extracted and added dedicated test files: `test/queue.test.js` (metadata, CJS/ESM/TS template rendering, and temporary directory scaffolding) and `test/stack-plugins.test.js` (per-framework package resolutions, native template generation across Express, Fastify, Hono, and Koa, and runtime detection).
+   - Brought total passing automated test suite to 96 tests.
 
 
 
