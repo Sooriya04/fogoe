@@ -219,22 +219,31 @@ function installPackageList({ packages = "", devPackages = "", pm = null, silent
 /**
  * Universal safe package uninstaller helper.
  * Uses execFileSync with discrete argument arrays to prevent shell injection.
+ * Safely handles execution errors without unhandled process termination.
  */
 function uninstallPackageList({ packages = "", pm = null, silent = false }) {
   const activePm = pm || getPackageManager();
   const stdio = silent ? "ignore" : "inherit";
 
   const splitPkgs = (typeof packages === "string" ? packages.split(" ") : packages).filter(Boolean);
-  if (splitPkgs.length === 0) return;
+  if (splitPkgs.length === 0) return true;
 
-  if (activePm === "npm") {
-    execFileSync("npm", ["uninstall", ...splitPkgs], { stdio });
-  } else if (activePm === "bun") {
-    execFileSync("bun", ["remove", ...splitPkgs], { stdio });
-  } else if (activePm === "pnpm") {
-    execFileSync("pnpm", ["remove", ...splitPkgs], { stdio });
-  } else if (activePm === "yarn") {
-    execFileSync("yarn", ["remove", ...splitPkgs], { stdio });
+  try {
+    if (activePm === "npm") {
+      execFileSync("npm", ["uninstall", ...splitPkgs], { stdio });
+    } else if (activePm === "bun") {
+      execFileSync("bun", ["remove", ...splitPkgs], { stdio });
+    } else if (activePm === "pnpm") {
+      execFileSync("pnpm", ["remove", ...splitPkgs], { stdio });
+    } else if (activePm === "yarn") {
+      execFileSync("yarn", ["remove", ...splitPkgs], { stdio });
+    }
+    return true;
+  } catch (err) {
+    if (!silent) {
+      console.warn(`\nWarning: Failed to uninstall packages via ${activePm}: ${err.message}`);
+    }
+    return false;
   }
 }
 

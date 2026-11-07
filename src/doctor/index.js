@@ -328,7 +328,7 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
         const envLines = ['# Fogoe Environment Configuration', 'PORT=3000'];
         if (db === 'mongodb') {
           envLines.push('DATABASE_URL=mongodb://localhost:27017/app_dev');
-        } else if (db === 'postgresql' || db === 'postgres') {
+        } else if (db === 'postgresql' || db === 'postgres' || db === 'prisma' || db === 'drizzle') {
           envLines.push('DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app_dev');
         } else if (db === 'mysql') {
           envLines.push('DATABASE_URL=mysql://root:root@localhost:3306/app_dev');
@@ -348,7 +348,7 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
       missingEnvKeys.push({ key: 'PORT', defaultVal: '3000' });
     }
 
-    if (['mongodb', 'postgresql', 'postgres', 'mysql'].includes(db)) {
+    if (['mongodb', 'postgresql', 'postgres', 'mysql', 'prisma', 'drizzle'].includes(db)) {
       if (!('DATABASE_URL' in envMap)) {
         let defaultDbUrl = 'postgresql://postgres:postgres@localhost:5432/app_dev';
         if (db === 'mongodb') defaultDbUrl = 'mongodb://localhost:27017/app_dev';

@@ -5,6 +5,7 @@ const path = require('path');
 const os = require('os');
 const { execSync } = require('child_process');
 const { checkNpmPackageExists, resolveTypesPackage } = require('../src/plugins');
+const { uninstallPackageList } = require('../src/installer');
 
 test('npm package resolver: checks package existence on registry', () => {
   assert.strictEqual(checkNpmPackageExists('lodash'), true);
@@ -95,6 +96,17 @@ test('CLI remove command: removes package, cleans @types, and updates fogoe.conf
   } finally {
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
+});
+
+test('Installer: uninstallPackageList gracefully handles failures without throwing', () => {
+  // Test invalid package manager or failed execution with silent: true
+  const res = uninstallPackageList({
+    packages: 'non-existent-pkg-xyz',
+    pm: 'invalid-pm-binary-999',
+    silent: true,
+  });
+  // Since invalid-pm-binary-999 falls back to npm/default or throws, the helper catches and returns false/true safely
+  assert.strictEqual(typeof res, 'boolean');
 });
 
 

@@ -384,3 +384,31 @@ test('Doctor CLI Integration: node bin/cli.js doctor --fix --yes --json applies 
   assert.ok(pkg.scripts.start);
 });
 
+test('Doctor Database Env: flags missing DATABASE_URL for prisma and drizzle projects', () => {
+  fs.mkdirSync(TEST_DOCTOR_DIR, { recursive: true });
+
+  // 1. Prisma project without DATABASE_URL in .env
+  fs.writeFileSync(path.join(TEST_DOCTOR_DIR, 'fogoe.config.json'), JSON.stringify({
+    defaults: { runtime: 'fastify', language: 'ts', database: 'prisma' }
+  }));
+  fs.writeFileSync(path.join(TEST_DOCTOR_DIR, 'package.json'), JSON.stringify({
+    name: 'prisma-doctor-test',
+    dependencies: { fastify: '^4.0.0' }
+  }));
+  fs.writeFileSync(path.join(TEST_DOCTOR_DIR, '.env'), 'PORT=3000\n');
+
+  const prismaDiag = diagnoseProject(TEST_DOCTOR_DIR);
+  const prismaDbCheck = prismaDiag.checks.find(c => c.id === 'env_keys_missing');
+  assert.ok(prismaDbCheck, 'Missing DATABASE_URL should be flagged for prisma');
+  assert.ok(prismaDbCheck.message.includes('DATABASE_URL'));
+
+  // 2. Drizzle project without DATABASE_URL in .env
+  fs.writeFileSync(path.join(TEST_DOCTOR_DIR, 'fogoe.config.json'), JSON.stringify({
+    defaults: { runtime: 'express', language: 'ts', database: 'drizzle' }
+  }));
+  const drizzleDiag = diagnoseProject(TEST_DOCTOR_DIR);
+  const drizzleDbCheck = drizzleDiag.checks.find(c => c.id === 'env_keys_missing');
+  assert.ok(drizzleDbCheck, 'Missing DATABASE_URL should be flagged for drizzle');
+  assert.ok(drizzleDbCheck.message.includes('DATABASE_URL'));
+});
+

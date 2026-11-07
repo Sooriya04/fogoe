@@ -326,5 +326,17 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Added security rejection tests in `test/generate.test.js` and dollar pattern preservation tests in `test/generator.test.js`, bringing the passing suite to 98 tests.
 
 
+## Fixes: Safe Package Uninstallation & Doctor Prisma/Drizzle Database Audit
+
+1. **Safe Package Uninstallation Failure Handling ([`src/installer.js`](file:///media/workspace/fogoe/src/installer.js)):**
+   - Wrapped `uninstallPackageList` execution in a `try...catch` boundary with diagnostic warning fallback, matching `installPackageList`.
+   - Prevents uncaught exceptions and CLI crashes if package managers report non-zero exit codes.
+2. **Prisma & Drizzle `.env` Diagnostics in `fogoe doctor` ([`src/doctor/index.js`](file:///media/workspace/fogoe/src/doctor/index.js)):**
+   - Added `prisma` and `drizzle` to required `DATABASE_URL` verification in `.env`.
+   - Ensures projects configured with modern ORMs receive accurate diagnostics and automatic `.env` repair suggestions when database strings are missing.
+3. **Automated Test Suite Expansion:**
+   - Added tests in `test/doctor.test.js` and `test/plugins.test.js`, bringing passing test suite to 100 tests.
+
+
 
 
