@@ -314,5 +314,17 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Brought total passing automated test suite to 96 tests.
 
 
+## Fixes: Code Generator Path Traversal & Template String Corruption
+
+1. **Path Traversal Guard in `fogoe generate` ([`src/generate.js`](file:///media/workspace/fogoe/src/generate.js)):**
+   - Added regex validation (`/^[a-z0-9_-]+$/`) on component names.
+   - Prevents path traversal attempts (such as `../../malicious`) from escaping intended `src/routes`, `src/controllers`, or `src/models` directories.
+2. **Safe Template Token Replacement ([`src/composer.js`](file:///media/workspace/fogoe/src/composer.js)):**
+   - Switched template replacement from raw string substitution to a function callback `() => String(val)`.
+   - Prevents `$$`, `$1`, `$&`, and other special JavaScript regex replacement patterns in secrets, database passwords, or descriptions from corrupting generated files.
+3. **Automated Test Suite:**
+   - Added security rejection tests in `test/generate.test.js` and dollar pattern preservation tests in `test/generator.test.js`, bringing the passing suite to 98 tests.
+
+
 
 

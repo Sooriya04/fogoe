@@ -896,6 +896,12 @@ function generateComponent(typeArg, nameArg) {
 
   const compType = typeArg.toLowerCase();
   const rawName = nameArg.toLowerCase();
+
+  if (!/^[a-z0-9_-]+$/.test(rawName)) {
+    console.error(chalk.red(`\n  ✗ Invalid name: "${nameArg}". Name must be alphanumeric and can contain hyphens or underscores.`));
+    process.exit(1);
+  }
+
   const capName = capitalize(rawName);
   const ext = language === 'ts' ? 'ts' : 'js';
   const importSuffix = type === 'esm' ? '.js' : '';

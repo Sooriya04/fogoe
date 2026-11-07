@@ -26,10 +26,10 @@ function copyTemplateDir(srcDir, destDir, vars = {}) {
       fs.mkdirSync(path.dirname(destPath), { recursive: true });
       let content = fs.readFileSync(srcPath, 'utf8');
 
-      // Apply variable substitutions
+      // Apply variable substitutions safely without regex replacement pattern corruption
       for (const [key, val] of Object.entries(vars)) {
         const regex = new RegExp(`{{${key}}}`, 'g');
-        content = content.replace(regex, val || '');
+        content = content.replace(regex, () => (val !== undefined && val !== null ? String(val) : ''));
       }
 
       fs.writeFileSync(destPath, content);

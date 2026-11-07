@@ -383,4 +383,20 @@ test('CLI: AI-assisted project scaffolding via --ai flag', () => {
   assert.ok(fs.existsSync(path.join(target, 'src/server.ts')));
 });
 
+test('Composer: safely substitutes values containing regex replacement patterns ($1, $&, $$)', () => {
+  const target = path.join(TEST_OUTPUT_DIR, 'special-char-project');
+  composeProject({
+    targetDir: target,
+    name: 'test-dollar-app',
+    language: 'javascript',
+    runtime: 'express',
+    type: 'commonjs',
+    architecture: 'minimal',
+    description: 'Special $1 and $& and $$ test description',
+  });
+
+  const readme = fs.readFileSync(path.join(target, 'README.md'), 'utf8');
+  assert.ok(readme.includes('Special $1 and $& and $$ test description'), 'Should preserve literal dollar sequences in template substitution');
+});
+
 

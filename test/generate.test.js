@@ -247,5 +247,35 @@ test('CLI generate: TypeScript MVC with MongoDB generates ES import syntax', () 
   }
 });
 
+test('CLI generate: rejects path traversal and invalid component names', () => {
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+  const tmpDir = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'fogoe-sec-test-'));
+
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ defaults: { arch: 'mvc', language: 'js', runtime: 'express', type: 'cjs' } }, null, 2)
+    );
+
+    assert.throws(() => {
+      execSync(`node "${cliPath}" generate route ../../exploit`, {
+        cwd: tmpDir,
+        stdio: 'pipe',
+      });
+    }, /Command failed/);
+
+    assert.throws(() => {
+      execSync(`node "${cliPath}" generate route "invalid name"`, {
+        cwd: tmpDir,
+        stdio: 'pipe',
+      });
+    }, /Command failed/);
+
+    assert.strictEqual(fs.existsSync(path.join(tmpDir, 'exploit.js')), false);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 
 
