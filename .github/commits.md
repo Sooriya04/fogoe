@@ -265,5 +265,38 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Added `test/agent.test.js` validating manifest schema structure, composer integration, and CLI headless output, bringing total passing test suite to 85 tests.
 
 
+## Feature: Stack-Aware Framework Plugins (`ratelimit`, `swagger`, `zod`)
+
+1. **Framework-Aware Dynamic Package Resolution:**
+   - Refactored `PLUGINS` in `src/plugins/registry.js` to support stack overrides (`stacks`) and implemented `getPluginConfig(pluginName, runtime)`:
+     - **`ratelimit`:**
+       - Express: `express-rate-limit`
+       - Fastify: `@fastify/rate-limit`
+       - Hono: `hono-rate-limiter`
+       - Koa: `koa-ratelimit` (+ companion `@types/koa-ratelimit`)
+     - **`swagger`:**
+       - Express: `swagger-ui-express swagger-jsdoc` (+ types)
+       - Fastify: `@fastify/swagger @fastify/swagger-ui`
+       - Hono: `@hono/zod-openapi @scalar/hono-api-reference`
+       - Koa: `koa2-swagger-ui swagger-jsdoc` (+ types)
+     - Preserves full backwards compatibility with static Express defaults.
+
+2. **Framework-Native Code Generation Templates (`src/plugins/templates.js`):**
+   - **Fastify:** Scaffolds plugin wrappers using Fastify's native `fastify.register()` hooks with `FastifyInstance` TypeScript typing.
+   - **Hono:** Scaffolds rate limiter middleware using `app.use(limiter)` and OpenAPI documentation using `@scalar/hono-api-reference`'s interactive `apiReference` UI.
+   - **Koa:** Scaffolds rate limiting with in-memory stores and `Context` types, and mounts Swagger UI via `koa2-swagger-ui`.
+   - **Zod:** Upgraded schema validation middleware to adapt to runtime context (`FastifyRequest`/`FastifyReply` for Fastify, `c.req.json()` for Hono, `ctx.request.body` for Koa).
+
+3. **Intelligent Stack Detection & Lifecycle Management (`src/plugins/index.js`):**
+   - Added `detectRuntime()` to automatically resolve project framework from `fogoe.config.json` (`runtime` / `framework`) or `package.json` dependencies.
+   - Updated `fogoe add` to scaffold framework-specific code and output stack-tailored next steps hints.
+   - Updated `fogoe remove` to inspect all possible framework package variations across stacks and clean up whatever framework package is installed in `dependencies` / `devDependencies`.
+   - Enhanced `--json` support for pre-configured plugins for CI and coding agents.
+
+4. **CLI Help & Automated Test Suite:**
+   - Updated `fogoe --help` to advertise stack-aware capabilities across all 4 HTTP runtimes.
+   - Expanded `test/plugins.test.js` with unit and integration tests verifying package resolution, template syntax, runtime detection, and headless CLI scaffolding, bringing the passing test suite to 89 tests.
+
+
 
 

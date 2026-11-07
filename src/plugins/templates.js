@@ -43,6 +43,262 @@ export default client;
 // ─────────────────────────────────────────────
 
 const zod = {
+  stacks: {
+    express: {
+      js: {
+        commonjs: `const { z } = require('zod');
+
+/**
+ * Example: validate request body
+ * const schema = z.object({ name: z.string(), age: z.number() });
+ * const result = schema.safeParse(req.body);
+ */
+
+function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ errors: result.error.flatten().fieldErrors });
+    }
+    req.body = result.data;
+    next();
+  };
+}
+
+module.exports = { z, validate };
+`,
+        module: `import { z } from 'zod';
+
+/**
+ * Example: validate request body
+ * const schema = z.object({ name: z.string(), age: z.number() });
+ * const result = schema.safeParse(req.body);
+ */
+
+export function validate(schema) {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ errors: result.error.flatten().fieldErrors });
+    }
+    req.body = result.data;
+    next();
+  };
+}
+
+export { z };
+`,
+      },
+      ts: `import { z, ZodSchema } from 'zod';
+import { Request, Response, NextFunction } from 'express';
+
+/**
+ * Example: validate request body
+ * const schema = z.object({ name: z.string(), age: z.number() });
+ * const result = schema.safeParse(req.body);
+ */
+
+export function validate(schema: ZodSchema) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ errors: result.error.flatten().fieldErrors });
+    }
+    req.body = result.data;
+    next();
+  };
+}
+
+export { z };
+`,
+    },
+    fastify: {
+      js: {
+        commonjs: `const { z } = require('zod');
+
+/**
+ * Fastify preValidation hook / validator
+ */
+function validate(schema) {
+  return async (req, reply) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return reply.status(400).send({ errors: result.error.flatten().fieldErrors });
+    }
+    req.body = result.data;
+  };
+}
+
+module.exports = { z, validate };
+`,
+        module: `import { z } from 'zod';
+
+/**
+ * Fastify preValidation hook / validator
+ */
+export function validate(schema) {
+  return async (req, reply) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return reply.status(400).send({ errors: result.error.flatten().fieldErrors });
+    }
+    req.body = result.data;
+  };
+}
+
+export { z };
+`,
+      },
+      ts: `import { z, ZodSchema } from 'zod';
+import { FastifyRequest, FastifyReply } from 'fastify';
+
+/**
+ * Fastify preValidation hook / validator
+ */
+export function validate(schema: ZodSchema) {
+  return async (req: FastifyRequest, reply: FastifyReply) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return reply.status(400).send({ errors: result.error.flatten().fieldErrors });
+    }
+    req.body = result.data;
+  };
+}
+
+export { z };
+`,
+    },
+    hono: {
+      js: {
+        commonjs: `const { z } = require('zod');
+
+/**
+ * Hono validation middleware
+ */
+function validate(schema) {
+  return async (c, next) => {
+    const body = await c.req.json().catch(() => ({}));
+    const result = schema.safeParse(body);
+    if (!result.success) {
+      return c.json({ errors: result.error.flatten().fieldErrors }, 400);
+    }
+    c.set('validatedBody', result.data);
+    await next();
+  };
+}
+
+module.exports = { z, validate };
+`,
+        module: `import { z } from 'zod';
+
+/**
+ * Hono validation middleware
+ */
+export function validate(schema) {
+  return async (c, next) => {
+    const body = await c.req.json().catch(() => ({}));
+    const result = schema.safeParse(body);
+    if (!result.success) {
+      return c.json({ errors: result.error.flatten().fieldErrors }, 400);
+    }
+    c.set('validatedBody', result.data);
+    await next();
+  };
+}
+
+export { z };
+`,
+      },
+      ts: `import { z, ZodSchema } from 'zod';
+import { Context, Next } from 'hono';
+
+/**
+ * Hono validation middleware
+ */
+export function validate(schema: ZodSchema) {
+  return async (c: Context, next: Next) => {
+    const body = await c.req.json().catch(() => ({}));
+    const result = schema.safeParse(body);
+    if (!result.success) {
+      return c.json({ errors: result.error.flatten().fieldErrors }, 400);
+    }
+    c.set('validatedBody', result.data);
+    await next();
+  };
+}
+
+export { z };
+`,
+    },
+    koa: {
+      js: {
+        commonjs: `const { z } = require('zod');
+
+/**
+ * Koa validation middleware
+ */
+function validate(schema) {
+  return async (ctx, next) => {
+    const body = ctx.request.body || {};
+    const result = schema.safeParse(body);
+    if (!result.success) {
+      ctx.status = 400;
+      ctx.body = { errors: result.error.flatten().fieldErrors };
+      return;
+    }
+    ctx.request.body = result.data;
+    await next();
+  };
+}
+
+module.exports = { z, validate };
+`,
+        module: `import { z } from 'zod';
+
+/**
+ * Koa validation middleware
+ */
+export function validate(schema) {
+  return async (ctx, next) => {
+    const body = ctx.request.body || {};
+    const result = schema.safeParse(body);
+    if (!result.success) {
+      ctx.status = 400;
+      ctx.body = { errors: result.error.flatten().fieldErrors };
+      return;
+    }
+    ctx.request.body = result.data;
+    await next();
+  };
+}
+
+export { z };
+`,
+      },
+      ts: `import { z, ZodSchema } from 'zod';
+import { Context, Next } from 'koa';
+
+/**
+ * Koa validation middleware
+ */
+export function validate(schema: ZodSchema) {
+  return async (ctx: Context, next: Next) => {
+    const body = (ctx.request as any).body || {};
+    const result = schema.safeParse(body);
+    if (!result.success) {
+      ctx.status = 400;
+      ctx.body = { errors: result.error.flatten().fieldErrors };
+      return;
+    }
+    (ctx.request as any).body = result.data;
+    await next();
+  };
+}
+
+export { z };
+`,
+    },
+  },
   js: {
     commonjs: `const { z } = require('zod');
 
@@ -223,10 +479,176 @@ export default stripe;
 };
 
 // ─────────────────────────────────────────────
-// RATE LIMIT (express-rate-limit)
+// RATE LIMIT (stack-aware)
 // ─────────────────────────────────────────────
 
 const ratelimit = {
+  stacks: {
+    express: {
+      js: {
+        commonjs: `const rateLimit = require('express-rate-limit');
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+module.exports = limiter;
+`,
+        module: `import rateLimit from 'express-rate-limit';
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+export default limiter;
+`,
+      },
+      ts: `import rateLimit from 'express-rate-limit';
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+export default limiter;
+`,
+    },
+    fastify: {
+      js: {
+        commonjs: `const rateLimit = require('@fastify/rate-limit');
+
+async function setupRateLimit(fastify) {
+  await fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '15 minutes',
+  });
+}
+
+module.exports = setupRateLimit;
+`,
+        module: `import rateLimit from '@fastify/rate-limit';
+
+export default async function setupRateLimit(fastify) {
+  await fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '15 minutes',
+  });
+}
+`,
+      },
+      ts: `import rateLimit from '@fastify/rate-limit';
+import { FastifyInstance } from 'fastify';
+
+export default async function setupRateLimit(fastify: FastifyInstance) {
+  await fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: '15 minutes',
+  });
+}
+`,
+    },
+    hono: {
+      js: {
+        commonjs: `const { rateLimiter } = require('hono-rate-limiter');
+
+const limiter = rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100,
+  standardHeaders: 'draft-6',
+  keyGenerator: (c) => c.req.header('x-forwarded-for') || 'anon',
+});
+
+module.exports = limiter;
+`,
+        module: `import { rateLimiter } from 'hono-rate-limiter';
+
+const limiter = rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100,
+  standardHeaders: 'draft-6',
+  keyGenerator: (c) => c.req.header('x-forwarded-for') || 'anon',
+});
+
+export default limiter;
+`,
+      },
+      ts: `import { rateLimiter } from 'hono-rate-limiter';
+
+export const limiter = rateLimiter({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100,
+  standardHeaders: 'draft-6',
+  keyGenerator: (c) => c.req.header('x-forwarded-for') || 'anon',
+});
+
+export default limiter;
+`,
+    },
+    koa: {
+      js: {
+        commonjs: `const rateLimit = require('koa-ratelimit');
+
+const db = new Map();
+
+const limiter = rateLimit({
+  driver: 'memory',
+  db,
+  duration: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  id: (ctx) => ctx.ip,
+  errorMessage: 'Too many requests, please try again later.',
+  disableHeader: false,
+});
+
+module.exports = limiter;
+`,
+        module: `import rateLimit from 'koa-ratelimit';
+
+const db = new Map();
+
+const limiter = rateLimit({
+  driver: 'memory',
+  db,
+  duration: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  id: (ctx) => ctx.ip,
+  errorMessage: 'Too many requests, please try again later.',
+  disableHeader: false,
+});
+
+export default limiter;
+`,
+      },
+      ts: `import rateLimit from 'koa-ratelimit';
+import { Context } from 'koa';
+
+const db = new Map();
+
+const limiter = rateLimit({
+  driver: 'memory',
+  db,
+  duration: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  id: (ctx: Context) => ctx.ip,
+  errorMessage: 'Too many requests, please try again later.',
+  disableHeader: false,
+});
+
+export default limiter;
+`,
+    },
+  },
   js: {
     commonjs: `const rateLimit = require('express-rate-limit');
 
@@ -269,10 +691,268 @@ export default limiter;
 };
 
 // ─────────────────────────────────────────────
-// SWAGGER (swagger-ui-express + swagger-jsdoc)
+// SWAGGER / API DOCS (stack-aware)
 // ─────────────────────────────────────────────
 
 const swagger = {
+  stacks: {
+    express: {
+      js: {
+        commonjs: `const swaggerUi = require('swagger-ui-express');
+const swaggerJsdoc = require('swagger-jsdoc');
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Docs',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.js'],
+};
+
+const spec = swaggerJsdoc(options);
+
+module.exports = { swaggerUi, spec };
+`,
+        module: `import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Docs',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.js'],
+};
+
+const spec = swaggerJsdoc(options);
+
+export { swaggerUi, spec };
+`,
+      },
+      ts: `import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Docs',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.ts'],
+};
+
+const spec = swaggerJsdoc(options);
+
+export { swaggerUi, spec };
+`,
+    },
+    fastify: {
+      js: {
+        commonjs: `const swagger = require('@fastify/swagger');
+const swaggerUi = require('@fastify/swagger-ui');
+
+async function setupSwagger(fastify) {
+  await fastify.register(swagger, {
+    openapi: {
+      info: {
+        title: 'API Docs',
+        version: '1.0.0',
+      },
+    },
+  });
+
+  await fastify.register(swaggerUi, {
+    routePrefix: '/api-docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: false,
+    },
+  });
+}
+
+module.exports = setupSwagger;
+`,
+        module: `import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
+
+export default async function setupSwagger(fastify) {
+  await fastify.register(swagger, {
+    openapi: {
+      info: {
+        title: 'API Docs',
+        version: '1.0.0',
+      },
+    },
+  });
+
+  await fastify.register(swaggerUi, {
+    routePrefix: '/api-docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: false,
+    },
+  });
+}
+`,
+      },
+      ts: `import swagger from '@fastify/swagger';
+import swaggerUi from '@fastify/swagger-ui';
+import { FastifyInstance } from 'fastify';
+
+export default async function setupSwagger(fastify: FastifyInstance) {
+  await fastify.register(swagger, {
+    openapi: {
+      info: {
+        title: 'API Docs',
+        version: '1.0.0',
+      },
+    },
+  });
+
+  await fastify.register(swaggerUi, {
+    routePrefix: '/api-docs',
+    uiConfig: {
+      docExpansion: 'list',
+      deepLinking: false,
+    },
+  });
+}
+`,
+    },
+    hono: {
+      js: {
+        commonjs: `const { apiReference } = require('@scalar/hono-api-reference');
+
+function setupSwagger(app) {
+  app.get(
+    '/api-docs',
+    apiReference({
+      theme: 'purple',
+      spec: {
+        url: '/doc',
+      },
+    })
+  );
+}
+
+module.exports = setupSwagger;
+`,
+        module: `import { apiReference } from '@scalar/hono-api-reference';
+
+export function setupSwagger(app) {
+  app.get(
+    '/api-docs',
+    apiReference({
+      theme: 'purple',
+      spec: {
+        url: '/doc',
+      },
+    })
+  );
+}
+
+export default setupSwagger;
+`,
+      },
+      ts: `import { apiReference } from '@scalar/hono-api-reference';
+
+export function setupSwagger(app: any) {
+  app.get(
+    '/api-docs',
+    apiReference({
+      theme: 'purple',
+      spec: {
+        url: '/doc',
+      },
+    })
+  );
+}
+
+export default setupSwagger;
+`,
+    },
+    koa: {
+      js: {
+        commonjs: `const { koaSwagger } = require('koa2-swagger-ui');
+const swaggerJsdoc = require('swagger-jsdoc');
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Docs',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.js'],
+};
+
+const spec = swaggerJsdoc(options);
+
+const swaggerMiddleware = koaSwagger({
+  routePrefix: '/api-docs',
+  swaggerOptions: { spec },
+});
+
+module.exports = { swaggerMiddleware, spec };
+`,
+        module: `import { koaSwagger } from 'koa2-swagger-ui';
+import swaggerJsdoc from 'swagger-jsdoc';
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Docs',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.js'],
+};
+
+const spec = swaggerJsdoc(options);
+
+export const swaggerMiddleware = koaSwagger({
+  routePrefix: '/api-docs',
+  swaggerOptions: { spec },
+});
+
+export { spec };
+`,
+      },
+      ts: `import { koaSwagger } from 'koa2-swagger-ui';
+import swaggerJsdoc from 'swagger-jsdoc';
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'API Docs',
+      version: '1.0.0',
+    },
+  },
+  apis: ['./src/routes/*.ts'],
+};
+
+const spec = swaggerJsdoc(options);
+
+export const swaggerMiddleware = koaSwagger({
+  routePrefix: '/api-docs',
+  swaggerOptions: { spec },
+});
+
+export { spec };
+`,
+    },
+  },
   js: {
     commonjs: `const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');

@@ -2,12 +2,13 @@
  * Plugin registry — maps plugin names to their metadata.
  * Each entry defines:
  *   - description: human-readable summary shown in the select prompt
- *   - packages: npm package(s) to install as --save
+ *   - packages: npm package(s) to install as --save (fallback / default)
  *   - devPackages: npm package(s) to install as --save-dev (optional)
  *   - outputDir: where the scaffolded file goes (relative to project root)
  *   - outputFile: filename (without extension — extension added at runtime)
  *   - template: key in templates.js that holds the file content
  *   - envVars: string of env vars to append to .env (null if none)
+ *   - stacks: optional framework-specific overrides ({ express, fastify, hono, koa })
  */
 
 const PLUGINS = {
@@ -48,22 +49,58 @@ const PLUGINS = {
     envVars: 'STRIPE_SECRET_KEY=sk_test_\nSTRIPE_WEBHOOK_SECRET=whsec_',
   },
   ratelimit: {
-    description: 'express-rate-limit — protect endpoints from abuse',
+    description: 'Rate limiting — protect endpoints from abuse (stack-aware)',
     packages: 'express-rate-limit',
     devPackages: '',
     outputDir: 'src/middlewares',
     outputFile: 'rateLimiter',
     template: 'ratelimit',
     envVars: null,
+    stacks: {
+      express: {
+        packages: 'express-rate-limit',
+        devPackages: '',
+      },
+      fastify: {
+        packages: '@fastify/rate-limit',
+        devPackages: '',
+      },
+      hono: {
+        packages: 'hono-rate-limiter',
+        devPackages: '',
+      },
+      koa: {
+        packages: 'koa-ratelimit',
+        devPackages: '@types/koa-ratelimit',
+      },
+    },
   },
   swagger: {
-    description: 'Swagger UI — interactive API documentation',
+    description: 'API Documentation — interactive Swagger / OpenAPI docs (stack-aware)',
     packages: 'swagger-ui-express swagger-jsdoc',
     devPackages: '@types/swagger-ui-express @types/swagger-jsdoc',
     outputDir: 'src/config',
     outputFile: 'swagger',
     template: 'swagger',
     envVars: null,
+    stacks: {
+      express: {
+        packages: 'swagger-ui-express swagger-jsdoc',
+        devPackages: '@types/swagger-ui-express @types/swagger-jsdoc',
+      },
+      fastify: {
+        packages: '@fastify/swagger @fastify/swagger-ui',
+        devPackages: '',
+      },
+      hono: {
+        packages: '@hono/zod-openapi @scalar/hono-api-reference',
+        devPackages: '',
+      },
+      koa: {
+        packages: 'koa2-swagger-ui swagger-jsdoc',
+        devPackages: '@types/swagger-jsdoc',
+      },
+    },
   },
   socket: {
     description: 'Socket.IO — real-time bidirectional event-based communication',
@@ -92,4 +129,24 @@ const PLUGINS = {
   },
 };
 
-module.exports = { PLUGINS };
+/**
+ * Resolve plugin metadata customized for the target runtime framework.
+ *
+ * @param {string} pluginName
+ * @param {string} [runtime='express']
+ * @returns {object|null}
+ */
+function getPluginConfig(pluginName, runtime = 'express') {
+  const plugin = PLUGINS[pluginName];
+  if (!plugin) return null;
+  const normRuntime = (runtime || 'express').toLowerCase();
+  const stack = plugin.stacks?.[normRuntime] || plugin.stacks?.express || {};
+  return {
+    ...plugin,
+    ...stack,
+    packages: stack.packages !== undefined ? stack.packages : plugin.packages,
+    devPackages: stack.devPackages !== undefined ? stack.devPackages : plugin.devPackages,
+  };
+}
+
+module.exports = { PLUGINS, getPluginConfig };

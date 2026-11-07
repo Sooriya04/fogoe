@@ -249,8 +249,8 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.cyan('zod')}        — Schema validation (zod)`);
     console.log(`  ${chalk.cyan('mailer')}     — Email via SMTP (nodemailer)`);
     console.log(`  ${chalk.cyan('stripe')}     — Payment processing (stripe)`);
-    console.log(`  ${chalk.cyan('ratelimit')}  — Request rate limiting (express-rate-limit)`);
-    console.log(`  ${chalk.cyan('swagger')}    — API docs (swagger-ui-express)`);
+    console.log(`  ${chalk.cyan('ratelimit')}  — Request rate limiting (stack-aware: Express, Fastify, Hono, Koa)`);
+    console.log(`  ${chalk.cyan('swagger')}    — API docs & Swagger UI (stack-aware: Express, Fastify, Hono, Koa)`);
     console.log(`  ${chalk.cyan('socket')}     — Real-time events (socket.io)\n`);
 
     console.log(chalk.yellow('Examples:'));
