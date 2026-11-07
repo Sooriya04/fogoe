@@ -109,4 +109,48 @@ test('Installer: uninstallPackageList gracefully handles failures without throwi
   assert.strictEqual(typeof res, 'boolean');
 });
 
+test('CLI add and remove: cleanly exits with JSON error when package argument is omitted in --json mode', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-json-err-'));
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-app', version: '1.0.0', dependencies: {} }, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ defaults: { language: 'js', type: 'cjs' } }, null, 2)
+    );
+
+    // fogoe add --json without package name
+    assert.throws(() => {
+      execSync(`node "${cliPath}" add --json`, {
+        cwd: tmpDir,
+        encoding: 'utf8',
+      });
+    }, (err) => {
+      const parsed = JSON.parse(err.stdout.trim());
+      assert.strictEqual(parsed.success, false);
+      assert.ok(parsed.error.includes('Package name required'));
+      return true;
+    });
+
+    // fogoe remove --json without package name
+    assert.throws(() => {
+      execSync(`node "${cliPath}" remove --json`, {
+        cwd: tmpDir,
+        encoding: 'utf8',
+      });
+    }, (err) => {
+      const parsed = JSON.parse(err.stdout.trim());
+      assert.strictEqual(parsed.success, false);
+      assert.ok(parsed.error.includes('Package name required'));
+      return true;
+    });
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 

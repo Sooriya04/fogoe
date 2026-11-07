@@ -227,7 +227,9 @@ async function setupCompose(options = {}) {
       if (cfg.name) projectName = cfg.name;
       if (cfg.defaults && cfg.defaults.database) database = cfg.defaults.database;
       if (cfg.addons && Array.isArray(cfg.addons)) {
-        if (cfg.addons.includes('redis')) redis = true;
+        if (cfg.addons.includes('redis') || cfg.addons.includes('queue') || cfg.addons.includes('bullmq')) {
+          redis = true;
+        }
       }
     } catch {}
   }
@@ -239,7 +241,7 @@ async function setupCompose(options = {}) {
       const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
       if (pkg.name && projectName === path.basename(targetDir)) projectName = pkg.name;
       const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
-      if (deps['ioredis'] || deps['redis']) redis = true;
+      if (deps['ioredis'] || deps['redis'] || deps['bullmq']) redis = true;
       if (database === 'none') {
         if (deps['pg'] || deps['drizzle-orm'] || deps['@prisma/client']) database = 'postgres';
         else if (deps['mongoose'] || deps['mongodb']) database = 'mongodb';

@@ -7,6 +7,7 @@ const { generateGitHubActionsWorkflow } = require('../src/ci/githubActions');
 const { generateDockerfile, generateDockerignore } = require('../src/ci/docker');
 const { DEPLOY_TARGETS, isValidDeployTarget, getRequiredSecrets } = require('../src/ci/deploy');
 const { detectProjectStack, setupCiCd } = require('../src/ci');
+const { setupCompose } = require('../src/ci/compose');
 
 const TEST_CI_DIR = path.join(__dirname, 'temp_ci_test');
 
@@ -398,4 +399,25 @@ test('Docker Compose: setupCompose avoids duplicate compose in addons array', as
   const cfg = JSON.parse(fs.readFileSync(path.join(TEST_CI_DIR, 'fogoe.config.json'), 'utf8'));
   const occurrences = cfg.addons.filter(a => a === 'compose').length;
   assert.strictEqual(occurrences, 1, 'Should not duplicate compose in addons');
+});
+
+test('Docker Compose: setupCompose automatically activates Redis when queue addon is present', async () => {
+  cleanTemp();
+  fs.mkdirSync(TEST_CI_DIR, { recursive: true });
+
+  fs.writeFileSync(
+    path.join(TEST_CI_DIR, 'fogoe.config.json'),
+    JSON.stringify({ defaults: { database: 'none' }, addons: ['queue'] }, null, 2)
+  );
+  fs.writeFileSync(
+    path.join(TEST_CI_DIR, 'package.json'),
+    JSON.stringify({ name: 'queue-compose-test', dependencies: { bullmq: '^5.0.0' } }, null, 2)
+  );
+
+  await setupCompose({ targetDir: TEST_CI_DIR, silent: true });
+
+  const composeContent = fs.readFileSync(path.join(TEST_CI_DIR, 'docker-compose.yml'), 'utf8');
+  assert.ok(composeContent.includes('redis:'), 'Should provision redis service for BullMQ queue addon');
+  assert.ok(composeContent.includes('image: redis:7-alpine'), 'Should use official redis alpine image');
+  assert.ok(composeContent.includes('REDIS_URL=redis://redis:6379'), 'Should set container REDIS_URL');
 });

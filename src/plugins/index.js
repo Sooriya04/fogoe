@@ -129,6 +129,10 @@ async function addPlugin(pluginArg, options = {}) {
   let pluginName = pluginArg;
 
   if (!pluginName) {
+    if (json) {
+      console.log(JSON.stringify({ success: false, error: 'Package name required in non-interactive/json mode' }));
+      process.exit(1);
+    }
     // Show interactive select
     const choices = Object.entries(PLUGINS).map(([name, meta]) => `${name} — ${meta.description}`);
     const chosen = await select('Select a plugin to add', choices);
@@ -382,6 +386,11 @@ async function removePlugin(packageArg, options = {}) {
   // ── 2. Determine package to remove ─────────────────────────────────────────
   let targetPackage = packageArg;
   if (!targetPackage) {
+    if (json) {
+      console.log(JSON.stringify({ success: false, error: 'Package name required in non-interactive/json mode' }));
+      process.exit(1);
+    }
+
     const installed = Array.from(new Set([
       ...(config.addons || []),
       ...Object.keys(deps),

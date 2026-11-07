@@ -338,5 +338,18 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Added tests in `test/doctor.test.js` and `test/plugins.test.js`, bringing passing test suite to 100 tests.
 
 
+## Fixes: Headless CLI Argument Handling & Docker Compose Queue Redis Dependency
+
+1. **Headless Package Name Requirement ([`src/plugins/index.js`](file:///media/workspace/fogoe/src/plugins/index.js)):**
+   - Added explicit non-interactive/headless check in `addPlugin` and `removePlugin`: when `--json` is provided without a package name, immediately outputs `{ success: false, error: 'Package name required in non-interactive/json mode' }` and exits with code 1 instead of hanging on interactive terminal prompt menus.
+2. **BullMQ Queue Redis Container Activation ([`src/ci/compose.js`](file:///media/workspace/fogoe/src/ci/compose.js)):**
+   - Updated Docker Compose generator to inspect `queue` or `bullmq` addons and `bullmq` package.json dependency.
+   - Automatically provisions and wires Redis container in `docker-compose.yml` for projects using background queues.
+3. **Automated Test Suite Expansion:**
+   - Added unit test in `test/plugins.test.js` for `--json` headless validation and in `test/ci.test.js` for automatic Redis service generation when queue addon is configured.
+   - All 102 automated tests passing.
+
+
+
 
 
