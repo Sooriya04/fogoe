@@ -356,6 +356,14 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Removed unused `execSync` from `child_process` import destructuring since all git operations use `execFileSync`.
 
 
+## Fix: Windows Cross-Platform Binary Resolution in Installer & Plugins
+
+1. **Windows `.cmd` Binary Resolution in `execFileSync` ([`src/plugins/index.js`](file:///media/workspace/fogoe/src/plugins/index.js), [`src/installer.js`](file:///media/workspace/fogoe/src/installer.js)):**
+   - On Windows (`process.platform === 'win32'`), `npm`, `bun`, `pnpm`, and `yarn` executables are `.cmd` / `.bat` shell batch scripts that require extension resolution when spawned via `execFileSync`.
+   - Added automatic binary resolution (`resolveBin`) so Windows CI runners (`windows-latest` matrix in GitHub Actions) correctly resolve `npm.cmd`, `yarn.cmd`, and `pnpm.cmd` without throwing `ENOENT` or failing registry queries in `test/plugins.test.js`.
+
+
+
 
 
 

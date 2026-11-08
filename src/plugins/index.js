@@ -38,6 +38,8 @@ function isValidNpmPackageName(name) {
   return /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(name);
 }
 
+const npmBinary = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+
 /**
  * Check if a package name exists on npm registry.
  * Uses execFileSync with discrete arguments to prevent shell injection.
@@ -47,7 +49,7 @@ function checkNpmPackageExists(packageName) {
     return false;
   }
   try {
-    execFileSync('npm', ['view', packageName, 'version'], {
+    execFileSync(npmBinary, ['view', packageName, 'version'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
     });
@@ -67,11 +69,11 @@ function resolveTypesPackage(packageName) {
   }
   try {
     // Check if main package already bundles types
-    const typings = execFileSync('npm', ['view', packageName, 'typings'], {
+    const typings = execFileSync(npmBinary, ['view', packageName, 'typings'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
     }).trim();
-    const types = execFileSync('npm', ['view', packageName, 'types'], {
+    const types = execFileSync(npmBinary, ['view', packageName, 'types'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
     }).trim();

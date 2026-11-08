@@ -172,9 +172,11 @@ function installPackageList({ packages = "", devPackages = "", pm = null, silent
 
   if (splitPkgs.length === 0 && splitDev.length === 0) return;
 
+  const resolveBin = (name) => (process.platform === 'win32' ? `${name}.cmd` : name);
+
   const runCmd = (cmd, args) => {
     try {
-      execFileSync(cmd, args, { stdio });
+      execFileSync(resolveBin(cmd), args, { stdio });
       return true;
     } catch {
       return false;
@@ -228,15 +230,17 @@ function uninstallPackageList({ packages = "", pm = null, silent = false }) {
   const splitPkgs = (typeof packages === "string" ? packages.split(" ") : packages).filter(Boolean);
   if (splitPkgs.length === 0) return true;
 
+  const resolveBin = (name) => (process.platform === 'win32' ? `${name}.cmd` : name);
+
   try {
     if (activePm === "npm") {
-      execFileSync("npm", ["uninstall", ...splitPkgs], { stdio });
+      execFileSync(resolveBin("npm"), ["uninstall", ...splitPkgs], { stdio });
     } else if (activePm === "bun") {
-      execFileSync("bun", ["remove", ...splitPkgs], { stdio });
+      execFileSync(resolveBin("bun"), ["remove", ...splitPkgs], { stdio });
     } else if (activePm === "pnpm") {
-      execFileSync("pnpm", ["remove", ...splitPkgs], { stdio });
+      execFileSync(resolveBin("pnpm"), ["remove", ...splitPkgs], { stdio });
     } else if (activePm === "yarn") {
-      execFileSync("yarn", ["remove", ...splitPkgs], { stdio });
+      execFileSync(resolveBin("yarn"), ["remove", ...splitPkgs], { stdio });
     }
     return true;
   } catch (err) {
