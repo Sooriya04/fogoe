@@ -264,3 +264,45 @@ test('CLI monitor integration: node bin/cli.js monitor --stats outputs TUI box f
   }
 });
 
+test('TUI Monitor: renderBar safely handles NaN and undefined without throwing', () => {
+  const barNaN = renderBar(NaN, 10);
+  const barUndefined = renderBar(undefined, 10);
+  assert.ok(barNaN.includes('░░░░░░░░░░'));
+  assert.ok(barUndefined.includes('░░░░░░░░░░'));
+});
+
+test('TUI Monitor: renderTuiMonitor preserves exact 76-char width with long error messages', () => {
+  const mockHealth = {
+    timestamp: new Date().toISOString(),
+    project: 'overflow-test-app',
+    healthy: false,
+    services: {
+      server: {
+        configured: true,
+        port: 3000,
+        listening: false,
+        error: 'ENOTFOUND very-long-cluster-domain-name-exceeding-any-normal-column-size.us-east-1.rds.amazonaws.com',
+      },
+      database: {
+        configured: true,
+        type: 'postgres',
+        connected: false,
+        error: 'FATAL: database "super_long_production_customer_data_partition_name_2026" does not exist',
+      },
+      redis: {
+        configured: true,
+        reachable: false,
+        error: 'ECONNREFUSED 127.0.0.1:6379 (Connection refused after 1500ms timeout retry)',
+      },
+    },
+  };
+
+  const { stripAnsi } = require('../src/tui/monitor');
+  const output = renderTuiMonitor(mockHealth);
+  const lines = output.trim().split('\n');
+  for (const line of lines) {
+    assert.strictEqual(stripAnsi(line).length, 76);
+  }
+});
+
+

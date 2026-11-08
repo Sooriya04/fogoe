@@ -399,3 +399,12 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 2. **Alignment & Typography:** Removed emojis to prevent terminal font-width distortion, added ANSI-aware `makeRow` ensuring exact 76-char width across all rows, and closed top header border gaps.
 3. **CLI & Controls (`src/monitor/`, `src/index.js`):** Added `--stats` and `--tui` flags with interactive `[r]` refresh and `[q]` quit shortcuts in watch mode.
 4. **Test Suite:** Added 4 automated tests in `test/monitor.test.js`, bringing passing tests to 116.
+
+
+## Fix: TUI Monitor NaN Memory Guard & Error Border Overflow
+
+1. **Memory Bar Safety (`src/tui/monitor.js`):** Added finite checks (`Number.isFinite`) to `renderBar` and guarded `totalMem > 0` to prevent `RangeError` crashes on `NaN` in restricted containers.
+2. **Border Overflow Protection (`src/tui/monitor.js`):** Added `truncate()` and safe slicing fallback in `makeRow` ensuring lines never exceed 76 characters when error strings or URLs are long.
+3. **Deduplication:** Extracted `formatServiceRow` helper to clean up repeated padding across service rows.
+4. **Test Suite:** Added unit tests in `test/monitor.test.js` verifying `NaN`/`undefined` bar safety and 76-character width invariance, bringing passing tests to 118.
+

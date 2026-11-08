@@ -13,16 +13,29 @@ function stripAnsi(str) {
 }
 
 /**
+ * Truncates a string with an ellipsis if it exceeds max length.
+ * @param {string} str
+ * @param {number} max
+ * @returns {string}
+ */
+function truncate(str, max = 18) {
+  if (!str || typeof str !== 'string') return '';
+  return str.length > max ? str.slice(0, max - 3) + '...' : str;
+}
+
+/**
  * Creates a visual ASCII progress bar.
  * Example: [████████░░░░░░░░]
+ * Safe against NaN or infinite values.
  * @param {number} percent - 0 to 100
  * @param {number} width - character width
  * @returns {string}
  */
 function renderBar(percent, width = 16) {
-  const clamped = Math.max(0, Math.min(100, percent));
+  const safe = Number.isFinite(percent) ? percent : 0;
+  const clamped = Math.max(0, Math.min(100, safe));
   const filledCount = Math.round((clamped / 100) * width);
-  const emptyCount = width - filledCount;
+  const emptyCount = Math.max(0, width - filledCount);
 
   const filled = chalk.cyan('█'.repeat(filledCount));
   const empty = chalk.gray('░'.repeat(emptyCount));
@@ -35,6 +48,7 @@ function renderBar(percent, width = 16) {
  * @returns {string}
  */
 function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
   if (bytes < 1024 * 1024) {
     return `${Math.round(bytes / 1024)} KB`;
   }
@@ -58,6 +72,7 @@ function pad(str, width) {
 
 /**
  * Wraps content in side borders with exact fixed inner width.
+ * Prevents border protrusion if content exceeds inner width.
  * @param {string} content
  * @param {number} boxWidth
  * @returns {string}
@@ -65,8 +80,32 @@ function pad(str, width) {
 function makeRow(content, boxWidth) {
   const innerWidth = boxWidth - 2;
   const visible = stripAnsi(content).length;
+  if (visible > innerWidth) {
+    const plain = stripAnsi(content);
+    return chalk.cyan('│') + plain.slice(0, innerWidth - 3) + '...' + chalk.cyan('│');
+  }
   const padding = Math.max(0, innerWidth - visible);
   return chalk.cyan('│') + content + ' '.repeat(padding) + chalk.cyan('│');
+}
+
+/**
+ * Helper to format a unified 5-column service table row.
+ * @param {string} name
+ * @param {string} statusText
+ * @param {string} endpoint
+ * @param {string} latency
+ * @param {string} detail
+ * @returns {string}
+ */
+function formatServiceRow(name, statusText, endpoint, latency, detail) {
+  return (
+    '  ' +
+    pad(name, 15) +
+    pad(statusText, 12) +
+    pad(truncate(endpoint, 18), 20) +
+    pad(latency, 9) +
+    detail
+  );
 }
 
 /**
@@ -130,16 +169,9 @@ function renderTuiMonitor(health) {
       ? s.httpResponding
         ? chalk.green(`HTTP ${s.statusCode || 200}`)
         : chalk.gray('TCP ready')
-      : chalk.red(s.error || 'refused');
+      : chalk.red(truncate(s.error || 'refused', 18));
 
-    const serverRow =
-      '  ' +
-      pad('Server', 15) +
-      pad(statusText, 12) +
-      pad(endpoint, 20) +
-      pad(latency, 9) +
-      detail;
-    lines.push(makeRow(serverRow, boxWidth));
+    lines.push(makeRow(formatServiceRow('Server', statusText, endpoint, latency, detail), boxWidth));
   }
 
   // 2. Database Row
@@ -155,17 +187,10 @@ function renderTuiMonitor(health) {
         : `${d.host || '127.0.0.1'}:${d.port || 5432}`;
     const latency = d.latencyMs ? `${d.latencyMs}ms` : '-';
     const detail = ok
-      ? chalk.gray(d.type ? `${d.type} connected` : 'connected')
-      : chalk.red(d.error || 'unreachable');
+      ? chalk.gray(d.type ? truncate(`${d.type} connected`, 18) : 'connected')
+      : chalk.red(truncate(d.error || 'unreachable', 18));
 
-    const dbRow =
-      '  ' +
-      pad('Database', 15) +
-      pad(statusText, 12) +
-      pad(endpoint, 20) +
-      pad(latency, 9) +
-      detail;
-    lines.push(makeRow(dbRow, boxWidth));
+    lines.push(makeRow(formatServiceRow('Database', statusText, endpoint, latency, detail), boxWidth));
   }
 
   // 3. Redis Row
@@ -177,17 +202,10 @@ function renderTuiMonitor(health) {
     const endpoint = '127.0.0.1:6379';
     const latency = r.latencyMs ? `${r.latencyMs}ms` : '-';
     const detail = r.reachable
-      ? chalk.gray(r.response || 'PONG')
-      : chalk.red(r.error || 'unreachable');
+      ? chalk.gray(truncate(r.response || 'PONG', 18))
+      : chalk.red(truncate(r.error || 'unreachable', 18));
 
-    const redisRow =
-      '  ' +
-      pad('Redis Queue', 15) +
-      pad(statusText, 12) +
-      pad(endpoint, 20) +
-      pad(latency, 9) +
-      detail;
-    lines.push(makeRow(redisRow, boxWidth));
+    lines.push(makeRow(formatServiceRow('Redis Queue', statusText, endpoint, latency, detail), boxWidth));
   }
 
   // 4. Docker Row
@@ -205,14 +223,7 @@ function renderTuiMonitor(health) {
     const detail =
       count > 0 ? `${runningCount}/${count} running` : chalk.gray('0 containers');
 
-    const dockerRow =
-      '  ' +
-      pad('Containers', 15) +
-      pad(statusText, 12) +
-      pad(endpoint, 20) +
-      pad('-', 9) +
-      detail;
-    lines.push(makeRow(dockerRow, boxWidth));
+    lines.push(makeRow(formatServiceRow('Containers', statusText, endpoint, '-', detail), boxWidth));
   }
 
   lines.push(divider);
@@ -221,13 +232,14 @@ function renderTuiMonitor(health) {
   const totalMem = os.totalmem();
   const freeMem = os.freemem();
   const usedMem = totalMem - freeMem;
-  const memPct = Math.round((usedMem / totalMem) * 100);
+  const memPct = totalMem > 0 ? Math.round((usedMem / totalMem) * 100) : 0;
   const bar = renderBar(memPct, 16);
 
   lines.push(makeRow(`  ${chalk.bold.cyan('SYSTEM TELEMETRY')}`, boxWidth));
   const memStr = `  Memory:   ${bar}  ${memPct}%  ${chalk.gray(`(${formatBytes(usedMem)} / ${formatBytes(totalMem)})`)}`;
   lines.push(makeRow(memStr, boxWidth));
-  const cpuStr = `  CPU:      ${chalk.white(`${os.cpus().length} Cores (${os.arch()})`)}  ${chalk.gray('·')}  ${chalk.white(os.platform())}  ${chalk.gray('·')}  ${chalk.white(process.version)}`;
+  const cpuCount = (os.cpus() || []).length || 1;
+  const cpuStr = `  CPU:      ${chalk.white(`${cpuCount} Cores (${os.arch()})`)}  ${chalk.gray('·')}  ${chalk.white(os.platform())}  ${chalk.gray('·')}  ${chalk.white(process.version)}`;
   lines.push(makeRow(cpuStr, boxWidth));
 
   lines.push(divider);
@@ -238,12 +250,7 @@ function renderTuiMonitor(health) {
     : chalk.yellow('▲ One or more services require attention');
 
   lines.push(makeRow(`  Status:    ${footerStatus}`, boxWidth));
-  lines.push(
-    makeRow(
-      `  Shortcuts: [r] refresh [q] quit`,
-      boxWidth
-    )
-  );
+  lines.push(makeRow(`  Shortcuts: [r] refresh [q] quit`, boxWidth));
 
   // Bottom Border
   lines.push(border('└' + '─'.repeat(boxWidth - 2) + '┘') + '\n');
@@ -256,4 +263,5 @@ module.exports = {
   renderBar,
   formatBytes,
   stripAnsi,
+  truncate,
 };
