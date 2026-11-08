@@ -6,27 +6,7 @@ const { confirm, intro, outro, note } = require('../prompts');
 const { getPackageManager } = require('../installer');
 const { setupGitignore } = require('../github/gitignore');
 const { buildTsConfig } = require('../tsconfig');
-
-/**
- * Parse a simple .env file into key-value dictionary without external dependencies
- */
-function parseEnvFile(content) {
-  const result = {};
-  if (!content) return result;
-  
-  const lines = content.split('\n');
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const eqIdx = trimmed.indexOf('=');
-    if (eqIdx !== -1) {
-      const key = trimmed.slice(0, eqIdx).trim();
-      const val = trimmed.slice(eqIdx + 1).trim();
-      result[key] = val;
-    }
-  }
-  return result;
-}
+const { parseEnv: parseEnvFile } = require('../monitor/env');
 
 /**
  * Inspect project and compile complete diagnostics report

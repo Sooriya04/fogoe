@@ -1,5 +1,6 @@
 /**
  * Parses simple KEY=VALUE pairs from a .env string into an object.
+ * Strips wrapping quotes if present.
  * @param {string} raw
  * @returns {Record<string, string>}
  */
@@ -23,4 +24,7 @@ function parseEnv(raw) {
   return map;
 }
 
-module.exports = { parseEnv };
+module.exports = {
+  parseEnv,
+  parseEnvFile: parseEnv, // Alias for backward compatibility with doctor tests
+};

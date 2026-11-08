@@ -160,3 +160,35 @@ test('CLI monitor integration: node bin/cli.js monitor --json outputs pure machi
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('CLI monitor integration: node bin/cli.js monitor --wait times out and emits JSON payload', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-cli-mon-wait-'));
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ name: 'wait-test-app', defaults: { database: 'none' } }, null, 2)
+    );
+    fs.writeFileSync(path.join(tmpDir, '.env'), 'PORT=59998\n');
+
+    let output = '';
+    assert.throws(() => {
+      execSync(`node "${cliPath}" monitor --wait --timeout=500 --json`, {
+        cwd: tmpDir,
+        encoding: 'utf8',
+      });
+    }, (err) => {
+      output = err.stdout;
+      return true;
+    });
+
+    const parsed = JSON.parse(output.trim());
+    assert.strictEqual(parsed.project, 'wait-test-app');
+    assert.strictEqual(parsed.healthy, false);
+    assert.strictEqual(parsed.timedOut, true);
+    assert.strictEqual(parsed.services.server.port, 59998);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});

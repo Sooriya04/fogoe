@@ -381,8 +381,17 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Dedicated `--json` output writing pure machine-readable health metrics to stdout with zero ANSI noise.
    - Synchronization barrier `--wait [--timeout=30s]` allowing agents and CI runners to pause deterministically until all background services are fully booted.
 3. **Automated Unit & Integration Test Suite (`test/monitor.test.js`):**
-   - Added 9 unit tests covering raw socket probes, HTTP listener verification, Redis RESP protocol detection, SQLite file validation, ANSI dashboard formatting, and CLI integration.
-   - All 111 tests passing.
+   - Added 10 unit tests covering raw socket probes, HTTP listener verification, Redis RESP protocol detection, SQLite file validation, ANSI dashboard formatting, `--wait` synchronization timeout barrier, and CLI integration.
+   - All 112 tests passing.
+
+
+## Refactor: Deduplicate .env Parsing across Doctor and Monitor
+
+1. **Shared .env Parser ([`src/monitor/env.js`](file:///media/workspace/fogoe/src/monitor/env.js), [`src/doctor/index.js`](file:///media/workspace/fogoe/src/doctor/index.js)):**
+   - Exported `parseEnv` from `src/monitor/env.js` and reused it directly in `src/doctor/index.js`, eliminating 20 lines of redundant string parsing logic while preserving full backward compatibility for `parseEnvFile`.
+2. **Synchronized Agent Wait Timeout Test ([`test/monitor.test.js`](file:///media/workspace/fogoe/test/monitor.test.js)):**
+   - Added automated integration test verifying `fogoe monitor --wait --timeout=500 --json` reliably exits with code 1 and `{ timedOut: true }` when services are unavailable.
+
 
 
 
