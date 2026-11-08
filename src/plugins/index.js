@@ -38,7 +38,7 @@ function isValidNpmPackageName(name) {
   return /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(name);
 }
 
-const npmBinary = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const isWindows = process.platform === 'win32';
 
 /**
  * Check if a package name exists on npm registry.
@@ -49,9 +49,10 @@ function checkNpmPackageExists(packageName) {
     return false;
   }
   try {
-    execFileSync(npmBinary, ['view', packageName, 'version'], {
+    execFileSync('npm', ['view', packageName, 'version'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
+      shell: isWindows,
     });
     return true;
   } catch {
@@ -69,13 +70,15 @@ function resolveTypesPackage(packageName) {
   }
   try {
     // Check if main package already bundles types
-    const typings = execFileSync(npmBinary, ['view', packageName, 'typings'], {
+    const typings = execFileSync('npm', ['view', packageName, 'typings'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
+      shell: isWindows,
     }).trim();
-    const types = execFileSync(npmBinary, ['view', packageName, 'types'], {
+    const types = execFileSync('npm', ['view', packageName, 'types'], {
       stdio: ['pipe', 'pipe', 'ignore'],
       encoding: 'utf8',
+      shell: isWindows,
     }).trim();
 
     if (typings || types) {

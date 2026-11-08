@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const chalk = require('chalk');
 const { select } = require('./prompts');
 const { getPackageManager } = require('./installer');
@@ -13,7 +13,7 @@ async function updateProject(options = {}) {
     process.exit(1);
   }
 
-  const pm = getPackageManager(options.pm);
+  const pm = getPackageManager(options.pm, process.cwd());
   console.log(chalk.cyan(`\n  Detected package manager: ${chalk.bold(pm)}`));
   console.log(chalk.yellow(`  This will update all project dependencies using "${pm} update/upgrade".`));
 
@@ -26,19 +26,21 @@ async function updateProject(options = {}) {
   }
 
   console.log(chalk.cyan(`\n  Updating dependencies...`));
+  const isWindows = process.platform === 'win32';
+
   try {
     if (pm === 'npm') {
-      execSync('npm update', { stdio: 'inherit' });
+      execFileSync('npm', ['update'], { stdio: 'inherit', shell: isWindows });
     } else if (pm === 'bun') {
-      execSync('bun update', { stdio: 'inherit' });
+      execFileSync('bun', ['update'], { stdio: 'inherit', shell: isWindows });
     } else if (pm === 'pnpm') {
       try {
-        execSync('pnpm update', { stdio: 'inherit' });
+        execFileSync('pnpm', ['update'], { stdio: 'inherit', shell: isWindows });
       } catch {
-        execSync('pnpm update --config.dangerouslyAllowAllBuilds=true', { stdio: 'inherit' });
+        execFileSync('pnpm', ['update', '--config.dangerouslyAllowAllBuilds=true'], { stdio: 'inherit', shell: isWindows });
       }
     } else if (pm === 'yarn') {
-      execSync('yarn upgrade', { stdio: 'inherit' });
+      execFileSync('yarn', ['upgrade'], { stdio: 'inherit', shell: isWindows });
     }
     console.log(chalk.green('\n  ✓ Dependencies updated successfully!\n'));
   } catch (err) {

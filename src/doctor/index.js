@@ -431,7 +431,7 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
     }
   }
 
-  const pm = getPackageManager(options.pm);
+  const pm = getPackageManager(options.pm, targetDir);
 
   if (!hasNodeModules) {
     checks.push({

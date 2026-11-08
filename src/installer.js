@@ -1,4 +1,6 @@
-const { execSync, execFileSync } = require("child_process");
+const { execFileSync } = require("child_process");
+const fs = require("fs");
+const path = require("path");
 
 // Database package mapping
 const dbPackages = {
@@ -43,8 +45,10 @@ const hashTypePackages = {
 /**
  * Detect which package manager is being used or available.
  * Defaults to 'npm' unless invoked via bun/pnpm/yarn or a lockfile is detected.
+ * @param {string|null} preferredPm
+ * @param {string} targetDir
  */
-function getPackageManager(preferredPm = null) {
+function getPackageManager(preferredPm = null, targetDir = process.cwd()) {
   if (preferredPm && ["npm", "pnpm", "bun", "yarn"].includes(preferredPm.toLowerCase())) {
     return preferredPm.toLowerCase();
   }
@@ -55,11 +59,10 @@ function getPackageManager(preferredPm = null) {
   if (agent.startsWith("yarn")) return "yarn";
   if (agent.startsWith("npm")) return "npm";
 
-  const fs = require("fs");
-  if (fs.existsSync("bun.lockb") || fs.existsSync("bun.lock")) return "bun";
-  if (fs.existsSync("pnpm-lock.yaml")) return "pnpm";
-  if (fs.existsSync("yarn.lock")) return "yarn";
-  if (fs.existsSync("package-lock.json")) return "npm";
+  if (fs.existsSync(path.join(targetDir, "bun.lockb")) || fs.existsSync(path.join(targetDir, "bun.lock"))) return "bun";
+  if (fs.existsSync(path.join(targetDir, "pnpm-lock.yaml"))) return "pnpm";
+  if (fs.existsSync(path.join(targetDir, "yarn.lock"))) return "yarn";
+  if (fs.existsSync(path.join(targetDir, "package-lock.json"))) return "npm";
 
   return "npm";
 }
@@ -172,11 +175,11 @@ function installPackageList({ packages = "", devPackages = "", pm = null, silent
 
   if (splitPkgs.length === 0 && splitDev.length === 0) return;
 
-  const resolveBin = (name) => (process.platform === 'win32' ? `${name}.cmd` : name);
+  const isWindows = process.platform === 'win32';
 
   const runCmd = (cmd, args) => {
     try {
-      execFileSync(resolveBin(cmd), args, { stdio });
+      execFileSync(cmd, args, { stdio, shell: isWindows });
       return true;
     } catch {
       return false;
@@ -230,17 +233,17 @@ function uninstallPackageList({ packages = "", pm = null, silent = false }) {
   const splitPkgs = (typeof packages === "string" ? packages.split(" ") : packages).filter(Boolean);
   if (splitPkgs.length === 0) return true;
 
-  const resolveBin = (name) => (process.platform === 'win32' ? `${name}.cmd` : name);
+  const isWindows = process.platform === 'win32';
 
   try {
     if (activePm === "npm") {
-      execFileSync(resolveBin("npm"), ["uninstall", ...splitPkgs], { stdio });
+      execFileSync("npm", ["uninstall", ...splitPkgs], { stdio, shell: isWindows });
     } else if (activePm === "bun") {
-      execFileSync(resolveBin("bun"), ["remove", ...splitPkgs], { stdio });
+      execFileSync("bun", ["remove", ...splitPkgs], { stdio, shell: isWindows });
     } else if (activePm === "pnpm") {
-      execFileSync(resolveBin("pnpm"), ["remove", ...splitPkgs], { stdio });
+      execFileSync("pnpm", ["remove", ...splitPkgs], { stdio, shell: isWindows });
     } else if (activePm === "yarn") {
-      execFileSync(resolveBin("yarn"), ["remove", ...splitPkgs], { stdio });
+      execFileSync("yarn", ["remove", ...splitPkgs], { stdio, shell: isWindows });
     }
     return true;
   } catch (err) {
