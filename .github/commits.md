@@ -368,6 +368,24 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Migrated `fogoe update` in `src/update.js` from `execSync` bare strings to discrete `execFileSync` invocations matching `fogoe add` and `fogoe remove`.
 
 
+## Feature: Modular Live Project & Agent Stack Monitor (`fogoe monitor`)
+
+1. **Modular Architecture & Separation of Concerns (`src/monitor/`):**
+   - Organized into discrete single-responsibility files:
+     - `src/monitor/probes.js`: Zero-dependency socket, HTTP, RESP Redis, and Docker Compose probes.
+     - `src/monitor/env.js`: Clean environment variable parsing without external dotenv packages.
+     - `src/monitor/checker.js`: Project inspection aggregating server, database, Redis, and container health.
+     - `src/monitor/formatter.js`: ANSI terminal dashboard rendering.
+     - `src/monitor/index.js`: Main command orchestrator with `--wait`, `--timeout`, `--watch`, and `--json`.
+2. **Autonomous Agent & CI Contracts:**
+   - Dedicated `--json` output writing pure machine-readable health metrics to stdout with zero ANSI noise.
+   - Synchronization barrier `--wait [--timeout=30s]` allowing agents and CI runners to pause deterministically until all background services are fully booted.
+3. **Automated Unit & Integration Test Suite (`test/monitor.test.js`):**
+   - Added 9 unit tests covering raw socket probes, HTTP listener verification, Redis RESP protocol detection, SQLite file validation, ANSI dashboard formatting, and CLI integration.
+   - All 111 tests passing.
+
+
+
 
 
 

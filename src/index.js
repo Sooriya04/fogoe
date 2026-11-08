@@ -172,6 +172,14 @@ function parseCliArgs(args) {
       flags.pm = arg.split('=')[1];
     } else if (arg === '--dev' || arg === '-D' || arg === '--save-dev') {
       flags.dev = true;
+    } else if (arg === '--wait') {
+      flags.wait = true;
+    } else if (arg === '--watch' || arg === '-w') {
+      flags.watch = true;
+    } else if (arg === '--timeout') {
+      flags.timeout = args[++i];
+    } else if (arg.startsWith('--timeout=')) {
+      flags.timeout = arg.split('=')[1];
     } else if (!arg.startsWith('-')) {
       positionals.push(arg);
     }
@@ -209,6 +217,7 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('fogoe remove <package>')}        Remove a plugin or npm package (alias: rm)`);
     console.log(`  ${chalk.green('fogoe schema')}                  Emit machine-readable agent manifest contract`);
     console.log(`  ${chalk.green('fogoe status')}                  Show project details and status`);
+    console.log(`  ${chalk.green('fogoe monitor [--wait] [--json]')} Check live connectivity for app, db, and redis`);
     console.log(`  ${chalk.green('fogoe doctor [--fix]')}           Run diagnostics and optionally auto-repair project issues`);
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
     console.log(`  ${chalk.green('fogoe generate <type> <name>')}  Generate route, controller, model, or full crud`);
@@ -406,6 +415,18 @@ function parseCliArgs(args) {
 
   if (positionals[0] === 'status') {
     checkStatus({ json: flags.json });
+    return;
+  }
+
+  if (positionals[0] === 'monitor') {
+    const { runMonitor } = require('./monitor');
+    await runMonitor({
+      cwd: process.cwd(),
+      json: flags.json,
+      wait: flags.wait,
+      timeout: flags.timeout,
+      watch: flags.watch,
+    });
     return;
   }
 
