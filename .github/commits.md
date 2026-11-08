@@ -393,11 +393,9 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
    - Added automated integration test verifying `fogoe monitor --wait --timeout=500 --json` reliably exits with code 1 and `{ timedOut: true }` when services are unavailable.
 
 
+## Feature: Terminal TUI Monitor & Alignment (`fogoe monitor --stats`)
 
-
-
-
-
-
-
-
+1. **Terminal TUI Dashboard (`src/tui/monitor.js`):** Added zero-dependency retro box dashboard (`renderTuiMonitor`), ASCII memory progress bar (`renderBar`), and live host telemetry (CPU, RAM, OS, Node).
+2. **Alignment & Typography:** Removed emojis to prevent terminal font-width distortion, added ANSI-aware `makeRow` ensuring exact 76-char width across all rows, and closed top header border gaps.
+3. **CLI & Controls (`src/monitor/`, `src/index.js`):** Added `--stats` and `--tui` flags with interactive `[r]` refresh and `[q]` quit shortcuts in watch mode.
+4. **Test Suite:** Added 4 automated tests in `test/monitor.test.js`, bringing passing tests to 116.

@@ -117,7 +117,7 @@ function probeRedis(redisUrl = 'redis://127.0.0.1:6379', timeoutMs = 1500) {
       socket.setTimeout(timeoutMs);
 
       socket.once('connect', () => {
-        socket.write('*1\r\n$4\r\nPING\r\n');
+        socket.write('PING\r\n');
       });
 
       socket.once('data', (data) => {

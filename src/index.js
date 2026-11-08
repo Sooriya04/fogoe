@@ -176,6 +176,8 @@ function parseCliArgs(args) {
       flags.wait = true;
     } else if (arg === '--watch' || arg === '-w') {
       flags.watch = true;
+    } else if (arg === '--stats' || arg === '--tui') {
+      flags.stats = true;
     } else if (arg === '--timeout') {
       flags.timeout = args[++i];
     } else if (arg.startsWith('--timeout=')) {
@@ -217,7 +219,7 @@ function parseCliArgs(args) {
     console.log(`  ${chalk.green('fogoe remove <package>')}        Remove a plugin or npm package (alias: rm)`);
     console.log(`  ${chalk.green('fogoe schema')}                  Emit machine-readable agent manifest contract`);
     console.log(`  ${chalk.green('fogoe status')}                  Show project details and status`);
-    console.log(`  ${chalk.green('fogoe monitor [--wait] [--json]')} Check live connectivity for app, db, and redis`);
+    console.log(`  ${chalk.green('fogoe monitor [--stats] [--wait]')} Check live connectivity for app, db, and redis`);
     console.log(`  ${chalk.green('fogoe doctor [--fix]')}           Run diagnostics and optionally auto-repair project issues`);
     console.log(`  ${chalk.green('fogoe update')}                  Upgrade project dependencies to latest`);
     console.log(`  ${chalk.green('fogoe generate <type> <name>')}  Generate route, controller, model, or full crud`);
@@ -426,6 +428,8 @@ function parseCliArgs(args) {
       wait: flags.wait,
       timeout: flags.timeout,
       watch: flags.watch,
+      stats: flags.stats,
+      tui: flags.stats || flags.tui,
     });
     return;
   }

@@ -13,6 +13,7 @@ const {
   probeRedis,
 } = require('../src/monitor/probes');
 const { checkProjectHealth, formatDashboard } = require('../src/monitor');
+const { renderTuiMonitor, renderBar, formatBytes } = require('../src/tui/monitor');
 
 test('Monitor Probes: normalizeHost converts localhost to 127.0.0.1', () => {
   assert.strictEqual(normalizeHost('localhost'), '127.0.0.1');
@@ -192,3 +193,74 @@ test('CLI monitor integration: node bin/cli.js monitor --wait times out and emit
     fs.rmSync(tmpDir, { recursive: true, force: true });
   }
 });
+
+test('TUI Monitor: renderBar formats visual ASCII progress bar', () => {
+  const bar0 = renderBar(0, 10);
+  const bar50 = renderBar(50, 10);
+  const bar100 = renderBar(100, 10);
+
+  assert.ok(bar0.includes('░░░░░░░░░░'));
+  assert.ok(bar50.includes('█████'));
+  assert.ok(bar100.includes('██████████'));
+});
+
+test('TUI Monitor: formatBytes formats KB, MB, and GB accurately', () => {
+  assert.strictEqual(formatBytes(512 * 1024), '512 KB');
+  assert.strictEqual(formatBytes(128 * 1024 * 1024), '128 MB');
+  assert.strictEqual(formatBytes(2.5 * 1024 * 1024 * 1024), '2.5 GB');
+});
+
+test('TUI Monitor: renderTuiMonitor formats retro box with telemetry and services', () => {
+  const mockHealth = {
+    timestamp: new Date().toISOString(),
+    project: 'my-tui-app',
+    healthy: true,
+    services: {
+      server: { configured: true, port: 4000, listening: true, httpResponding: true, statusCode: 200, latencyMs: 3 },
+      database: { configured: true, type: 'postgres', connected: true, latencyMs: 7 },
+      redis: { configured: true, reachable: true, response: '+PONG', latencyMs: 2 },
+    },
+  };
+
+  const output = renderTuiMonitor(mockHealth);
+  assert.ok(output.includes('fogoe monitor'));
+  assert.ok(output.includes('LIVE'));
+  assert.ok(output.includes('my-tui-app'));
+  assert.ok(output.includes('Server'));
+  assert.ok(output.includes('Database'));
+  assert.ok(output.includes('Redis Queue'));
+  assert.ok(output.includes('SYSTEM TELEMETRY'));
+  assert.ok(output.includes('Memory:'));
+  assert.ok(output.includes('CPU:'));
+  assert.ok(output.includes('[r] refresh [q] quit'));
+});
+
+test('CLI monitor integration: node bin/cli.js monitor --stats outputs TUI box format', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-cli-tui-'));
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ name: 'tui-cli-app', defaults: { database: 'none' } }, null, 2)
+    );
+    fs.writeFileSync(path.join(tmpDir, '.env'), 'PORT=59997\n');
+
+    let output = '';
+    try {
+      execSync(`node "${cliPath}" monitor --stats`, {
+        cwd: tmpDir,
+        encoding: 'utf8',
+      });
+    } catch (err) {
+      output = err.stdout;
+    }
+
+    assert.ok(output.includes('fogoe monitor'));
+    assert.ok(output.includes('tui-cli-app'));
+    assert.ok(output.includes('SYSTEM TELEMETRY'));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
