@@ -62,12 +62,20 @@ async function runMonitor(options = {}) {
   // 2. Watch mode: Re-render dashboard continuously
   if (watch && !json) {
     let interval;
+    let rendering = false;
+
     const render = async () => {
-      const health = await checkProjectHealth(cwd, { timeoutMs: 1500 });
-      process.stdout.write('\x1b[2J\x1b[0;0H'); // clear screen
-      process.stdout.write(renderView(health));
-      if (!useTui) {
-        process.stdout.write(chalk.gray('  Press Ctrl+C to exit monitor.\n'));
+      if (rendering) return;
+      rendering = true;
+      try {
+        const health = await checkProjectHealth(cwd, { timeoutMs: 1500 });
+        process.stdout.write('\x1b[2J\x1b[0;0H'); // clear screen
+        process.stdout.write(renderView(health));
+        if (!useTui) {
+          process.stdout.write(chalk.gray('  Press Ctrl+C to exit monitor.\n'));
+        }
+      } finally {
+        rendering = false;
       }
     };
 
@@ -91,7 +99,10 @@ async function runMonitor(options = {}) {
         if (key === 'q' || key === '\u0003') {
           cleanup();
         } else if (key === 'r') {
-          render();
+          clearInterval(interval);
+          render().then(() => {
+            interval = setInterval(render, 2000);
+          });
         }
       });
     }

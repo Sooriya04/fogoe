@@ -401,10 +401,16 @@ Resolved GitHub Actions test matrix failures across Windows, macOS, and Linux:
 4. **Test Suite:** Added 4 automated tests in `test/monitor.test.js`, bringing passing tests to 116.
 
 
-## Fix: TUI Monitor NaN Memory Guard & Error Border Overflow
+## Fix: TUI Monitor Hardening, Concurrency & Table Deduplication
 
 1. **Memory Bar Safety (`src/tui/monitor.js`):** Added finite checks (`Number.isFinite`) to `renderBar` and guarded `totalMem > 0` to prevent `RangeError` crashes on `NaN` in restricted containers.
 2. **Border Overflow Protection (`src/tui/monitor.js`):** Added `truncate()` and safe slicing fallback in `makeRow` ensuring lines never exceed 76 characters when error strings or URLs are long.
-3. **Deduplication:** Extracted `formatServiceRow` helper to clean up repeated padding across service rows.
-4. **Test Suite:** Added unit tests in `test/monitor.test.js` verifying `NaN`/`undefined` bar safety and 76-character width invariance, bringing passing tests to 118.
+3. **Watch Mode Concurrency Guard (`src/monitor/index.js`):** Added `rendering` lock and timer reset on `[r]` keystrokes to prevent concurrent redraw races and screen tearing.
+4. **Table Row Deduplication (`src/tui/monitor.js`):** Extracted `formatServiceRow` helper, deduplicating padding across Server, Database, Redis, and Container rows.
+5. **Test Suite:** Added automated tests in `test/monitor.test.js` verifying `NaN`/`undefined` bar safety and 76-character width invariance, bringing passing tests to 118.
 
+
+## Fix: Monitor Watch Mode Concurrency Guard (`src/monitor/index.js`)
+
+1. **Screen Tearing Prevention:** Added `rendering` re-entrancy lock in watch mode to prevent concurrent asynchronous probe passes when `[r]` is repeatedly pressed.
+2. **Timer Synchronization:** Automatically resets the 2-second interval timer upon manual `[r]` refresh so scheduled updates do not fire immediately after manual re-probes.
