@@ -239,6 +239,23 @@ test('applyRepairs: safely executes multi-item repair plan and returns results',
   assert.ok(gitignore.includes('node_modules/'));
 });
 
+test('Doctor Repairs: applyRepairs suppresses install output when json/silent is enabled', () => {
+  fs.mkdirSync(TEST_DOCTOR_DIR, { recursive: true });
+  fs.writeFileSync(path.join(TEST_DOCTOR_DIR, 'package.json'), JSON.stringify({
+    name: 'silent-install-test',
+    dependencies: { 'is-sorted': '^1.0.0' },
+  }));
+
+  const report = diagnoseProject(TEST_DOCTOR_DIR, { json: true });
+  const installFix = report.fixPlan.find(f => f.id === 'fix_install_deps');
+  assert.ok(installFix, 'Should have install dependencies repair');
+
+  const applied = applyRepairs(TEST_DOCTOR_DIR, [installFix], { json: true });
+  assert.strictEqual(applied.length, 1);
+  assert.strictEqual(applied[0].success, true);
+  assert.ok(fs.existsSync(path.join(TEST_DOCTOR_DIR, 'node_modules')));
+});
+
 test('Doctor Framework: detects missing framework dependency in package.json and repairs it', () => {
   fs.mkdirSync(TEST_DOCTOR_DIR, { recursive: true });
 

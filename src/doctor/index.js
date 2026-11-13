@@ -432,9 +432,10 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
       category: 'dependencies',
       description: `Install dependencies using ${pm} (${pm} install)`,
       details: `Executes package manager installation to populate node_modules/ safely.`,
-      apply: () => {
+      apply: (_dir, opts = {}) => {
+        const isSilent = Boolean(opts.silent || opts.json || options.silent || options.json);
         const installCmd = pm === 'yarn' ? 'yarn install' : `${pm} install`;
-        execSync(installCmd, { cwd: targetDir, stdio: 'inherit' });
+        execSync(installCmd, { cwd: targetDir, stdio: isSilent ? 'ignore' : 'inherit' });
       },
     });
   } else {
@@ -574,11 +575,11 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
  * @param {Array} fixPlan
  * @returns {Array} Applied repair summaries
  */
-function applyRepairs(targetDir, fixPlan) {
+function applyRepairs(targetDir, fixPlan, options = {}) {
   const applied = [];
   for (const item of fixPlan) {
     try {
-      item.apply(targetDir);
+      item.apply(targetDir, options);
       applied.push({ id: item.id, description: item.description, success: true });
     } catch (err) {
       applied.push({ id: item.id, description: item.description, success: false, error: err.message });
@@ -599,12 +600,12 @@ async function runDoctor(options = {}) {
     pm = null,
   } = options;
 
-  const diagnostics = diagnoseProject(cwd, { pm });
+  const diagnostics = diagnoseProject(cwd, { pm, json });
 
   if (json) {
     if (fix && yes && diagnostics.fixPlan.length > 0) {
-      const applied = applyRepairs(cwd, diagnostics.fixPlan);
-      const postDiagnostics = diagnoseProject(cwd, { pm });
+      const applied = applyRepairs(cwd, diagnostics.fixPlan, { json: true });
+      const postDiagnostics = diagnoseProject(cwd, { pm, json: true });
       console.log(JSON.stringify({
         mode: 'fix',
         appliedRepairs: applied,

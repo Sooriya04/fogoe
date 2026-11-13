@@ -60,14 +60,28 @@ function checkStatus(options = {}) {
     }
   }
 
+  // Fallback to database declared in config if file is not yet generated
+  if (database === 'none' && defaults.database && defaults.database !== 'none') {
+    const dbName = String(defaults.database).toLowerCase();
+    if (dbName === 'prisma') database = 'Prisma';
+    else if (dbName === 'mongodb' || dbName === 'mongo') database = 'MongoDB (Mongoose)';
+    else if (dbName === 'drizzle') database = 'Drizzle ORM (PostgreSQL)';
+    else if (dbName === 'mysql') database = 'MySQL';
+    else if (dbName === 'sqlite') database = 'SQLite (better-sqlite3)';
+    else if (dbName === 'postgresql' || dbName === 'postgres' || dbName === 'pg') database = 'PostgreSQL';
+    else database = defaults.database;
+  }
+
   // Check Git status
   let gitStatusText = 'Not Initialized';
   let isGitRepo = false;
   let branch = '';
-  try {
-    execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
-    isGitRepo = true;
-  } catch (err) {}
+  if (fs.existsSync(path.join(process.cwd(), '.git'))) {
+    try {
+      execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
+      isGitRepo = true;
+    } catch (err) {}
+  }
 
   if (isGitRepo) {
     try {
