@@ -55,6 +55,36 @@ test('CLI add command: supports arbitrary npm package via --json', () => {
   }
 });
 
+test('CLI add command: pre-configured plugin with envVars outputs clean parseable JSON via --json', () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-add-json-env-'));
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-app', version: '1.0.0', dependencies: {} }, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ defaults: { language: 'js', type: 'cjs', runtime: 'express' } }, null, 2)
+    );
+
+    const cliPath = path.resolve(__dirname, '../bin/cli.js');
+    const output = execSync(`node ${cliPath} add redis --json`, {
+      cwd: tmpDir,
+      encoding: 'utf8',
+    });
+
+    const parsed = JSON.parse(output.trim());
+    assert.strictEqual(parsed.success, true);
+    assert.strictEqual(parsed.plugin, 'redis');
+    assert.strictEqual(parsed.outputFile, 'src/config/redis.js');
+
+    const envContent = fs.readFileSync(path.join(tmpDir, '.env'), 'utf8');
+    assert.ok(envContent.includes('REDIS_URL='), '.env should be populated with REDIS_URL');
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 test('CLI remove command: removes package, cleans @types, and updates fogoe.config.json', () => {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-remove-test-'));
   try {

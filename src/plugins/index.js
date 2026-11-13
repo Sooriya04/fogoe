@@ -231,7 +231,7 @@ async function addPlugin(pluginArg, options = {}) {
   installPackages(plugin.packages, devPkgs, pm, json);
 
   // ── 6. Append env vars ─────────────────────────────────────────────────────
-  appendEnvVars(plugin.envVars);
+  appendEnvVars(plugin.envVars, json);
 
   // ── 7. Update fogoe.config.json addons list ────────────────────────────────
   if (!config.addons) config.addons = [];
@@ -325,13 +325,13 @@ function resolveTemplate(pluginName, language, moduleType, runtime = 'express') 
 /**
  * Append env vars to .env without duplicating existing keys.
  */
-function appendEnvVars(envVars) {
+function appendEnvVars(envVars, silent = false) {
   const envPath = path.join(process.cwd(), '.env');
   if (!envVars) return;
 
   if (!fs.existsSync(envPath)) {
     fs.writeFileSync(envPath, envVars + '\n');
-    console.log(chalk.green('  ✓ .env created with required variables'));
+    if (!silent) console.log(chalk.green('  ✓ .env created with required variables'));
     return;
   }
 
@@ -346,7 +346,7 @@ function appendEnvVars(envVars) {
 
   if (toAppend) {
     fs.appendFileSync(envPath, '\n' + toAppend + '\n');
-    console.log(chalk.green('  ✓ .env updated with required variables'));
+    if (!silent) console.log(chalk.green('  ✓ .env updated with required variables'));
   }
 }
 

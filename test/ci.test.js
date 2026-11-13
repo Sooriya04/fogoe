@@ -182,6 +182,20 @@ test('Docker Generator: Debian Slim distribution', () => {
   assert.ok(dockerfile.includes('HEALTHCHECK'));
 });
 
+test('Docker Generator: Healthcheck targets active server root instead of non-existent /health', () => {
+  const alpineDockerfile = generateDockerfile({ os: 'alpine', port: '3000' });
+  assert.ok(alpineDockerfile.includes('http://localhost:3000/ ||'));
+  assert.strictEqual(alpineDockerfile.includes('/health'), false);
+
+  const debianDockerfile = generateDockerfile({ os: 'debian', port: '8080' });
+  assert.ok(debianDockerfile.includes("http://localhost:8080/'"));
+  assert.strictEqual(debianDockerfile.includes('/health'), false);
+
+  const bunDockerfile = generateDockerfile({ pm: 'bun', port: '4000' });
+  assert.ok(bunDockerfile.includes('http://localhost:4000/ ||'));
+  assert.strictEqual(bunDockerfile.includes('/health'), false);
+});
+
 test('Docker Generator: Ubuntu distribution', () => {
   const dockerfile = generateDockerfile({
     language: 'javascript',

@@ -123,7 +123,7 @@ COPY . .
 
 EXPOSE ${targetPort}
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${targetPort}/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:${targetPort}/ || exit 1
 
 CMD ["bun", "run", "start"]
 `;
@@ -286,10 +286,10 @@ CMD ["bun", "run", "start"]
   // Built-in container healthcheck
   if (targetOs === 'alpine') {
     lines.push('HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\');
-    lines.push(`  CMD wget --no-verbose --tries=1 --spider http://localhost:${targetPort}/health || exit 1`);
+    lines.push(`  CMD wget --no-verbose --tries=1 --spider http://localhost:${targetPort}/ || exit 1`);
   } else {
     lines.push('HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\');
-    lines.push(`  CMD node -e "require('http').get('http://localhost:${targetPort}/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" || exit 1`);
+    lines.push(`  CMD node -e "require('http').get('http://localhost:${targetPort}/', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))" || exit 1`);
   }
   lines.push('');
 
