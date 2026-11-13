@@ -348,7 +348,7 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
         });
       } else {
         const secretVal = envMap.JWT_SECRET.toLowerCase();
-        const placeholderSecrets = ['secret', 'your-secret-key', 'changeme', 'temp', 'test', 'password'];
+        const placeholderSecrets = ['secret', 'your-secret-key', 'changeme', 'temp', 'test', 'password', 'dev-secret', 'dev_secret'];
         if (placeholderSecrets.includes(secretVal)) {
           checks.push({
             id: 'env_jwt_secret_insecure',

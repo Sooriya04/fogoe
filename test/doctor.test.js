@@ -164,6 +164,12 @@ test('Doctor Secret Safety: warns on placeholder secrets without altering them',
   assert.ok(warnCheck, 'Should flag insecure placeholder secret');
   assert.strictEqual(warnCheck.status, 'warn');
   assert.strictEqual(warnCheck.fixable, false, 'Should not auto-overwrite existing secret');
+
+  // Also verify Fogoe default scaffolded dev-secret is flagged
+  fs.writeFileSync(path.join(TEST_DOCTOR_DIR, '.env'), 'PORT=3000\nJWT_SECRET=dev-secret\n');
+  const devSecretResult = diagnoseProject(TEST_DOCTOR_DIR);
+  const devSecretWarn = devSecretResult.checks.find(c => c.id === 'env_jwt_secret_insecure');
+  assert.ok(devSecretWarn, 'Should flag default scaffolded dev-secret placeholder');
 });
 
 test('Doctor TypeScript: detects broken path aliases (TS5090) and repairs them', () => {
