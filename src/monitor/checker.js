@@ -100,13 +100,28 @@ async function checkProjectHealth(targetDir = process.cwd(), options = {}) {
       }
     }
   } else if (dbType !== 'none') {
-    results.services.database = {
-      configured: false,
-      type: dbType,
-      error: 'MISSING_DATABASE_URL',
-      hint: "Add DATABASE_URL to your .env file or run 'fogoe doctor --fix'",
-    };
-    results.healthy = false;
+    if (dbType === 'sqlite') {
+      const dbPath = 'dev.db';
+      const resolvedDbPath = path.join(targetDir, dbPath);
+      const exists = fs.existsSync(resolvedDbPath);
+      results.services.database = {
+        configured: true,
+        type: 'sqlite',
+        path: dbPath,
+        accessible: exists,
+        error: exists ? null : 'FILE_NOT_FOUND',
+        hint: exists ? null : "SQLite database file 'dev.db' not found. It will be created on server start.",
+      };
+      if (!exists) results.healthy = false;
+    } else {
+      results.services.database = {
+        configured: false,
+        type: dbType,
+        error: 'MISSING_DATABASE_URL',
+        hint: "Add DATABASE_URL to your .env file or run 'fogoe doctor --fix'",
+      };
+      results.healthy = false;
+    }
   }
 
   // 3. Redis Probe

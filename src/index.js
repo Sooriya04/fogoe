@@ -340,30 +340,41 @@ function parseCliArgs(args) {
 
   if (positionals[0] === 'docker') {
     const { setupCiCd } = require('./ci');
-    await setupCiCd({
+    const result = await setupCiCd({
       docker: true,
       dockerOs: flags.dockerOs,
-      isNonInteractive: flags.yes || flags.nonInteractive,
+      isNonInteractive: flags.yes || flags.nonInteractive || flags.json,
+      silent: flags.json,
     });
+    if (flags.json) {
+      console.log(JSON.stringify({ success: true, ...result }));
+    }
     return;
   }
 
   if (positionals[0] === 'compose' || positionals[0] === 'docker-compose') {
     const { setupCompose } = require('./ci/compose');
-    await setupCompose({
+    const result = await setupCompose({
       targetDir: process.cwd(),
       silent: flags.json,
     });
+    if (flags.json) {
+      console.log(JSON.stringify({ success: true, ...result }));
+    }
     return;
   }
 
   if (positionals[0] === 'ci') {
     const { setupCiCd } = require('./ci');
-    await setupCiCd({
+    const result = await setupCiCd({
       ci: true,
       deploy: flags.deploy || undefined,
-      isNonInteractive: flags.yes || flags.nonInteractive,
+      isNonInteractive: flags.yes || flags.nonInteractive || flags.json,
+      silent: flags.json,
     });
+    if (flags.json) {
+      console.log(JSON.stringify({ success: true, ...result }));
+    }
     return;
   }
 
@@ -371,18 +382,25 @@ function parseCliArgs(args) {
     const pluginName = positionals[1] || undefined;
     if (pluginName === 'compose' || pluginName === 'docker-compose') {
       const { setupCompose } = require('./ci/compose');
-      await setupCompose({ targetDir: process.cwd(), silent: flags.json });
+      const result = await setupCompose({ targetDir: process.cwd(), silent: flags.json });
+      if (flags.json) {
+        console.log(JSON.stringify({ success: true, plugin: pluginName, ...result }));
+      }
       return;
     }
     if (pluginName === 'ci' || pluginName === 'docker' || pluginName === 'cicd') {
       const { setupCiCd } = require('./ci');
-      await setupCiCd({
+      const result = await setupCiCd({
         ci: pluginName === 'ci' || pluginName === 'cicd' || flags.ci,
         docker: pluginName === 'docker' || pluginName === 'cicd' || flags.docker,
         dockerOs: flags.dockerOs,
         deploy: flags.deploy || undefined,
-        isNonInteractive: flags.yes || flags.nonInteractive,
+        isNonInteractive: flags.yes || flags.nonInteractive || flags.json,
+        silent: flags.json,
       });
+      if (flags.json) {
+        console.log(JSON.stringify({ success: true, plugin: pluginName, ...result }));
+      }
       return;
     }
     await addPlugin(pluginName, {

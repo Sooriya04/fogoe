@@ -312,6 +312,8 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
           envLines.push('DATABASE_URL=postgresql://postgres:postgres@localhost:5432/app_dev');
         } else if (db === 'mysql') {
           envLines.push('DATABASE_URL=mysql://root:root@localhost:3306/app_dev');
+        } else if (db === 'sqlite') {
+          envLines.push('DATABASE_URL=dev.db');
         }
         if (auth === 'jwt') {
           envLines.push(`JWT_SECRET=dev_secret_${Math.random().toString(36).substring(2, 12)}`);
@@ -328,11 +330,12 @@ function diagnoseProject(targetDir = process.cwd(), options = {}) {
       missingEnvKeys.push({ key: 'PORT', defaultVal: '3000' });
     }
 
-    if (['mongodb', 'postgresql', 'postgres', 'mysql', 'prisma', 'drizzle'].includes(db)) {
+    if (['mongodb', 'postgresql', 'postgres', 'mysql', 'prisma', 'drizzle', 'sqlite'].includes(db)) {
       if (!('DATABASE_URL' in envMap)) {
         let defaultDbUrl = 'postgresql://postgres:postgres@localhost:5432/app_dev';
         if (db === 'mongodb') defaultDbUrl = 'mongodb://localhost:27017/app_dev';
         if (db === 'mysql') defaultDbUrl = 'mysql://root:root@localhost:3306/app_dev';
+        if (db === 'sqlite') defaultDbUrl = 'dev.db';
         missingEnvKeys.push({ key: 'DATABASE_URL', defaultVal: defaultDbUrl });
       }
     }

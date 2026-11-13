@@ -110,6 +110,22 @@ test('Monitor: checkProjectHealth accurately identifies SQLite database file', a
   }
 });
 
+test('Monitor: checkProjectHealth accurately checks fallback dev.db when DATABASE_URL is omitted in SQLite', async () => {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-mon-sqlite-fallback-'));
+  try {
+    fs.writeFileSync(path.join(tmpDir, 'fogoe.config.json'), JSON.stringify({ defaults: { database: 'sqlite' } }));
+    fs.writeFileSync(path.join(tmpDir, '.env'), 'PORT=3000\n');
+    fs.writeFileSync(path.join(tmpDir, 'dev.db'), 'mock-sqlite-header');
+
+    const health = await checkProjectHealth(tmpDir, { timeoutMs: 200 });
+    assert.strictEqual(health.services.database.type, 'sqlite');
+    assert.strictEqual(health.services.database.path, 'dev.db');
+    assert.strictEqual(health.services.database.accessible, true);
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
+
 test('Monitor: checkProjectHealth formats ANSI dashboard with service details', () => {
   const mockHealth = {
     timestamp: new Date().toISOString(),

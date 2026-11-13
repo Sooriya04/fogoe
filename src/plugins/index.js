@@ -196,14 +196,22 @@ async function addPlugin(pluginArg, options = {}) {
   if (plugin.isSpecial) {
     if (pluginName === 'compose' || pluginName === 'docker-compose') {
       const { setupCompose } = require('../ci/compose');
-      await setupCompose({ targetDir: process.cwd() });
+      const result = await setupCompose({ targetDir: process.cwd(), silent: json });
+      if (json) {
+        console.log(JSON.stringify({ success: true, plugin: pluginName, ...result }));
+      }
       return;
     }
     const { setupCiCd } = require('../ci');
-    await setupCiCd({
+    const result = await setupCiCd({
       ci: pluginName === 'ci',
       docker: pluginName === 'docker',
+      isNonInteractive: true,
+      silent: json,
     });
+    if (json) {
+      console.log(JSON.stringify({ success: true, plugin: pluginName, ...result }));
+    }
     return;
   }
 

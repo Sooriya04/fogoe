@@ -410,5 +410,20 @@ test('Doctor Database Env: flags missing DATABASE_URL for prisma and drizzle pro
   const drizzleDbCheck = drizzleDiag.checks.find(c => c.id === 'env_keys_missing');
   assert.ok(drizzleDbCheck, 'Missing DATABASE_URL should be flagged for drizzle');
   assert.ok(drizzleDbCheck.message.includes('DATABASE_URL'));
+
+  // 3. SQLite project without DATABASE_URL in .env
+  fs.writeFileSync(path.join(TEST_DOCTOR_DIR, 'fogoe.config.json'), JSON.stringify({
+    defaults: { runtime: 'express', language: 'js', database: 'sqlite' }
+  }));
+  const sqliteDiag = diagnoseProject(TEST_DOCTOR_DIR);
+  const sqliteDbCheck = sqliteDiag.checks.find(c => c.id === 'env_keys_missing');
+  assert.ok(sqliteDbCheck, 'Missing DATABASE_URL should be flagged for sqlite');
+  assert.ok(sqliteDbCheck.message.includes('DATABASE_URL'));
+
+  const fixItem = sqliteDiag.fixPlan.find(f => f.id === 'fix_append_env');
+  assert.ok(fixItem);
+  fixItem.apply();
+  const updatedEnv = fs.readFileSync(path.join(TEST_DOCTOR_DIR, '.env'), 'utf8');
+  assert.ok(updatedEnv.includes('DATABASE_URL=dev.db'), 'Should repair SQLite DATABASE_URL to dev.db');
 });
 

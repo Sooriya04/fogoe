@@ -435,3 +435,43 @@ test('Docker Compose: setupCompose automatically activates Redis when queue addo
   assert.ok(composeContent.includes('image: redis:7-alpine'), 'Should use official redis alpine image');
   assert.ok(composeContent.includes('REDIS_URL=redis://redis:6379'), 'Should set container REDIS_URL');
 });
+
+test('CLI CI/CD integration: docker, ci, and compose commands support headless execution via --json', () => {
+  const os = require('os');
+  const { execSync } = require('child_process');
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'fogoe-cli-json-'));
+  const cliPath = path.resolve(__dirname, '../bin/cli.js');
+
+  try {
+    fs.writeFileSync(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'headless-ci-app', version: '1.0.0', dependencies: { express: '^4.19.0' } }, null, 2)
+    );
+    fs.writeFileSync(
+      path.join(tmpDir, 'fogoe.config.json'),
+      JSON.stringify({ defaults: { language: 'js', type: 'cjs', runtime: 'express', database: 'none' } }, null, 2)
+    );
+
+    // 1. fogoe docker --json
+    const dockerOut = execSync(`node "${cliPath}" docker --json`, { cwd: tmpDir, encoding: 'utf8' });
+    const parsedDocker = JSON.parse(dockerOut.trim());
+    assert.strictEqual(parsedDocker.success, true);
+    assert.strictEqual(parsedDocker.docker, true);
+    assert.ok(fs.existsSync(path.join(tmpDir, 'Dockerfile')));
+
+    // 2. fogoe ci --json
+    const ciOut = execSync(`node "${cliPath}" ci --json`, { cwd: tmpDir, encoding: 'utf8' });
+    const parsedCi = JSON.parse(ciOut.trim());
+    assert.strictEqual(parsedCi.success, true);
+    assert.strictEqual(parsedCi.ci, true);
+    assert.ok(fs.existsSync(path.join(tmpDir, '.github/workflows/ci.yml')));
+
+    // 3. fogoe compose --json
+    const composeOut = execSync(`node "${cliPath}" compose --json`, { cwd: tmpDir, encoding: 'utf8' });
+    const parsedCompose = JSON.parse(composeOut.trim());
+    assert.strictEqual(parsedCompose.success, true);
+    assert.ok(fs.existsSync(path.join(tmpDir, 'docker-compose.yml')));
+  } finally {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  }
+});
