@@ -598,6 +598,7 @@ function parseCliArgs(args) {
 
   // 1. Project metadata
   let name = initialName ? path.basename(initialName) : path.basename(process.cwd());
+  name = name.toLowerCase().trim().replace(/[^a-z0-9-_]/g, '-').replace(/^-+|-+$/g, '') || 'fogoe-app';
   if (!isNonInteractive && !initialName) {
     name = await input('Package name', name, (val) => {
       if (!val) return 'Package name is required';

@@ -6,45 +6,58 @@ const { select } = require('./prompts');
 const { getPackageManager } = require('./installer');
 
 async function updateProject(options = {}) {
-  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  const cwd = options.cwd || process.cwd();
+  const packageJsonPath = path.join(cwd, 'package.json');
   if (!fs.existsSync(packageJsonPath)) {
-    console.error(chalk.red('\n  ✗ package.json not found.'));
-    console.error(chalk.yellow('    Are you in a Node.js project directory?\n'));
+    if (!options.silent) {
+      console.error(chalk.red('\n  ✗ package.json not found.'));
+      console.error(chalk.yellow('    Are you in a Node.js project directory?\n'));
+    }
+    if (options.throwOnError) {
+      throw new Error('package.json not found');
+    }
     process.exit(1);
   }
 
-  const pm = getPackageManager(options.pm, process.cwd());
-  console.log(chalk.cyan(`\n  Detected package manager: ${chalk.bold(pm)}`));
-  console.log(chalk.yellow(`  This will update all project dependencies using "${pm} update/upgrade".`));
+  const pm = getPackageManager(options.pm, cwd);
+  if (!options.silent) {
+    console.log(chalk.cyan(`\n  Detected package manager: ${chalk.bold(pm)}`));
+    console.log(chalk.yellow(`  This will update all project dependencies using "${pm} update/upgrade".`));
+  }
 
   if (!options.yes) {
     const proceed = await select('Do you want to continue?', ['yes', 'no']);
     if (proceed !== 'yes') {
-      console.log(chalk.cyan('  Update cancelled.'));
-      return;
+      if (!options.silent) console.log(chalk.cyan('  Update cancelled.'));
+      return { success: false, cancelled: true };
     }
   }
 
-  console.log(chalk.cyan(`\n  Updating dependencies...`));
+  if (!options.silent) console.log(chalk.cyan(`\n  Updating dependencies...`));
   const isWindows = process.platform === 'win32';
+  const stdio = options.silent ? 'ignore' : 'inherit';
 
   try {
     if (pm === 'npm') {
-      execFileSync('npm', ['update'], { stdio: 'inherit', shell: isWindows });
+      execFileSync('npm', ['update'], { cwd, stdio, shell: isWindows });
     } else if (pm === 'bun') {
-      execFileSync('bun', ['update'], { stdio: 'inherit', shell: isWindows });
+      execFileSync('bun', ['update'], { cwd, stdio, shell: isWindows });
     } else if (pm === 'pnpm') {
       try {
-        execFileSync('pnpm', ['update'], { stdio: 'inherit', shell: isWindows });
+        execFileSync('pnpm', ['update'], { cwd, stdio, shell: isWindows });
       } catch {
-        execFileSync('pnpm', ['update', '--config.dangerouslyAllowAllBuilds=true'], { stdio: 'inherit', shell: isWindows });
+        execFileSync('pnpm', ['update', '--config.dangerouslyAllowAllBuilds=true'], { cwd, stdio, shell: isWindows });
       }
     } else if (pm === 'yarn') {
-      execFileSync('yarn', ['upgrade'], { stdio: 'inherit', shell: isWindows });
+      execFileSync('yarn', ['upgrade'], { cwd, stdio, shell: isWindows });
     }
-    console.log(chalk.green('\n  ✓ Dependencies updated successfully!\n'));
+    if (!options.silent) console.log(chalk.green('\n  ✓ Dependencies updated successfully!\n'));
+    return { success: true, pm };
   } catch (err) {
-    console.error(chalk.red('\n  ✗ Failed to update dependencies.'));
+    if (!options.silent) console.error(chalk.red('\n  ✗ Failed to update dependencies.'));
+    if (options.throwOnError) {
+      throw err;
+    }
     process.exit(1);
   }
 }

@@ -20,6 +20,7 @@ const {
   gitSetBranch,
   gitAddRemote,
   gitVerifyRemote,
+  gitPush,
   normalizeGitHubUrl,
 } = require('../src/github/commands');
 const { setupGitRepository } = require('../src/github');
@@ -194,4 +195,34 @@ test('setupGitRepository: Skips gracefully when git is false', async () => {
   assert.strictEqual(result.initialized, false);
   assert.strictEqual(fs.existsSync(path.join(TEST_DIR, '.git')), false);
 });
+
+test('gitPush: Handles unreachable or non-existent remote cleanly without throwing unhandled exceptions', () => {
+  fs.mkdirSync(TEST_DIR, { recursive: true });
+  gitInit(TEST_DIR, 'main');
+  fs.writeFileSync(path.join(TEST_DIR, 'file.txt'), 'content\n');
+  gitAdd(TEST_DIR);
+  gitCommit('initial commit', TEST_DIR);
+
+  gitAddRemote('origin', 'https://github.com/nonexistent-org-xyz/nonexistent-repo-xyz.git', TEST_DIR);
+  const pushRes = gitPush('main', TEST_DIR);
+  assert.strictEqual(pushRes.success, false);
+  assert.ok(pushRes.error, 'Should contain error details');
+});
+
+test('setupGitRepository: Returns pushed=false when remote repository push fails', async () => {
+  fs.mkdirSync(TEST_DIR, { recursive: true });
+
+  const result = await setupGitRepository({
+    targetDir: TEST_DIR,
+    git: true,
+    github: 'https://github.com/nonexistent-org-xyz/nonexistent-repo-xyz.git',
+    push: true,
+    silent: true,
+    isNonInteractive: true,
+  });
+
+  assert.strictEqual(result.initialized, true);
+  assert.strictEqual(result.github.pushed, false);
+});
+
 
