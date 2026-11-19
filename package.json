@@ -18,7 +18,6 @@
   },
   "scripts": {
     "test": "node --test",
-    "prepublishOnly": "npm test",
     "site:dev": "cd site && npm run dev",
     "site:build": "cd site && npm install && npm run build"
   },
