@@ -240,6 +240,7 @@ test('TUI Monitor: renderTuiMonitor formats retro box with telemetry and service
 
   const output = renderTuiMonitor(mockHealth);
   assert.ok(output.includes('fogoe monitor'));
+  assert.ok(output.includes('v1.3.0'));
   assert.ok(output.includes('LIVE'));
   assert.ok(output.includes('my-tui-app'));
   assert.ok(output.includes('Server'));

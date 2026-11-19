@@ -123,7 +123,13 @@ function renderTuiMonitor(health) {
 
   // Top header border with exact filler calculation
   const titleText = 'fogoe monitor ';
-  const versionText = 'v1.2.0';
+  let versionText = 'v1.3.0';
+  try {
+    const pkg = require('../../package.json');
+    if (pkg && pkg.version) {
+      versionText = `v${pkg.version}`;
+    }
+  } catch {}
   const liveTag = health.healthy
     ? chalk.bgGreen.black(' LIVE ')
     : chalk.bgYellow.black(' DEGRADED ');
