@@ -48,9 +48,15 @@ jobs:
         run: npm pack --dry-run
 
   publish:
-    name: Publish to NPM (if version bumped)
+    name: Publish to NPM
     needs: test
-    if: (github.ref == 'refs/heads/main' && github.event_name == 'push') || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    if: |
+      startsWith(github.ref, 'refs/tags/v') ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.ref == 'refs/heads/main' && (startsWith(github.event.head_commit.message, 'chore(release)') || contains(github.event.head_commit.message, '[release]')))
+    concurrency:
+      group: npm-publish
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -68,16 +74,17 @@ jobs:
       - name: Check version and publish to NPM
         run: |
           LOCAL_VERSION=$(node -p "require('./package.json').version")
-          NPM_VERSION=$(npm view fogoe version 2>/dev/null || echo "")
+          EXISTS_ON_NPM=$(npm view "fogoe@${LOCAL_VERSION}" version 2>/dev/null || echo "")
 
           echo "Local version:    $LOCAL_VERSION"
-          echo "Registry version: $NPM_VERSION"
+          echo "Registry status:  ${EXISTS_ON_NPM:-not published}"
 
-          if [ "$LOCAL_VERSION" != "$NPM_VERSION" ]; then
-            echo "🚀 New version detected ($LOCAL_VERSION != $NPM_VERSION). Publishing to NPM..."
-            npm publish --access public
-          else
-            echo "ℹ️ Version $LOCAL_VERSION is already published on NPM. Skipping publish."
+          if [ -n "$EXISTS_ON_NPM" ]; then
+            echo "ℹ️ Version $LOCAL_VERSION is already published on npm. Skipping publish."
+            exit 0
           fi
+
+          echo "🚀 Publishing fogoe@$LOCAL_VERSION to npm..."
+          npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
