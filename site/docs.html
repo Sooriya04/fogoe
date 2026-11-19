@@ -1010,11 +1010,10 @@
       <div class="sidebar-group">
         <div class="sidebar-group-title">CLI Suite &amp; Commands</div>
         <ul class="sidebar-links">
-          <li><a href="#cmd-fogoe" class="sidebar-link"><code>fogoe</code> (Interactive TUI)</a></li>
-          <li><a href="#cmd-create" class="sidebar-link"><code>fogoe create &lt;name&gt;</code></a></li>
-          <li><a href="#cmd-generate" class="sidebar-link"><code>fogoe generate</code> / <code>g crud</code></a></li>
-          <li><a href="#cmd-add" class="sidebar-link"><code>fogoe add [plugin]</code></a></li>
-          <li><a href="#cmd-diagnostics" class="sidebar-link">Diagnostics &amp; Git Suite</a></li>
+          <li><a href="#cmd-fogoe" class="sidebar-link"><code>fogoe</code> (Commands Reference)</a></li>
+          <li><a href="#cmd-monitor" class="sidebar-link"><code>fogoe monitor</code> (Telemetry &amp; TUI)</a></li>
+          <li><a href="#cmd-doctor" class="sidebar-link"><code>fogoe doctor</code> (Auto-Repair)</a></li>
+          <li><a href="#plugins" class="sidebar-link"><code>fogoe add [plugin]</code></a></li>
         </ul>
       </div>
 
@@ -1296,8 +1295,18 @@
               </tr>
               <tr>
                 <td><code>fogoe add [plugin]</code></td>
-                <td><code>ci</code>, <code>docker</code>, <code>compose</code>, <code>redis</code>, <code>zod</code>, <code>mailer</code>, <code>stripe</code>, <code>ratelimit</code>, <code>swagger</code>, <code>socket</code></td>
+                <td><code>ci</code>, <code>docker</code>, <code>compose</code>, <code>queue</code>, <code>redis</code>, <code>zod</code>, <code>mailer</code>, <code>stripe</code>, <code>ratelimit</code>, <code>swagger</code>, <code>socket</code></td>
                 <td>Installs and integrates modular backend capabilities or DevOps pipelines into an existing project.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe doctor</code></td>
+                <td><code>[--fix] [--yes] [--json]</code></td>
+                <td>Audits project health, missing dependencies, broken path aliases, and unignored secrets with safe automated repairs.</td>
+              </tr>
+              <tr>
+                <td><code>fogoe monitor</code></td>
+                <td><code>[--stats] [--tui] [--watch] [--json]</code></td>
+                <td>Probes server endpoint, database, Redis queue, and memory with real-time retro ANSI/TUI telemetry dashboard.</td>
               </tr>
               <tr>
                 <td><code>fogoe docker</code></td>
@@ -1521,6 +1530,27 @@
                 <td>Boolean</td>
                 <td><code>false</code></td>
                 <td>Bypasses all stdin prompts using flags or defaults.</td>
+              </tr>
+              <tr>
+                <td><code>--fix</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Enables automated repairs in <code>fogoe doctor</code> for missing deps, scripts, and tsconfig aliases.</td>
+              </tr>
+              <tr>
+                <td><code>--stats</code> / <code>--tui</code></td>
+                <td>—</td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Renders real-time retro ANSI/TUI system telemetry dashboard in <code>fogoe monitor</code>.</td>
+              </tr>
+              <tr>
+                <td><code>--watch</code></td>
+                <td><code>-w</code></td>
+                <td>Boolean</td>
+                <td><code>false</code></td>
+                <td>Runs continuous polling probe loop in <code>fogoe monitor</code>.</td>
               </tr>
             </tbody>
           </table>

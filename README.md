@@ -62,7 +62,9 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 - **6 Databases & ORMs:** Drizzle ORM, Prisma, MongoDB (Mongoose), PostgreSQL, MySQL, and SQLite.
 - **Disk-Based Template Architecture:** Pure `.ts` and `.js` template files on disk for deterministic file generation.
 - **Vertical Slice CRUD Generator:** Generate Model, Controller, and Route in one command (`fogoe g crud <name>`).
-- **Project Doctor:** Audit repository health, detect broken configurations, and auto-repair (`fogoe doctor [--fix]`).
+- **Project Doctor & Auto-Repair:** Audit repository health, detect broken configurations, and safe auto-repair (`fogoe doctor [--fix]`).
+- **Live Terminal Telemetry & Service Monitor:** Real-time TUI dashboard with multi-service probing (HTTP server, database, Redis queue) and memory telemetry (`fogoe monitor [--stats/--tui]`).
+- **Modular Plugin Ecosystem:** Plug-and-play integrations for BullMQ queues, Redis, Zod, Nodemailer, Stripe, Swagger, and rate limiting (`fogoe add <plugin>`).
 - **AI-Assisted Scaffolding:** Scaffolds complete architectures from plain English requirements (`--ai "..."`).
 - **Headless Agent Mode (`--json`):** Clean JSON output on `stdout` for autonomous agents (Cursor, Antigravity) and CI.
 - **Automated CI/CD & Docker:** Pre-configured GitHub Actions pipelines and Alpine multi-stage Dockerfiles.
@@ -83,7 +85,8 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `fogoe generate <type> <name>` | Generate MVC components (`route`, `controller`, `model`, `crud`) |
 | `fogoe g crud <name>` | Generate complete 3-layer vertical slice (Model + Controller + Routes) |
 | `fogoe doctor [--fix]` | Audit project health, configuration integrity, and safe auto-repair |
-| `fogoe add [plugin]` | Add extensions: `ci`, `docker`, `compose`, `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
+| `fogoe monitor` | Probes server, database, Redis queue, and container health (`--stats`, `--tui`, `--watch`, `--json`) |
+| `fogoe add [plugin]` | Add extensions: `ci`, `docker`, `compose`, `queue`, `redis`, `zod`, `mailer`, `stripe`, `ratelimit`, `swagger`, `socket` |
 | `fogoe status` | Display project configuration, Git state, CI/CD, and Docker status |
 | `fogoe update` | Upgrade all project dependencies to their latest compatible versions |
 | `fogoe init` | Initialize Git repository and link with remote |
@@ -110,6 +113,30 @@ npx fogoe create microservice --framework hono --lang js --arch minimal --json
 | `--install` | `-i` | boolean | `false` | Auto-install dependencies |
 | `--pm` | — | `npm`, `pnpm`, `bun`, `yarn` | `npm` | Preferred package manager |
 | `--yes` | `-y` | boolean | `false` | Accept default choices without prompting |
+| `--stats`, `--tui` | — | boolean | `false` | Terminal TUI dashboard in `fogoe monitor` |
+| `--watch` | `-w` | boolean | `false` | Continuous monitor polling loop |
+
+---
+
+## 📊 Terminal Telemetry & Service Monitor
+
+Fogoe provides a built-in diagnostics and real-time monitoring suite that probes your live HTTP server, database connection, Redis queue, and memory usage:
+
+```bash
+# Basic health check probe
+fogoe monitor
+
+# Live retro ANSI/TUI dashboard with real-time ASCII telemetry bars
+fogoe monitor --stats
+# or
+fogoe monitor --tui
+
+# Continuous monitoring watch mode
+fogoe monitor --watch
+
+# Machine-readable JSON output for CI runners and coding agents
+fogoe monitor --json
+```
 
 ---
 
@@ -128,6 +155,7 @@ fogoe doctor --fix
 fogoe doctor --fix -y --json
 ```
 
+- **Repairs Covered:** Automatically installs missing framework packages (`express`, `fastify`, etc.), configures standard npm scripts (`dev`, `build`, `start`), repairs broken TypeScript path aliases (TS5090), and sets up default database environment variables.
 - **Safety Guarantee:** Fogoe Doctor will **never** overwrite existing secrets in `.env` and will never delete user files.
 
 ---
